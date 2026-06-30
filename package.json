@@ -1,0 +1,16 @@
+{
+  "name": "the-game-x-o",
+  "version": "1.0.0",
+  "description": "لعبة إكس أو مطورة أونلاين مع نظام غرف خاصة وشات فوري",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}

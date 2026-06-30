@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> THE X O </title>
+    <title>لعبة X O المتقدمة</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -17,13 +17,16 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
         
-        /* واجهة الدخول واختيار الغرفة */
-        .lobby-container { background: var(--container-bg); padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 400px; }
-        .lobby-container h2 { margin-bottom: 25px; }
-        .btn { background: var(--accent-color); border: none; padding: 12px 20px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 15px; font-size: 1rem; transition: background 0.3s; }
-        .btn:hover { opacity: 0.9; }
+        .lobby-container { background: var(--container-bg); padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 450px; }
+        .lobby-container h2 { margin-bottom: 20px; color: var(--accent-color); }
+        .btn { background: var(--accent-color); border: none; padding: 12px 20px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 10px; font-size: 1rem; transition: all 0.3s; }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
         .btn.secondary { background: var(--x-color); }
+        .btn.ai { background: #8b5cf6; }
         .input-field { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; text-align: center; margin-bottom: 15px; outline: none; font-size: 1.1rem; }
+        
+        .divider { margin: 15px 0; color: #64748b; font-size: 0.9rem; position: relative; }
+        .select-style { width: 100%; padding: 12px; border-radius: 8px; background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 15px; outline: none; cursor: pointer; }
 
         /* واجهة اللعبة الرئيسية */
         .game-container { display: none; background: var(--container-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); gap: 30px; max-width: 900px; width: 100%; border: 1px solid rgba(255,255,255,0.1); }
@@ -40,6 +43,7 @@
         .cell.X { color: var(--x-color); text-shadow: 0 0 10px var(--x-color); }
         .cell.O { color: var(--o-color); text-shadow: 0 0 10px var(--o-color); }
 
+        /* الشات */
         .chat-container { width: 300px; background: rgba(0, 0, 0, 0.2); border-radius: 15px; display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; }
         .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; height: 300px; }
         .message { padding: 8px 12px; border-radius: 10px; max-width: 80%; font-size: 0.9rem; word-break: break-word; }
@@ -59,10 +63,20 @@
 <body>
 
 <div class="lobby-container" id="lobby">
-    <h2>لعبة X O المطورة</h2>
-    <button class="btn" id="createRoomBtn">إنشاء جولة خاصة جديدة</button>
-    <div style="margin: 15px 0; color: #64748b;">أو</div>
-    <input type="text" class="input-field" id="roomCodeInput" placeholder="أدخل رمز الجولة الخاصة">
+    <h2>لعبة X O الاحترافية</h2>
+    <input type="text" class="input-field" id="playerNameInput" placeholder="أدخل اسمك اللاعب">
+    
+    <div class="divider">🕹️ نمط اللعب الفردي (ضد الذكاء الاصطناعي)</div>
+    <select class="select-style" id="difficultySelect">
+        <option value="easy">مستوى: سهل (ضعيف)</option>
+        <option value="medium">مستوى: عادي (متوسط)</option>
+        <option value="hard">مستوى: صعب (قوي جداً)</option>
+    </select>
+    <button class="btn ai" id="playAiBtn">ابدأ لعب فردي</button>
+
+    <div class="divider">🌐 نمط أونلاين (مع صديق)</div>
+    <button class="btn" id="createRoomBtn">إنشاء جولة خاصة</button>
+    <input type="text" class="input-field" id="roomCodeInput" placeholder="رمز الجولة للاستلام">
     <button class="btn secondary" id="joinRoomBtn">انضمام للجولة</button>
 </div>
 
@@ -70,9 +84,9 @@
     <div class="main-game">
         <div class="header-info">
             <div class="round-counter" id="roundDisplay">الجولة: 1</div>
-            <div class="turn-indicator" id="statusDisplay">بانتظار صديقك...</div>
+            <div class="turn-indicator" id="statusDisplay">جاري التجهيز...</div>
             <br>
-            <div class="room-display" id="copyRoomCode" title="اضغط لنسخ الرمز">رمز الغرفة: <span id="roomCodeText"></span> (اضغط للنسخ)</div>
+            <div class="room-display" id="copyRoomCode" style="display:none;">رمز الغرفة: <span id="roomCodeText"></span> (نسخ)</div>
         </div>
         
         <div class="board" id="board">
@@ -88,9 +102,9 @@
         </div>
     </div>
 
-    <div class="chat-container">
+    <div class="chat-container" id="chatSection">
         <div class="chat-messages" id="chatMessages">
-            <div class="message system">مرحباً بك في شات الجولة الخاصة!</div>
+            <div class="message system">شات الجولة</div>
         </div>
         <div class="chat-input-area">
             <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة..." disabled>
@@ -103,15 +117,19 @@
 <script>
     const socket = io({ transports: ['websocket', 'polling'] });
     
+    // عناصر الواجهة
     const lobby = document.getElementById('lobby');
     const gameArea = document.getElementById('gameArea');
-    const board = document.getElementById('board');
     const cells = document.querySelectorAll('.cell');
     const statusDisplay = document.getElementById('statusDisplay');
     const roundDisplay = document.getElementById('roundDisplay');
     const roomCodeText = document.getElementById('roomCodeText');
     const copyRoomCode = document.getElementById('copyRoomCode');
+    const chatSection = document.getElementById('chatSection');
     
+    const playerNameInput = document.getElementById('playerNameInput');
+    const difficultySelect = document.getElementById('difficultySelect');
+    const playAiBtn = document.getElementById('playAiBtn');
     const createRoomBtn = document.getElementById('createRoomBtn');
     const joinRoomBtn = document.getElementById('joinRoomBtn');
     const roomCodeInput = document.getElementById('roomCodeInput');
@@ -120,85 +138,226 @@
     const chatInput = document.getElementById('chatInput');
     const sendBtn = document.getElementById('sendBtn');
 
-    let mySign = null; 
+    let mySign = 'X'; 
     let isMyTurn = false;
     let currentRoomCode = "";
+    let gameMode = "online"; // او single
+    let pName = "لاعب";
 
-    // عند الضغط على إنشاء غرفة
+    // إعدادات اللعب الفردي локально
+    let aiBoard = Array(9).fill(null);
+    let aiRound = 1;
+    let aiCurrentTurn = 'X';
+    let aiStartingPlayer = 'X';
+    let aiDrawStreak = 0;
+
+    function getPlayerName() {
+        return playerNameInput.value.trim() || "لاعب";
+    }
+
+    // --- قسم اللعب الأونلاين (Socket.io) ---
     createRoomBtn.addEventListener('click', () => {
-        socket.emit('createPrivateRoom');
+        pName = getPlayerName();
+        socket.emit('createPrivateRoom', { name: pName });
     });
 
-    // عند الضغط على انضمام لغرفة
     joinRoomBtn.addEventListener('click', () => {
         const code = roomCodeInput.value.trim().toUpperCase();
-        if (code !== "") {
-            socket.emit('joinPrivateRoom', code);
-        }
+        pName = getPlayerName();
+        if (code !== "") socket.emit('joinPrivateRoom', { roomCode: code, name: pName });
     });
 
-    // ميزة نسخ الكود عند الضغط عليه
     copyRoomCode.addEventListener('click', () => {
         navigator.clipboard.writeText(currentRoomCode);
-        alert('تم نسخ رمز الجولة! أرسله لصديقك الآن.');
+        alert('تم نسخ الرمز! أرسله لصديقك.');
     });
 
-    // استقبال تأكيد الغرفة وتجهيز الواجهة
     socket.on('roomCreated', (roomCode) => {
         currentRoomCode = roomCode;
         roomCodeText.innerText = roomCode;
+        copyRoomCode.style.display = 'inline-block';
         lobby.style.display = 'none';
         gameArea.style.display = 'flex';
+        gameMode = "online";
     });
 
     socket.on('playerAssignment', (data) => {
         mySign = data.sign;
-        statusDisplay.innerText = `أنت تلعب بـ (${mySign}). بانتظار الخصم ليتحرك...`;
+        statusDisplay.innerText = `أنت: ${pName} (${mySign}). بانتظار الخصم...`;
     });
 
     socket.on('startRound', (data) => {
         roundDisplay.innerText = `الجولة: ${data.round}`;
         isMyTurn = (data.currentTurn === mySign);
-        statusDisplay.innerText = isMyTurn ? "دورك الآن للاعب!" : `دور اللاعب الآخر (${data.currentTurn})`;
-        
-        chatInput.disabled = false;
-        sendBtn.disabled = false;
-
-        cells.forEach(cell => {
-            cell.innerText = '';
-            cell.className = 'cell';
-        });
+        statusDisplay.innerText = isMyTurn ? "دورك الآن!" : `دور الخصم (${data.currentTurn})`;
+        chatInput.disabled = false; sendBtn.disabled = false;
+        resetLocalBoard();
     });
 
     socket.on('updateBoard', (data) => {
         const cell = cells[data.index];
-        cell.innerText = data.sign;
-        cell.classList.add(data.sign);
-        
+        cell.innerText = data.sign; cell.classList.add(data.sign);
         isMyTurn = (data.nextTurn === mySign);
-        statusDisplay.innerText = isMyTurn ? "دورك الآن!" : `دور اللاعب الآخر (${data.nextTurn})`;
+        statusDisplay.innerText = isMyTurn ? "دورك الآن!" : `دور الخصم (${data.nextTurn})`;
     });
 
+    // --- قسم اللعب الفردي (AI) ---
+    playAiBtn.addEventListener('click', () => {
+        pName = getPlayerName();
+        gameMode = "single";
+        lobby.style.display = 'none';
+        gameArea.style.display = 'flex';
+        chatSection.style.display = 'none'; // إخفاء الشات في اللعب الفردي
+        copyRoomCode.style.display = 'none';
+        startAiRound();
+    });
+
+    function startAiRound() {
+        aiBoard = Array(9).fill(null);
+        aiCurrentTurn = aiStartingPlayer;
+        roundDisplay.innerText = `الجولة: ${aiRound}`;
+        resetLocalBoard();
+        
+        mySign = 'X'; // اللاعب دائما X والكمبيوتر O تسهيلاً للعملية
+        isMyTurn = (aiCurrentTurn === 'X');
+        statusDisplay.innerText = isMyTurn ? "دورك الآن!" : "دور الكمبيوتر...";
+
+        if (!isMyTurn) {
+            setTimeout(makeAiMove, 500);
+        }
+    }
+
+    function makeAiMove() {
+        const diff = difficultySelect.value;
+        let move;
+        if (diff === 'easy') move = getRandomMove();
+        else if (diff === 'medium') move = Math.random() > 0.5 ? getBestMove() : getRandomMove();
+        else move = getBestMove();
+
+        if (move !== null) {
+            aiBoard[move] = 'O';
+            cells[move].innerText = 'O';
+            cells[move].classList.add('O');
+            
+            if (checkLocalWinner(aiBoard)) {
+                handleAiEnd(checkLocalWinner(aiBoard));
+            } else {
+                aiCurrentTurn = 'X';
+                isMyTurn = true;
+                statusDisplay.innerText = "دورك الآن!";
+            }
+        }
+    }
+
+    function getRandomMove() {
+        let avail = aiBoard.map((v, i) => v === null ? i : null).filter(v => v !== null);
+        return avail.length > 0 ? avail[Math.floor(Math.random() * avail.length)] : null;
+    }
+
+    function getBestMove() {
+        let bestScore = -Infinity;
+        let move = null;
+        for (let i = 0; i < 9; i++) {
+            if (aiBoard[i] === null) {
+                aiBoard[i] = 'O';
+                let score = minimax(aiBoard, 0, false);
+                aiBoard[i] = null;
+                if (score > bestScore) {
+                    bestScore = score;
+                    move = i;
+                }
+            }
+        }
+        return move !== null ? move : getRandomMove();
+    }
+
+    function minimax(board, depth, isMaximizing) {
+        let result = checkLocalWinner(board);
+        if (result === 'O') return 10 - depth;
+        if (result === 'X') return depth - 10;
+        if (result === 'draw') return 0;
+
+        if (isMaximizing) {
+            let bestScore = -Infinity;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === null) {
+                    board[i] = 'O';
+                    let score = minimax(board, depth + 1, false);
+                    board[i] = null;
+                    bestScore = Math.max(score, bestScore);
+                }
+            }
+            return bestScore;
+        } else {
+            let bestScore = Infinity;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === null) {
+                    board[i] = 'X';
+                    let score = minimax(board, depth + 1, true);
+                    board[i] = null;
+                    bestScore = Math.min(score, bestScore);
+                }
+            }
+            return bestScore;
+        }
+    }
+
+    function checkLocalWinner(b) {
+        const cond = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        for (let c of cond) {
+            if (b[c[0]] && b[c[0]] === b[c[1]] && b[c[0]] === b[c[2]]) return b[c[0]];
+        }
+        if (!b.includes(null)) return 'draw';
+        return null;
+    }
+
+    function handleAiEnd(result) {
+        if (result === 'draw') {
+            aiDrawStreak++;
+            aiStartingPlayer = (aiDrawStreak % 2 !== 0) ? 'O' : 'X';
+            alert(`تعادل! الجولة القادمة يبدأها: ${aiStartingPlayer}`);
+        } else {
+            aiStartingPlayer = result;
+            aiDrawStreak = 0;
+            alert(result === 'X' ? `مبروك! الفائز هو: ${pName}` : "للأسف! فاز الكمبيوتر.");
+        }
+        aiRound++;
+        startAiRound();
+    }
+
+    // الضغط العام على مربعات الشبكة
     cells.forEach(cell => {
         cell.addEventListener('click', () => {
             const index = cell.getAttribute('data-index');
-            if (isMyTurn && cell.innerText === '') {
+            if (gameMode === "online" && isMyTurn && cell.innerText === '') {
                 socket.emit('makeMove', { index: index, roomCode: currentRoomCode });
+            } 
+            else if (gameMode === "single" && isMyTurn && cell.innerText === '') {
+                aiBoard[index] = 'X';
+                cell.innerText = 'X';
+                cell.classList.add('X');
+                isMyTurn = false;
+                
+                if (checkLocalWinner(aiBoard)) {
+                    handleAiEnd(checkLocalWinner(aiBoard));
+                } else {
+                    aiCurrentTurn = 'O';
+                    statusDisplay.innerText = "دور الكمبيوتر...";
+                    setTimeout(makeAiMove, 600);
+                }
             }
         });
     });
 
-    // خطأ عند تعذر الدخول (مثلاً كود خاطئ أو غرفة ممتلئة)
-    socket.on('errorEvent', (message) => {
-        alert(message);
-    });
+    function resetLocalBoard() {
+        cells.forEach(c => { c.innerText = ''; c.className = 'cell'; });
+    }
 
-    // الشات ونظام الرسائل
+    // شات أونلاين
     socket.on('receiveMessage', (data) => {
         const msgDiv = document.createElement('div');
-        msgDiv.classList.add('message');
-        msgDiv.classList.add(data.sender === socket.id ? 'me' : 'other');
-        msgDiv.innerText = data.text;
+        msgDiv.classList.add('message', data.sender === socket.id ? 'me' : 'other');
+        msgDiv.innerText = `${data.name}: ${data.text}`;
         chatMessages.appendChild(msgDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     });
@@ -211,14 +370,15 @@
         chatMessages.scrollTop = chatMessages.scrollHeight;
     });
 
+    socket.on('errorEvent', (msg) => alert(msg));
+
     function sendMessage() {
         const text = chatInput.value.trim();
         if (text !== '') {
-            socket.emit('sendMessage', { roomCode: currentRoomCode, text: text });
+            socket.emit('sendMessage', { roomCode: currentRoomCode, text: text, name: pName });
             chatInput.value = '';
         }
     }
-
     sendBtn.addEventListener('click', sendMessage);
     chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
 </script>

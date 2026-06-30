@@ -13,108 +13,128 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// متغيرات حالة اللعبة
-let players = []; 
-let board = Array(9).fill(null);
-let round = 1;
-let currentTurn = 'X'; // الجولة الأولى تبدأ بـ X افتراضياً
-let drawStreak = 0;    // لحساب عدد التعادلات المتتالية واغتصاب الأدوار على أساسها
-let startingPlayerOfRound = 'X'; 
+const rooms = {};
 
 const winningConditions = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // أفقي
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // عمودي
-    [0, 4, 8], [2, 4, 6]             // قطري
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6]
 ];
 
-function checkWinner() {
+function generateRoomCode() {
+    return Math.random().toString(36).substring(2, 7).toUpperCase();
+}
+
+function checkWinner(board) {
     for (let condition of winningConditions) {
         const [a, b, c] = condition;
         if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-            return board[a]; // يعيد X أو O
+            return board[a];
         }
     }
-    if (!board.includes(null)) return 'draw'; // تعادل
+    if (!board.includes(null)) return 'draw';
     return null;
 }
 
 io.on('connection', (socket) => {
-    // إدارة دخول اللاعبين (الحد الأقصى 2)
-    if (players.length < 2) {
-        const sign = players.length === 0 ? 'X' : 'O';
-        players.push({ id: socket.id, sign: sign });
-        socket.emit('playerAssignment', { sign: sign });
-        
-        if (players.length === 2) {
-            io.emit('systemMessage', 'اكتمل اللاعبون! بدأت اللعبة.');
-            startNewRound();
-        }
-    } else {
-        socket.emit('systemMessage', 'عذراً، الغرفة ممتلئة حالياً.');
-        socket.disconnect();
-        return;
-    }
 
-    // استقبال حركات اللاعبين وتطبيق القوانين المطلوبة
+    socket.on('createPrivateRoom', (data) => {
+        const roomCode = generateRoomCode();
+        rooms[roomCode] = {
+            players: [{ id: socket.id, sign: 'X', name: data.name }],
+            board: Array(9).fill(null),
+            round: 1,
+            currentTurn: 'X',
+            drawStreak: 0,
+            startingPlayerOfRound: 'X'
+        };
+        socket.join(roomCode);
+        socket.emit('roomCreated', roomCode);
+        socket.emit('playerAssignment', { sign: 'X' });
+    });
+
+    socket.on('joinPrivateRoom', (data) => {
+        const { roomCode, name } = data;
+        const room = rooms[roomCode];
+        if (!room) {
+            socket.emit('errorEvent', 'رمز الجولة غير صحيح!');
+            return;
+        }
+        if (room.players.length >= 2) {
+            socket.emit('errorEvent', 'الجولة ممتلئة!');
+            return;
+        }
+
+        room.players.push({ id: socket.id, sign: 'O', name: name });
+        socket.join(roomCode);
+        
+        socket.emit('roomCreated', roomCode);
+        socket.emit('playerAssignment', { sign: 'O' });
+
+        io.to(roomCode).emit('systemMessage', `انضم اللاعب ${name} إلى الجولة!`);
+        startNewRound(roomCode);
+    });
+
     socket.on('makeMove', (data) => {
-        const player = players.find(p => p.id === socket.id);
-        if (player && player.sign === currentTurn && board[data.index] === null) {
-            board[data.index] = currentTurn;
+        const { roomCode, index } = data;
+        const room = rooms[roomCode];
+        if (!room) return;
+
+        const player = room.players.find(p => p.id === socket.id);
+        if (player && player.sign === room.currentTurn && room.board[index] === null) {
+            room.board[index] = room.currentTurn;
             
-            const result = checkWinner();
+            const result = checkWinner(room.board);
             
             if (result) {
                 if (result === 'draw') {
-                    // قانون التعادل:
-                    drawStreak++;
-                    if (drawStreak % 2 !== 0) {
-                        startingPlayerOfRound = 'O'; // التعادل الأول: O يبدأ
-                    } else {
-                        startingPlayerOfRound = 'X'; // التعادل الثاني: تنقلب الكفة لـ X
-                    }
-                    io.emit('systemMessage', `تعادل! جولة جديدة تبدأ بواسطة: ${startingPlayerOfRound}`);
-                    round++;
-                    startNewRound();
+                    room.drawStreak++;
+                    room.startingPlayerOfRound = (room.drawStreak % 2 !== 0) ? 'O' : 'X';
+                    io.to(roomCode).emit('systemMessage', `تعادل! الجولة التالية تبدأ بواسطة: ${room.startingPlayerOfRound}`);
+                    room.round++;
+                    startNewRound(roomCode);
                 } else {
-                    // قانون الفائز: الفائز هو من يفتتح الجولة القادمة
-                    startingPlayerOfRound = result;
-                    drawStreak = 0; // إعادة تصغير ستريك التعادل
-                    io.emit('systemMessage', `الفائز في هذه الجولة هو اللاعب: ${result}!`);
-                    round++;
-                    startNewRound();
+                    room.startingPlayerOfRound = result;
+                    room.drawStreak = 0;
+                    const winnerName = room.players.find(p => p.sign === result)?.name || result;
+                    io.to(roomCode).emit('systemMessage', `الفائز في الجولة هو: ${winnerName}`);
+                    room.round++;
+                    startNewRound(roomCode);
                 }
             } else {
-                // تبديل الدور العادي داخل الجولة
-                currentTurn = currentTurn === 'X' ? 'O' : 'X';
-                io.emit('updateBoard', { index: data.index, sign: player.sign, nextTurn: currentTurn });
+                room.currentTurn = room.currentTurn === 'X' ? 'O' : 'X';
+                io.to(roomCode).emit('updateBoard', { index: index, sign: player.sign, nextTurn: room.currentTurn });
             }
         }
     });
 
-    // نظام الشات
-    socket.on('sendMessage', (text) => {
-        io.emit('receiveMessage', { sender: socket.id, text: text });
+    socket.on('sendMessage', (data) => {
+        const { roomCode, text, name } = data;
+        io.to(roomCode).emit('receiveMessage', { sender: socket.id, text: text, name: name });
     });
 
-    // عند خروج لاعب
     socket.on('disconnect', () => {
-        players = players.filter(p => p.id !== socket.id);
-        io.emit('systemMessage', 'غادر أحد اللاعبين. تم إعادة تصغير اللعبة.');
-        // إعادة تهيئة المتغيرات
-        board = Array(9).fill(null);
-        round = 1;
-        drawStreak = 0;
-        startingPlayerOfRound = 'X';
+        for (const roomCode in rooms) {
+            const room = rooms[roomCode];
+            const playerIndex = room.players.findIndex(p => p.id === socket.id);
+            if (playerIndex !== -1) {
+                io.to(roomCode).emit('systemMessage', 'غادر أحد اللاعبين الجولة.');
+                delete rooms[roomCode];
+                break;
+            }
+        }
     });
 });
 
-function startNewRound() {
-    board = Array(9).fill(null);
-    currentTurn = startingPlayerOfRound;
-    io.emit('startRound', { round: round, currentTurn: currentTurn });
+function startNewRound(roomCode) {
+    const room = rooms[roomCode];
+    if (!room) return;
+    room.board = Array(9).fill(null);
+    room.currentTurn = room.startingPlayerOfRound;
+    io.to(roomCode).emit('startRound', { round: room.round, currentTurn: room.currentTurn });
 }
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`السيرفر يعمل بنجاح على الرابط http://localhost:${PORT}`);
+    console.log(`السيرفر يعمل على منفذ ${PORT}`);
 });

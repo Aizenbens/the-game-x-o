@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة X O المتقدمة</title>
+    <title>The X O</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -33,7 +33,13 @@
         .main-game { flex: 1; display: flex; flex-direction: column; align-items: center; }
         
         .header-info { text-align: center; margin-bottom: 20px; width: 100%; }
-        .round-counter { font-size: 1.5rem; font-weight: bold; color: var(--accent-color); margin-bottom: 10px; }
+        .round-counter { font-size: 1.5rem; font-weight: bold; color: var(--accent-color); margin-bottom: 5px; }
+        
+        /* عداد النقاط */
+        .score-board { display: flex; justify-content: center; gap: 20px; font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 8px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }
+        .score-x { color: var(--x-color); }
+        .score-o { color: var(--o-color); }
+
         .turn-indicator { font-size: 1.1rem; background: rgba(255,255,255,0.05); padding: 8px 20px; border-radius: 50px; display: inline-block; margin-bottom: 10px; }
         .room-display { font-size: 0.9rem; color: #94a3b8; cursor: pointer; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 5px; display: inline-block; }
 
@@ -63,8 +69,8 @@
 <body>
 
 <div class="lobby-container" id="lobby">
-    <h2>لعبة X O الاحترافية</h2>
-    <input type="text" class="input-field" id="playerNameInput" placeholder="أدخل اسمك اللاعب">
+    <h2>The X O</h2>
+    <input type="text" class="input-field" id="playerNameInput" placeholder="أدخل اسم اللاعب">
     
     <div class="divider">🕹️ نمط اللعب الفردي (ضد الذكاء الاصطناعي)</div>
     <select class="select-style" id="difficultySelect">
@@ -84,6 +90,13 @@
     <div class="main-game">
         <div class="header-info">
             <div class="round-counter" id="roundDisplay">الجولة: 1</div>
+            
+            <div class="score-board">
+                <div class="score-x" id="scoreXDisplay">X (أنت): 0</div>
+                <div style="color: #64748b;">|</div>
+                <div class="score-o" id="scoreODisplay">O (الخصم): 0</div>
+            </div>
+
             <div class="turn-indicator" id="statusDisplay">جاري التجهيز...</div>
             <br>
             <div class="room-display" id="copyRoomCode" style="display:none;">رمز الغرفة: <span id="roomCodeText"></span> (نسخ)</div>
@@ -117,12 +130,13 @@
 <script>
     const socket = io({ transports: ['websocket', 'polling'] });
     
-    // عناصر الواجهة
     const lobby = document.getElementById('lobby');
     const gameArea = document.getElementById('gameArea');
     const cells = document.querySelectorAll('.cell');
     const statusDisplay = document.getElementById('statusDisplay');
     const roundDisplay = document.getElementById('roundDisplay');
+    const scoreXDisplay = document.getElementById('scoreXDisplay');
+    const scoreODisplay = document.getElementById('scoreODisplay');
     const roomCodeText = document.getElementById('roomCodeText');
     const copyRoomCode = document.getElementById('copyRoomCode');
     const chatSection = document.getElementById('chatSection');
@@ -141,10 +155,12 @@
     let mySign = 'X'; 
     let isMyTurn = false;
     let currentRoomCode = "";
-    let gameMode = "online"; // او single
+    let gameMode = "online"; 
     let pName = "لاعب";
 
-    // إعدادات اللعب الفردي локально
+    let scoreX = 0;
+    let scoreO = 0;
+
     let aiBoard = Array(9).fill(null);
     let aiRound = 1;
     let aiCurrentTurn = 'X';
@@ -155,7 +171,16 @@
         return playerNameInput.value.trim() || "لاعب";
     }
 
-    // --- قسم اللعب الأونلاين (Socket.io) ---
+    function updateScoreUI() {
+        if (gameMode === "single") {
+            scoreXDisplay.innerText = `${pName} (X): ${scoreX}`;
+            scoreODisplay.innerText = `الكمبيوتر (O): ${scoreO}`;
+        } else {
+            scoreXDisplay.innerText = `لاعب 1 (X): ${scoreX}`;
+            scoreODisplay.innerText = `لاعب 2 (O): ${scoreO}`;
+        }
+    }
+
     createRoomBtn.addEventListener('click', () => {
         pName = getPlayerName();
         socket.emit('createPrivateRoom', { name: pName });
@@ -179,6 +204,7 @@
         lobby.style.display = 'none';
         gameArea.style.display = 'flex';
         gameMode = "online";
+        updateScoreUI();
     });
 
     socket.on('playerAssignment', (data) => {
@@ -191,6 +217,12 @@
         isMyTurn = (data.currentTurn === mySign);
         statusDisplay.innerText = isMyTurn ? "دورك الآن!" : `دور الخصم (${data.currentTurn})`;
         chatInput.disabled = false; sendBtn.disabled = false;
+        
+        if(data.scores) {
+            scoreX = data.scores.X;
+            scoreO = data.scores.O;
+            updateScoreUI();
+        }
         resetLocalBoard();
     });
 
@@ -201,14 +233,15 @@
         statusDisplay.innerText = isMyTurn ? "دورك الآن!" : `دور الخصم (${data.nextTurn})`;
     });
 
-    // --- قسم اللعب الفردي (AI) ---
     playAiBtn.addEventListener('click', () => {
         pName = getPlayerName();
         gameMode = "single";
+        scoreX = 0; scoreO = 0;
         lobby.style.display = 'none';
         gameArea.style.display = 'flex';
-        chatSection.style.display = 'none'; // إخفاء الشات في اللعب الفردي
+        chatSection.style.display = 'none'; 
         copyRoomCode.style.display = 'none';
+        updateScoreUI();
         startAiRound();
     });
 
@@ -218,7 +251,7 @@
         roundDisplay.innerText = `الجولة: ${aiRound}`;
         resetLocalBoard();
         
-        mySign = 'X'; // اللاعب دائما X والكمبيوتر O تسهيلاً للعملية
+        mySign = 'X'; 
         isMyTurn = (aiCurrentTurn === 'X');
         statusDisplay.innerText = isMyTurn ? "دورك الآن!" : "دور الكمبيوتر...";
 
@@ -239,8 +272,9 @@
             cells[move].innerText = 'O';
             cells[move].classList.add('O');
             
-            if (checkLocalWinner(aiBoard)) {
-                handleAiEnd(checkLocalWinner(aiBoard));
+            const roundResult = checkLocalWinner(aiBoard);
+            if (roundResult) {
+                setTimeout(() => { handleAiEnd(roundResult); }, 300);
             } else {
                 aiCurrentTurn = 'X';
                 isMyTurn = true;
@@ -319,13 +353,19 @@
         } else {
             aiStartingPlayer = result;
             aiDrawStreak = 0;
-            alert(result === 'X' ? `مبروك! الفائز هو: ${pName}` : "للأسف! فاز الكمبيوتر.");
+            if (result === 'X') {
+                scoreX++;
+                alert(`مبروك! الفائز هو: ${pName}`);
+            } else {
+                scoreO++;
+                alert("للأسف! فاز الكمبيوتر.");
+            }
+            updateScoreUI();
         }
         aiRound++;
         startAiRound();
     }
 
-    // الضغط العام على مربعات الشبكة
     cells.forEach(cell => {
         cell.addEventListener('click', () => {
             const index = cell.getAttribute('data-index');
@@ -338,8 +378,9 @@
                 cell.classList.add('X');
                 isMyTurn = false;
                 
-                if (checkLocalWinner(aiBoard)) {
-                    handleAiEnd(checkLocalWinner(aiBoard));
+                const roundResult = checkLocalWinner(aiBoard);
+                if (roundResult) {
+                    setTimeout(() => { handleAiEnd(roundResult); }, 300);
                 } else {
                     aiCurrentTurn = 'O';
                     statusDisplay.innerText = "دور الكمبيوتر...";
@@ -353,7 +394,6 @@
         cells.forEach(c => { c.innerText = ''; c.className = 'cell'; });
     }
 
-    // شات أونلاين
     socket.on('receiveMessage', (data) => {
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message', data.sender === socket.id ? 'me' : 'other');

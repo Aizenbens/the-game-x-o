@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة X O أونلاين - غرف خاصة</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --container-bg: rgba(30, 41, 59, 0.7);
+            --text-color: #f8fafc;
+            --x-color: #3b82f6;
+            --o-color: #ef4444;
+            --accent-color: #10b981;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        
+        /* واجهة الدخول واختيار الغرفة */
+        .lobby-container { background: var(--container-bg); padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 400px; }
+        .lobby-container h2 { margin-bottom: 25px; }
+        .btn { background: var(--accent-color); border: none; padding: 12px 20px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 15px; font-size: 1rem; transition: background 0.3s; }
+        .btn:hover { opacity: 0.9; }
+        .btn.secondary { background: var(--x-color); }
+        .input-field { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; text-align: center; margin-bottom: 15px; outline: none; font-size: 1.1rem; }
+
+        /* واجهة اللعبة الرئيسية */
+        .game-container { display: none; background: var(--container-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); gap: 30px; max-width: 900px; width: 100%; border: 1px solid rgba(255,255,255,0.1); }
+        .main-game { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        
+        .header-info { text-align: center; margin-bottom: 20px; width: 100%; }
+        .round-counter { font-size: 1.5rem; font-weight: bold; color: var(--accent-color); margin-bottom: 10px; }
+        .turn-indicator { font-size: 1.1rem; background: rgba(255,255,255,0.05); padding: 8px 20px; border-radius: 50px; display: inline-block; margin-bottom: 10px; }
+        .room-display { font-size: 0.9rem; color: #94a3b8; cursor: pointer; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 5px; display: inline-block; }
+
+        .board { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 10px; margin-top: 20px; }
+        .cell { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 2.5rem; font-weight: bold; cursor: pointer; transition: all 0.3s ease; }
+        .cell:hover { background: rgba(255,255,255,0.1); transform: scale(1.05); }
+        .cell.X { color: var(--x-color); text-shadow: 0 0 10px var(--x-color); }
+        .cell.O { color: var(--o-color); text-shadow: 0 0 10px var(--o-color); }
+
+        .chat-container { width: 300px; background: rgba(0, 0, 0, 0.2); border-radius: 15px; display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; }
+        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; height: 300px; }
+        .message { padding: 8px 12px; border-radius: 10px; max-width: 80%; font-size: 0.9rem; word-break: break-word; }
+        .message.system { background: rgba(255,255,255,0.1); align-self: center; text-align: center; color: #94a3b8; font-size: 0.8rem; }
+        .message.me { background: var(--x-color); align-self: flex-start; }
+        .message.other { background: rgba(255,255,255,0.15); align-self: flex-end; }
+        .chat-input-area { display: flex; padding: 10px; background: rgba(0,0,0,0.3); }
+        .chat-input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px; color: white; outline: none; }
+        .chat-btn { background: var(--accent-color); border: none; padding: 8px 15px; margin-right: 5px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; }
+
+        @media (max-width: 768px) {
+            .game-container { flex-direction: column; }
+            .chat-container { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="lobby-container" id="lobby">
+    <h2>لعبة X O المطورة</h2>
+    <button class="btn" id="createRoomBtn">إنشاء جولة خاصة جديدة</button>
+    <div style="margin: 15px 0; color: #64748b;">أو</div>
+    <input type="text" class="input-field" id="roomCodeInput" placeholder="أدخل رمز الجولة الخاصة">
+    <button class="btn secondary" id="joinRoomBtn">انضمام للجولة</button>
+</div>
+
+<div class="game-container" id="gameArea">
+    <div class="main-game">
+        <div class="header-info">
+            <div class="round-counter" id="roundDisplay">الجولة: 1</div>
+            <div class="turn-indicator" id="statusDisplay">بانتظار صديقك...</div>
+            <br>
+            <div class="room-display" id="copyRoomCode" title="اضغط لنسخ الرمز">رمز الغرفة: <span id="roomCodeText"></span> (اضغط للنسخ)</div>
+        </div>
+        
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            <div class="message system">مرحباً بك في شات الجولة الخاصة!</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة..." disabled>
+            <button class="chat-btn" id="sendBtn" disabled>إرسال</button>
+        </div>
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+    const lobby = document.getElementById('lobby');
+    const gameArea = document.getElementById('gameArea');
+    const board = document.getElementById('board');
+    const cells = document.querySelectorAll('.cell');
+    const statusDisplay = document.getElementById('statusDisplay');
+    const roundDisplay = document.getElementById('roundDisplay');
+    const roomCodeText = document.getElementById('roomCodeText');
+    const copyRoomCode = document.getElementById('copyRoomCode');
+    
+    const createRoomBtn = document.getElementById('createRoomBtn');
+    const joinRoomBtn = document.getElementById('joinRoomBtn');
+    const roomCodeInput = document.getElementById('roomCodeInput');
+
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    let mySign = null; 
+    let isMyTurn = false;
+    let currentRoomCode = "";
+
+    // عند الضغط على إنشاء غرفة
+    createRoomBtn.addEventListener('click', () => {
+        socket.emit('createPrivateRoom');
+    });
+
+    // عند الضغط على انضمام لغرفة
+    joinRoomBtn.addEventListener('click', () => {
+        const code = roomCodeInput.value.trim().toUpperCase();
+        if (code !== "") {
+            socket.emit('joinPrivateRoom', code);
+        }
+    });
+
+    // ميزة نسخ الكود عند الضغط عليه
+    copyRoomCode.addEventListener('click', () => {
+        navigator.clipboard.writeText(currentRoomCode);
+        alert('تم نسخ رمز الجولة! أرسله لصديقك الآن.');
+    });
+
+    // استقبال تأكيد الغرفة وتجهيز الواجهة
+    socket.on('roomCreated', (roomCode) => {
+        currentRoomCode = roomCode;
+        roomCodeText.innerText = roomCode;
+        lobby.style.display = 'none';
+        gameArea.style.display = 'flex';
+    });
+
+    socket.on('playerAssignment', (data) => {
+        mySign = data.sign;
+        statusDisplay.innerText = `أنت تلعب بـ (${mySign}). بانتظار الخصم ليتحرك...`;
+    });
+
+    socket.on('startRound', (data) => {
+        roundDisplay.innerText = `الجولة: ${data.round}`;
+        isMyTurn = (data.currentTurn === mySign);
+        statusDisplay.innerText = isMyTurn ? "دورك الآن للاعب!" : `دور اللاعب الآخر (${data.currentTurn})`;
+        
+        chatInput.disabled = false;
+        sendBtn.disabled = false;
+
+        cells.forEach(cell => {
+            cell.innerText = '';
+            cell.className = 'cell';
+        });
+    });
+
+    socket.on('updateBoard', (data) => {
+        const cell = cells[data.index];
+        cell.innerText = data.sign;
+        cell.classList.add(data.sign);
+        
+        isMyTurn = (data.nextTurn === mySign);
+        statusDisplay.innerText = isMyTurn ? "دورك الآن!" : `دور اللاعب الآخر (${data.nextTurn})`;
+    });
+
+    cells.forEach(cell => {
+        cell.addEventListener('click', () => {
+            const index = cell.getAttribute('data-index');
+            if (isMyTurn && cell.innerText === '') {
+                socket.emit('makeMove', { index: index, roomCode: currentRoomCode });
+            }
+        });
+    });
+
+    // خطأ عند تعذر الدخول (مثلاً كود خاطئ أو غرفة ممتلئة)
+    socket.on('errorEvent', (message) => {
+        alert(message);
+    });
+
+    // الشات ونظام الرسائل
+    socket.on('receiveMessage', (data) => {
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('message');
+        msgDiv.classList.add(data.sender === socket.id ? 'me' : 'other');
+        msgDiv.innerText = data.text;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+
+    socket.on('systemMessage', (text) => {
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('message', 'system');
+        msgDiv.innerText = text;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+
+    function sendMessage() {
+        const text = chatInput.value.trim();
+        if (text !== '') {
+            socket.emit('sendMessage', { roomCode: currentRoomCode, text: text });
+            chatInput.value = '';
+        }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+</script>
+</body>
+</html>

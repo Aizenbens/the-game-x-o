@@ -6,7 +6,7 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 
-// إعداد السوكيت مع السماح بجميع الاتصالات لمنع أخطاء CORS
+// منع أخطاء CORS بشكل كامل بالسماح لجميع الاتصالات
 const io = new Server(server, {
     cors: {
         origin: "*",
@@ -17,24 +17,22 @@ const io = new Server(server, {
 app.use(express.static(__dirname));
 
 let onlineUsers = {};
-let rooms = {}; // لتخزين غرف الـ XO
+let rooms = {};
 
 io.on('connection', (socket) => {
-    console.log(`📡 لاعب اتصل الآن: ${socket.id}`);
-
-    // عند دخول اللاعب باسم مستخدم
+    // دخول لاعب لصالة الانتظار
     socket.on('joinHub', (username) => {
         onlineUsers[socket.id] = username;
         io.emit('updateOnlineUsers', Object.values(onlineUsers));
     });
 
-    // الشات الجماعي الأونلاين
+    // الشات العام أونلاين
     socket.on('sendGlobalMessage', (data) => {
         io.emit('receiveGlobalMessage', { name: data.name, msg: data.msg });
     });
 
-    // نظام غرف XO أونلاين
-    socket.on('joinXORoom', (data) => {
+    // دخول غرفة XO أونلاين
+    socket.on('joinXOGame', (data) => {
         const { roomCode, username } = data;
         socket.join(roomCode);
 
@@ -54,11 +52,11 @@ io.on('connection', (socket) => {
         if (rooms[roomCode].players.length === 2) {
             io.to(roomCode).emit('xoStart', { turn: "X" });
         } else {
-            socket.emit('xoWaiting', "في انتظار دخول لاعب آخر...");
+            socket.emit('xoWaiting', "في انتظار دخول الخصم...");
         }
     });
 
-    // حركات اللعب في XO أونلاين
+    // استقبال حركات اللعب ومزامنتها
     socket.on('makeXOMove', (data) => {
         const { roomCode, index, symbol } = data;
         if (rooms[roomCode] && rooms[roomCode].turn === symbol) {
@@ -67,13 +65,11 @@ io.on('connection', (socket) => {
 
             io.to(roomCode).emit('xoUpdate', {
                 board: rooms[roomCode].board,
-                turn: rooms[roomCode].turn,
-                lastMove: { index, symbol }
+                turn: rooms[roomCode].turn
             });
         }
     });
 
-    // عند الخروج أو قطع الاتصال
     socket.on('disconnect', () => {
         delete onlineUsers[socket.id];
         io.emit('updateOnlineUsers', Object.values(onlineUsers));
@@ -86,5 +82,5 @@ app.get('*', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`🚀 السيرفر الأونلاين يعمل على بورت: ${PORT}`);
+    console.log(`🚀 السيرفر يعمل أونلاين على بورت: ${PORT}`);
 });

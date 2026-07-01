@@ -1,7 +1,7 @@
 {
-  "name": "independent-game-hub-online",
+  "name": "ultimate-multiplayer-hub",
   "version": "1.0.0",
-  "description": "مجمع ألعاب أونلاين",
+  "description": "THE IT",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

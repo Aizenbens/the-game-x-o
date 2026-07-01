@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مجمع الألعاب أونلاين العالي الأداء</title>
+    <title>THE IT</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -13,16 +13,16 @@
     <div id="authScreen" class="flex-1 flex flex-col items-center justify-center p-4">
         <div class="bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-md border border-gray-700">
             <h2 class="text-3xl font-bold text-center mb-6 flex items-center justify-center gap-2">
-                🎮 مجمع الألعاب أونلاين
+                THE IT
             </h2>
             
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-4xl mb-1">اسم المستخدم</label>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">اسم المستخدم</label>
                     <input type="text" id="usernameInput" class="w-full p-3 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none focus:border-blue-500" placeholder="اكتب اسمك هنا...">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-4xl mb-1">كلمة المرور</label>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">كلمة المرور</label>
                     <input type="password" id="passwordInput" class="w-full p-3 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none focus:border-blue-500" placeholder="••••••••">
                 </div>
                 
@@ -53,7 +53,7 @@
 
         <div class="w-full md:w-80 bg-gray-800 rounded-lg p-4 border border-gray-700 flex flex-col justify-between h-96 md:h-full">
             <div>
-                <h4 class="font-bold border-b border-gray-750 pb-2 mb-2 text-emerald-400">🟢 المتصلون الآن:</h4>
+                <h4 class="font-bold border-b border-gray-700 pb-2 mb-2 text-emerald-400">🟢 المتصلون الآن:</h4>
                 <div id="onlineUsersContainer" class="space-y-1 max-h-32 overflow-y-auto text-sm text-gray-300"></div>
             </div>
             
@@ -73,7 +73,7 @@
             <h2 id="lobbyTitle" class="text-2xl font-bold mb-6">لوبي اللعبة</h2>
             
             <div id="xoOptions" class="hidden space-y-4">
-                <div class="border-b border-gray-750 pb-3 mb-3">
+                <div class="border-b border-gray-700 pb-3 mb-3">
                     <p class="text-gray-400 mb-2">🤖 اللعب الفردي:</p>
                     <button onclick="startXOAgainstBot()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-3 rounded transition mb-2">
                         تحدي البوت (الذكاء الاصطناعي)
@@ -117,7 +117,7 @@
             <button onclick="makeXOMove(8)" class="xo-cell bg-gray-800 text-4xl font-bold hover:bg-gray-700 rounded transition flex items-center justify-center h-full w-full" id="cell-8"></button>
         </div>
 
-        <button onclick="exitToHub()" class="mt-6 bg-red-650 hover:bg-red-700 px-6 py-2 rounded font-bold transition">
+        <button onclick="exitToHub()" class="mt-6 bg-red-600 hover:bg-red-700 px-6 py-2 rounded font-bold transition">
             انسحاب والعودة
         </button>
     </div>
@@ -130,7 +130,7 @@
     </div>
 
     <script>
-        // 📡 السطر الذهبي: الاتصال التلقائي الديناميكي بدون هاردكود لمنع الـ CORS تماماً
+        // 📡 السطر التلقائي الديناميكي لمنع مشاكل الـ CORS تماماً
         const socket = io(); 
         let myUsername = "";
         let currentGame = "";
@@ -144,7 +144,7 @@
             document.getElementById(newId).classList.remove('hidden');
         }
 
-        // تسجيل الدخول وإنشاء الحساب
+        // معالجة إنشاء الحساب وتسجيل الدخول
         function handleAuth(authType) {
             const user = document.getElementById('usernameInput').value.trim();
             const pass = document.getElementById('passwordInput').value.trim();
@@ -153,9 +153,11 @@
                 alert("الرجاء إدخال اسم المستخدم وكلمة المرور!");
                 return;
             }
+            // إرسال البيانات فوراً عبر الـ Socket
             socket.emit('authRequest', { type: authType, username: user, password: pass });
         }
 
+        // استقبال رد السيرفر
         socket.on('authResponse', (data) => {
             if (data.success) {
                 myUsername = data.username;
@@ -256,12 +258,11 @@
             if (isBotMode) {
                 isMyTurn = false;
                 document.getElementById('xoTurnStatus').innerText = "🤖 البوت يفكر ويخطط للرد...";
-                setTimeout(makeBotMove, 700); // محاكاة تفكير البوت
+                setTimeout(makeBotMove, 700);
             }
         }
 
         function makeBotMove() {
-            // منطق ذكاء اصطناعي بسيط: اختيار أول خانة فارغة متاحة
             let availableCells = [];
             for (let i = 0; i < xoBoard.length; i++) {
                 if (xoBoard[i] === "") availableCells.push(i);
@@ -285,9 +286,9 @@
 
         function checkXOWinner() {
             const winPatterns = [
-                [0,1,2], [3,4,5], [6,7,8], // أفقي
-                [0,3,6], [1,4,7], [2,5,8], // عمودي
-                [0,4,8], [2,4,6]           // قطري
+                [0,1,2], [3,4,5], [6,7,8],
+                [0,3,6], [1,4,7], [2,5,8],
+                [0,4,8], [2,4,6]
             ];
             return winPatterns.some(pattern => {
                 const [a, b, c] = pattern;
@@ -306,10 +307,9 @@
             }
         }
 
-        // ================= [ ميزة تشغيل لعبة الدودة Snake Canvas ] =================
+        // ================= [ ميزة تشغيل لعبة الدودة Snake ] =================
         function startSnakeGame() {
             switchScreen('lobbyArea', 'snakeCanvasArea');
-            // إذا كان لديك محرك الـ Canvas القديم جاهزاً، يمكنك وضعه واستدعاؤه هنا
         }
     </script>
 </body>

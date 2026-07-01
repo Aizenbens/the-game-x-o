@@ -21,7 +21,6 @@ const MAP_WIDTH = 3000;
 const MAP_HEIGHT = 3000;
 const CANDY_TYPES = ['donut', 'cupcake', 'icecream', 'lollipop', 'candy'];
 
-// تحديث مستمر لعناصر لعبة الدودة أونلاين
 setInterval(() => {
     for (let rCode in snakeRooms) {
         let room = snakeRooms[rCode];
@@ -172,7 +171,6 @@ io.on('connection', (socket) => {
         io.to(data.roomCode).emit('receiveChessChatMessage', data);
     });
 
-    // أحداث المغادرة اليدوية للغرف
     socket.on('leaveXORoom', (data) => {
         const { roomCode, username } = data;
         socket.leave(roomCode);
@@ -206,7 +204,6 @@ io.on('connection', (socket) => {
         if(onlineUsers[socket.id]) onlineUsers[socket.id].roomSnake = roomCode;
 
         if (!snakeRooms[roomCode]) {
-            // تحديث: زيادة هائلة للحلويات في الأونلاين إلى 600 عنصر ممتلئ
             snakeRooms[roomCode] = { players: {}, candies: [], bots: {}, magnets: [] };
             for (let i = 0; i < 600; i++) {
                 snakeRooms[roomCode].candies.push({
@@ -331,7 +328,6 @@ io.on('connection', (socket) => {
         socket.to(roomCode).emit('chessMoveUpdate', { move });
     });
 
-    // كشف انقطاع الاتصال المفاجئ وتنبيه الخصم في نفس الغرفة
     socket.on('disconnect', () => {
         let user = onlineUsers[socket.id];
         if (user) {

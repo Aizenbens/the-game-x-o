@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE</title>
+    <title>مجمع الألعاب أونلاين العالي الأداء</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body class="h-screen flex flex-col justify-between overflow-hidden bg-gray-900 text-white font-sans">
 
     <div id="authScreen" class="flex-1 flex flex-col items-center justify-center p-4">
         <div class="bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-md border border-gray-700">
             <h2 class="text-3xl font-bold text-center mb-6 flex items-center justify-center gap-2">
-                THE
+                🎮 مجمع الألعاب أونلاين
             </h2>
             
             <div class="space-y-4">
@@ -42,7 +43,7 @@
             <h3 class="text-2xl font-bold">اختر لعبة للبدء:</h3>
             <div class="flex flex-wrap gap-4 justify-center">
                 <button onclick="goToLobby('xo')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 text-xl font-bold px-8 py-4 rounded-xl transition shadow-md">
-                    ❌ XO تحدي
+                    ❌ XO تحدي (أونلاين / ضد البوت)
                 </button>
                 <button onclick="goToLobby('snake')" class="bg-lime-500 hover:bg-lime-600 text-slate-900 text-xl font-bold px-8 py-4 rounded-xl transition shadow-md">
                     🐍 لعبة الدودة أونلاين
@@ -69,26 +70,56 @@
 
     <div id="lobbyArea" class="hidden flex-1 flex flex-col items-center justify-center p-4">
         <div class="bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-md border border-gray-700 text-center">
-            <h2 id="lobbyTitle" class="text-2xl font-bold mb-6">لtrace الألعاب</h2>
+            <h2 id="lobbyTitle" class="text-2xl font-bold mb-6">لوبي اللعبة</h2>
             
             <div id="xoOptions" class="hidden space-y-4">
-                <input type="text" id="xoRoomCode" class="w-full p-3 rounded bg-gray-700 text-center text-white font-bold tracking-widest" placeholder="كود الغرفة">
-                <button onclick="joinXORoom()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold p-3 rounded transition">
-                    دخول الغرفة واللعب
-                </button>
+                <div class="border-b border-gray-750 pb-3 mb-3">
+                    <p class="text-gray-400 mb-2">🤖 اللعب الفردي:</p>
+                    <button onclick="startXOAgainstBot()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-3 rounded transition mb-2">
+                        تحدي البوت (الذكاء الاصطناعي)
+                    </button>
+                </div>
+                
+                <div>
+                    <p class="text-gray-400 mb-2">🌐 تحدي أونلاين:</p>
+                    <input type="text" id="xoRoomCode" class="w-full p-3 rounded bg-gray-700 text-center text-white font-bold tracking-widest mb-2" placeholder="كود الغرفة">
+                    <button onclick="joinXORoom()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold p-3 rounded transition">
+                        دخول غرفة أونلاين
+                    </button>
+                </div>
             </div>
 
             <div id="snakeOnlineOptions" class="hidden space-y-4">
-                <p class="text-gray-400">مستعد لتحدي الدودة أونلاين؟</p>
+                <p class="text-gray-400">مستعد لتحدي الدودة الكلاسيكية أونلاين؟</p>
                 <button onclick="startSnakeGame()" class="w-full bg-lime-500 hover:bg-lime-600 text-slate-900 font-bold p-3 rounded transition">
                     بدء اللعب الآن
                 </button>
             </div>
 
-            <button onclick="exitToHub()" class="mt-6 text-sm text-gray-400 hover:text-white underline">
+            <button onclick="exitToHub()" class="mt-6 text-sm text-gray-400 hover:text-white underline block w-full text-center">
                 العودة للقائمة الرئيسية
             </button>
         </div>
+    </div>
+
+    <div id="xoPlayArea" class="hidden flex-1 flex flex-col items-center justify-center p-4 relative">
+        <h3 id="xoTurnStatus" class="text-xl font-bold mb-4 text-amber-400">دورك للعب الآن</h3>
+        
+        <div id="xoGridContainer" class="grid grid-cols-3 gap-2 w-72 h-72 bg-gray-700 p-2 rounded-lg shadow-xl">
+            <button onclick="makeXOMove(0)" class="xo-cell bg-gray-800 text-4xl font-bold hover:bg-gray-700 rounded transition flex items-center justify-center h-full w-full" id="cell-0"></button>
+            <button onclick="makeXOMove(1)" class="xo-cell bg-gray-800 text-4xl font-bold hover:bg-gray-700 rounded transition flex items-center justify-center h-full w-full" id="cell-1"></button>
+            <button onclick="makeXOMove(2)" class="xo-cell bg-gray-800 text-4xl font-bold hover:bg-gray-700 rounded transition flex items-center justify-center h-full w-full" id="cell-2"></button>
+            <button onclick="makeXOMove(3)" class="xo-cell bg-gray-800 text-4xl font-bold hover:bg-gray-700 rounded transition flex items-center justify-center h-full w-full" id="cell-3"></button>
+            <button onclick="makeXOMove(4)" class="xo-cell bg-gray-800 text-4xl font-bold hover:bg-gray-700 rounded transition flex items-center justify-center h-full w-full" id="cell-4"></button>
+            <button onclick="makeXOMove(5)" class="xo-cell bg-gray-800 text-4xl font-bold hover:bg-gray-700 rounded transition flex items-center justify-center h-full w-full" id="cell-5"></button>
+            <button onclick="makeXOMove(6)" class="xo-cell bg-gray-800 text-4xl font-bold hover:bg-gray-700 rounded transition flex items-center justify-center h-full w-full" id="cell-6"></button>
+            <button onclick="makeXOMove(7)" class="xo-cell bg-gray-800 text-4xl font-bold hover:bg-gray-700 rounded transition flex items-center justify-center h-full w-full" id="cell-7"></button>
+            <button onclick="makeXOMove(8)" class="xo-cell bg-gray-800 text-4xl font-bold hover:bg-gray-700 rounded transition flex items-center justify-center h-full w-full" id="cell-8"></button>
+        </div>
+
+        <button onclick="exitToHub()" class="mt-6 bg-red-650 hover:bg-red-700 px-6 py-2 rounded font-bold transition">
+            انسحاب والعودة
+        </button>
     </div>
 
     <div id="snakeCanvasArea" class="hidden flex-1 flex flex-col items-center justify-center p-4 relative">
@@ -99,18 +130,21 @@
     </div>
 
     <script>
-        // 📡 الاتصال التلقائي الديناميكي بنفس رابط موقع الـ Render الحالي لتجنب الـ CORS تماماً
+        // 📡 السطر الذهبي: الاتصال التلقائي الديناميكي بدون هاردكود لمنع الـ CORS تماماً
         const socket = io(); 
         let myUsername = "";
         let currentGame = "";
+        let xoBoard = Array(9).fill("");
+        let isBotMode = false;
+        let isMyTurn = true;
 
-        // دالة التنقل بين الشاشات بسلاسة
+        // التنقل بين الشاشات
         function switchScreen(oldId, newId) {
             document.getElementById(oldId).classList.add('hidden');
             document.getElementById(newId).classList.remove('hidden');
         }
 
-        // التعامل مع إنشاء الحساب وتسجيل الدخول
+        // تسجيل الدخول وإنشاء الحساب
         function handleAuth(authType) {
             const user = document.getElementById('usernameInput').value.trim();
             const pass = document.getElementById('passwordInput').value.trim();
@@ -119,12 +153,9 @@
                 alert("الرجاء إدخال اسم المستخدم وكلمة المرور!");
                 return;
             }
-
-            // إرسال البيانات للسيرفر
             socket.emit('authRequest', { type: authType, username: user, password: pass });
         }
 
-        // استقبال رد السيرفر على الدخول
         socket.on('authResponse', (data) => {
             if (data.success) {
                 myUsername = data.username;
@@ -134,36 +165,40 @@
             }
         });
 
-        // تحديث قائمة المتصلين
+        // تحديث المتصلين
         socket.on('updateOnlineUsers', (usersList) => {
             const container = document.getElementById('onlineUsersContainer');
-            container.innerHTML = usersList.map(u => `<div class="flex items-center gap-2">🔹 ${u}</div>`).join('');
+            if(container) {
+                container.innerHTML = usersList.map(u => `<div class="flex items-center gap-2">🔹 ${u}</div>`).join('');
+            }
         });
 
-        // إدارة غرف الانتظار
+        // إدارة غرف الانتظار واللوبي
         function goToLobby(game) {
             currentGame = game;
             switchScreen('gameHub', 'lobbyArea');
-            
             document.getElementById('snakeOnlineOptions').classList.add('hidden');
             document.getElementById('xoOptions').classList.add('hidden');
 
             if (game === 'snake') {
-                document.getElementById('lobbyTitle').innerText = "🐍 لوي لعبة الدودة";
+                document.getElementById('lobbyTitle').innerText = "🐍 لوبي لعبة الدودة";
                 document.getElementById('snakeOnlineOptions').classList.remove('hidden');
             } else {
-                document.getElementById('lobbyTitle').innerText = "❌ XO لوي تحدي";
+                document.getElementById('lobbyTitle').innerText = "❌ XO لوبي تحدي الأبطال";
                 document.getElementById('xoOptions').classList.remove('hidden');
             }
         }
 
         function exitToHub() {
             switchScreen('lobbyArea', 'gameHub');
+            switchScreen('xoPlayArea', 'gameHub');
             switchScreen('snakeCanvasArea', 'gameHub');
             currentGame = "";
+            isBotMode = false;
+            resetXOBoard();
         }
 
-        // الشات العام
+        // الشات العام الفوري
         function sendChatMessage() {
             const input = document.getElementById('chatInput');
             const msg = input.value.trim();
@@ -175,22 +210,106 @@
 
         socket.on('receiveGlobalCommunityMessage', (data) => {
             const box = document.getElementById('chatMessagesBox');
-            box.innerHTML += `<div><strong class="text-blue-400">${data.name}:</strong> <span class="text-gray-100">${data.msg}</span></div>`;
-            box.scrollTop = box.scrollHeight;
+            if(box) {
+                box.innerHTML += `<div><strong class="text-blue-400">${data.name}:</strong> <span class="text-gray-100">${data.msg}</span></div>`;
+                box.scrollTop = box.scrollHeight;
+            }
         });
 
-        // ربط غرف الـ XO
+        // ================= [ منطق ميزة البوتات والذكاء الاصطناعي لـ XO ] =================
+        function startXOAgainstBot() {
+            isBotMode = true;
+            resetXOBoard();
+            switchScreen('lobbyArea', 'xoPlayArea');
+            document.getElementById('xoTurnStatus').innerText = "لقد بدأت اللعبة ضد البوت الذكي! دورك (X)";
+            isMyTurn = true;
+        }
+
         function joinXORoom() {
             const roomCode = document.getElementById('xoRoomCode').value.trim();
             if(!roomCode) { alert("أدخل كود الغرفة أولاً!"); return; }
+            isBotMode = false;
             socket.emit('joinXOGame', { roomCode: roomCode, username: myUsername });
-            alert(`تم طلب دخول الغرفة: ${roomCode} (يمكنك دمج لوحة اللعب الخاصة بك هنا)`);
+            switchScreen('lobbyArea', 'xoPlayArea');
+            document.getElementById('xoTurnStatus').innerText = "في انتظار الخصم أونلاين...";
         }
 
-        // تشغيل لعبة الـ Snake
+        function makeXOMove(index) {
+            if (!isMyTurn || xoBoard[index] !== "") return;
+
+            xoBoard[index] = "X";
+            document.getElementById(`cell-${index}`).innerText = "X";
+            document.getElementById(`cell-${index}`).classList.add("text-blue-400");
+
+            if (checkXOWinner()) {
+                alert("🎉 مبروك! لقد فزت بالتحدي!");
+                exitToHub();
+                return;
+            }
+
+            if (!xoBoard.includes("")) {
+                alert("🤝 تعادل رائع!");
+                exitToHub();
+                return;
+            }
+
+            if (isBotMode) {
+                isMyTurn = false;
+                document.getElementById('xoTurnStatus').innerText = "🤖 البوت يفكر ويخطط للرد...";
+                setTimeout(makeBotMove, 700); // محاكاة تفكير البوت
+            }
+        }
+
+        function makeBotMove() {
+            // منطق ذكاء اصطناعي بسيط: اختيار أول خانة فارغة متاحة
+            let availableCells = [];
+            for (let i = 0; i < xoBoard.length; i++) {
+                if (xoBoard[i] === "") availableCells.push(i);
+            }
+
+            if (availableCells.length > 0) {
+                let randomCell = availableCells[Math.floor(Math.random() * availableCells.length)];
+                xoBoard[randomCell] = "O";
+                document.getElementById(`cell-${randomCell}`).innerText = "O";
+                document.getElementById(`cell-${randomCell}`).classList.add("text-red-400");
+
+                if (checkXOWinner()) {
+                    alert("😢 البوت فاز هذه المرة! حاول مجدداً.");
+                    exitToHub();
+                    return;
+                }
+            }
+            isMyTurn = true;
+            document.getElementById('xoTurnStatus').innerText = "دورك الآن للعب (X)";
+        }
+
+        function checkXOWinner() {
+            const winPatterns = [
+                [0,1,2], [3,4,5], [6,7,8], // أفقي
+                [0,3,6], [1,4,7], [2,5,8], // عمودي
+                [0,4,8], [2,4,6]           // قطري
+            ];
+            return winPatterns.some(pattern => {
+                const [a, b, c] = pattern;
+                return xoBoard[a] && xoBoard[a] === xoBoard[b] && xoBoard[a] === xoBoard[c];
+            });
+        }
+
+        function resetXOBoard() {
+            xoBoard = Array(9).fill("");
+            for (let i = 0; i < 9; i++) {
+                const cell = document.getElementById(`cell-${i}`);
+                if(cell) {
+                    cell.innerText = "";
+                    cell.className = "xo-cell bg-gray-800 text-4xl font-bold hover:bg-gray-700 rounded transition flex items-center justify-center h-full w-full";
+                }
+            }
+        }
+
+        // ================= [ ميزة تشغيل لعبة الدودة Snake Canvas ] =================
         function startSnakeGame() {
             switchScreen('lobbyArea', 'snakeCanvasArea');
-            // هنا يمكنك استدعاء كود تشغيل لوحة الـ Canvas للعبة الدودة الخاصة بك بكل سهولة
+            // إذا كان لديك محرك الـ Canvas القديم جاهزاً، يمكنك وضعه واستدعاؤه هنا
         }
     </script>
 </body>

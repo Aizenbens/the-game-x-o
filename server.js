@@ -16,16 +16,15 @@ let xoRooms = {};
 let snakeRooms = {};  
 
 const GRID_SIZE = 20;
-const MAP_WIDTH = 3000;   // توسيع حجم الخريطة لأبعاد أكبر لتعطي واقعية وحرية في الحركة
+const MAP_WIDTH = 3000;   
 const MAP_HEIGHT = 3000;
 const CANDY_TYPES = ['donut', 'cupcake', 'icecream', 'lollipop', 'candy'];
 
-// توليد المغناطيس عشوائياً كل 10 ثوانٍ
 setInterval(() => {
     for (let rCode in snakeRooms) {
         let room = snakeRooms[rCode];
         room.magnets = room.magnets || [];
-        if (room.magnets.length < 3) { // السماح بوجود أكثر من مغناطيس في الخريطة الواسعة
+        if (room.magnets.length < 3) {
             room.magnets.push({
                 x: Math.floor(Math.random() * (MAP_WIDTH / GRID_SIZE)) * GRID_SIZE,
                 y: Math.floor(Math.random() * (MAP_HEIGHT / GRID_SIZE)) * GRID_SIZE
@@ -34,13 +33,11 @@ setInterval(() => {
     }
 }, 10000);
 
-// محرك حركة اللعبة والتصادمات والمغناطيس أونلاين
 setInterval(() => {
     for (let rCode in snakeRooms) {
         let room = snakeRooms[rCode];
         let allActive = { ...room.players, ...room.bots };
 
-        // ذكاء البوتات للتحرك نحو أقرب حلوى أو مغناطيس
         for (let bId in room.bots) {
             let bot = room.bots[bId];
             let target = room.magnets.length > 0 ? room.magnets[0] : room.candies[0];
@@ -53,7 +50,6 @@ setInterval(() => {
             }
         }
 
-        // عمل المغناطيس: جذب الحلويات القريبة عن بعد وتحديث العداد (6 ثوانٍ)
         for (let id in allActive) {
             let p = allActive[id];
             if (p.magnetTimer > 0) {
@@ -61,7 +57,7 @@ setInterval(() => {
                 let head = p.body[0];
                 room.candies.forEach(c => {
                     let dist = Math.hypot(c.x - head.x, c.y - head.y);
-                    if (dist < 200) { // مدى جذب المغناطيس للقطع
+                    if (dist < 200) {
                         if (c.x < head.x) c.x += GRID_SIZE;
                         if (c.x > head.x) c.x -= GRID_SIZE;
                         if (c.y < head.y) c.y += GRID_SIZE;
@@ -71,7 +67,6 @@ setInterval(() => {
             }
         }
 
-        // تحديث الحركة وفحص الموت عند ملامسة الحواف والحدود القاتلة
         for (let id in allActive) {
             let p = allActive[id];
             let head = { ...p.body[0] };
@@ -81,17 +76,15 @@ setInterval(() => {
             if (p.direction === "LEFT") head.x -= GRID_SIZE;
             if (p.direction === "RIGHT") head.x += GRID_SIZE;
 
-            // الموت عند الخروج من حدود الخريطة
             if (head.x < 0 || head.x >= MAP_WIDTH || head.y < 0 || head.y >= MAP_HEIGHT) {
                 p.isDead = true;
                 continue;
             }
 
-            // التقاط المغناطيس من الأرض
             for (let i = room.magnets.length - 1; i >= 0; i--) {
                 let mag = room.magnets[i];
                 if (Math.abs(head.x - mag.x) < GRID_SIZE && Math.abs(head.y - mag.y) < GRID_SIZE) {
-                    p.magnetTimer = 6; // تفعيل لـ 6 ثوانٍ
+                    p.magnetTimer = 6;
                     room.magnets.splice(i, 1);
                 }
             }
@@ -116,7 +109,8 @@ setInterval(() => {
             p.body.unshift(head);
         }
 
-        // نظام التصادم الصارم: إذا اصطدم رأس أي دودة بجسم دودة أخرى (لاعبين أو بوتات) تموت فوراً
+        // حساب انتقال النقاط أوتوماتيكياً عند القتل أونلاين
+        let killedScores = {};
         for (let id1 in allActive) {
             let p1 = allActive[id1];
             if (p1.isDead) continue;
@@ -126,13 +120,13 @@ setInterval(() => {
                 let p2 = allActive[id2];
                 if (p2.isDead) continue;
 
-                // إذا اصطدم الرأس بجسم دودة أخرى
                 if (id1 !== id2) {
                     if (p2.body.some(seg => seg.x === h1.x && seg.y === h1.y)) {
                         p1.isDead = true;
+                        // إضافة نقاط الضحية إلى حساب القاتل
+                        killedScores[id2] = (killedScores[id2] || 0) + p1.score;
                     }
                 } else {
-                    // الموت إذا اصطدمت الدودة بجسمها الخاص (باستثناء الرأس نفسه)
                     if (p1.body.slice(1).some(seg => seg.x === h1.x && seg.y === h1.y)) {
                         p1.isDead = true;
                     }
@@ -140,9 +134,10 @@ setInterval(() => {
             }
         }
 
-        // إعادة إرسال الكائنات الميتة إلى نقطة عشوائية وتصفير نقاطها
         for (let id in allActive) {
             let p = allActive[id];
+            if (killedScores[id]) p.score += killedScores[id]; // تحويل النقاط للقاتل
+
             if (p.isDead) {
                 p.score = 0;
                 p.magnetTimer = 0;
@@ -163,6 +158,11 @@ io.on('connection', (socket) => {
     socket.on('joinHub', (data) => {
         onlineUsers[socket.id] = { username: data.username, color: data.color };
         io.emit('updateOnlineUsers', Object.values(onlineUsers));
+    });
+
+    // شات غرفة الانتظار العامة
+    socket.on('sendHubChatMessage', (data) => {
+        io.emit('receiveHubChatMessage', data);
     });
 
     socket.on('sendXOChatMessage', (data) => {

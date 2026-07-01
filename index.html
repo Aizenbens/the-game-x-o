@@ -15,29 +15,23 @@
         .neon-btn { transition: all 0.3s ease; }
         .neon-btn:hover { transform: translateY(-2px); box-shadow: 0 0 25px currentColor; }
         
-        /* بلاطات الرقعة مع حركات انتقالية سلسة */
         .tile-light { background-color: #e2e8f0; color: #1e293b; transition: all 0.25s ease-in-out; }
         .tile-dark { background-color: #475569; color: #f8fafc; transition: all 0.25s ease-in-out; }
         .tile-selected { background-color: #a855f7 !important; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); transform: scale(1.02); z-index: 10; }
         
-        /* القطع الشطرنجية مع تأثير أنيميشن خفيف */
         .chess-piece { display: inline-block; transition: transform 0.2s ease, opacity 0.2s ease; cursor: pointer; user-select: none; }
         .chess-piece:hover { transform: scale(1.15); }
         
-        /* تأثيرات الشطرنج ثلاثي الأبعاد والاشعاعات النيون */
         .chess-container-3d { perspective: 1200px; padding: 20px; }
         .board-3d { transform: rotateX(28deg) rotateZ(0deg); transform-style: preserve-3d; transition: transform 0.5s ease; box-shadow: 0 30px 70px rgba(0,0,0,0.9), 0 0 40px rgba(139, 92, 246, 0.25); }
         
-        /* تلميحات المساعدة العادية (أصفر نيون) */
         .tile-hint { background-color: #f59e0b !important; box-shadow: inset 0 0 15px rgba(255, 255, 0, 0.8); color: #000 !important; }
         
-        /* تلميحات الاحتمالات عند الضغط على قطعة (أزرق نيون شعاعي ممتد) */
         .tile-possible-target { position: relative; transition: background-color 0.2s; }
         .tile-possible-target:hover { background-color: rgba(56, 189, 248, 0.3) !important; }
         .tile-possible-target::after { content: ''; position: absolute; width: 14px; height: 14px; background-color: #38bdf8; border-radius: 50%; box-shadow: 0 0 14px #0ea5e9; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; animation: pulseTarget 1.5s infinite; }
         @keyframes pulseTarget { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.7; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.7; } }
         
-        /* إضاءة الملك باللون الأحمر النيوني الفلاشي عند وجود كش ملك (شاك) */
         .tile-check-alert { background-color: #ef4444 !important; box-shadow: 0 0 35px #dc2626, inset 0 0 20px #7f1d1d !important; animation: checkPulse 0.6s infinite alternate; }
         @keyframes checkPulse { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.03); opacity: 1; } }
 
@@ -132,7 +126,7 @@
             </div>
 
             <div id="snakeMenuOptions" class="hidden space-y-2">
-                <button onclick="startSnakeOfflineMode()" class="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 font-black p-3.5 rounded-xl transition text-sm">📴 اللعب أوفلاين (600 حلوى + بوتات عملاقة)</button>
+                <button onclick="startSnakeOfflineMode()" class="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 font-black p-3.5 rounded-xl transition text-sm">📴 اللعب أوفلاين (600 حلوى + بوتات عملاقة + مغناطيس)</button>
             </div>
 
             <div class="border-t border-gray-800 pt-5 space-y-3">
@@ -200,7 +194,7 @@
             </div>
             
             <div id="whitePlayerNameTag" class="text-xs font-black px-4 py-1.5 rounded-b-xl bg-cyan-950/60 border-b border-x border-cyan-500/30 text-cyan-400 min-w-[200px] text-center shadow-md -mt-2">
-                👤 أنت (أبيض): ${myUsername}
+                👤 أنت (أبيض):
             </div>
             
             <button onclick="exitToHubDirectly('chessPlayArea')" class="mt-8 bg-gradient-to-r from-red-600 to-rose-700 text-white px-8 py-2.5 rounded-xl font-bold text-sm transition">خروج للرئيسية</button>
@@ -211,7 +205,7 @@
         <div class="absolute top-4 left-4 z-50 glass-panel px-5 py-2.5 rounded-2xl flex items-center gap-6 text-xs font-bold shadow-2xl">
             <span class="text-cyan-400" id="snakeModeTitle">غرفة الدودة 🐍</span>
             <span class="text-yellow-400" id="snakeLiveScore">عداد نقاطك: 0</span>
-            <span class="text-pink-400 hidden animate-pulse" id="magnetStatusWidget">🧲 مغناطيس فعال!</span>
+            <span class="text-pink-400 hidden animate-pulse" id="magnetStatusWidget">🧲 مغناطيس فعال! (<span id="magnetSecondsLeft">6</span>ث)</span>
             <button onclick="exitToHubDirectly('snakeCanvasArea')" class="bg-red-600 text-white px-4 py-1.5 rounded-xl hover:bg-red-700 transition">خروج</button>
         </div>
         <div class="absolute top-4 right-4 z-50 glass-panel p-4 rounded-2xl w-60 text-xs shadow-2xl max-h-[80vh] flex flex-col">
@@ -230,7 +224,6 @@
         let currentRound = 1;
         let localStartingSymbol = "X";
 
-        // متغيرات الشطرنج والتلميحات المحدودة (تلميحين فقط لكل لون)
         let chessGameInstance = new Chess();
         let myChessColor = "w"; 
         let selectedChessSquare = null;
@@ -245,8 +238,10 @@
         const MAP_SIZE = 3000; 
         let currentCandies = [], currentPlayers = {}, currentBots = {}, currentMagnets = [];
         let isOfflineMode = false;
-        let offlinePlayer = { body: [{x: 1000, y: 1000}], direction: "RIGHT", score: 0, magnetTimer: 0, isDead: false };
-        let offlineBots = [], offlineCandies = [], offlineMagnets = [], offlineLoopInterval;
+        
+        // تعزيز اللاعب في الأوفلاين وطول البداية
+        let offlinePlayer = { body: [], direction: "RIGHT", score: 0, magnetTimer: 0, isDead: false, username: "" };
+        let offlineBots = [], offlineCandies = [], offlineMagnets = [], offlineLoopInterval, magnetSpawnInterval;
 
         function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resizeCanvas);
@@ -327,356 +322,6 @@
             gameMode = "bot"; botDifficulty = diff; chessGameInstance = new Chess(); myChessColor = "w"; activeHints = []; currentSquarePossibilities = [];
             whiteHintsLeft = 2; blackHintsLeft = 2; updateHintButtonUI();
             
-            // تحديث يافطات الأسماء للبوت
             let diffText = diff === 'easy' ? 'سهل' : diff === 'medium' ? 'ذكي' : 'عبقري';
             document.getElementById('whitePlayerNameTag').innerText = `👤 أنت (أبيض): ${myUsername || 'لاعب 1'}`;
-            document.getElementById('blackPlayerNameTag').innerText = `🤖 البوت (${diffText}): الذكاء الاصطناعي`;
-            
-            document.getElementById('chessChatBoxContainer').classList.add('hidden');
-            switchScreen('lobbyArea', 'chessPlayArea'); renderChessBoardUI(); updateChessStatusText();
-        }
-
-        function startChessRoomOnline() {
-            gameMode = "online"; activeHints = []; currentSquarePossibilities = [];
-            whiteHintsLeft = 2; blackHintsLeft = 2; updateHintButtonUI();
-            currentRoom = document.getElementById('customRoomCode').value.trim(); if(!currentRoom) return alert("أدخل رمز الغرفة الخاصة أولاً!");
-            document.getElementById('chessChatBoxContainer').classList.remove('hidden');
-            
-            document.getElementById('whitePlayerNameTag').innerText = `👤 أنت: ${myUsername}`;
-            document.getElementById('blackPlayerNameTag').innerText = `👤 الخصم أونلاين: في انتظار دخوله...`;
-            
-            socket.emit('joinChessGame', { roomCode: currentRoom, username: myUsername });
-            switchScreen('lobbyArea', 'chessPlayArea');
-        }
-
-        function updateHintButtonUI() {
-            let left = myChessColor === 'w' ? whiteHintsLeft : blackHintsLeft;
-            document.getElementById('chessHintButton').innerText = `💡 طلب تلميح (المتبقي: ${left})`;
-        }
-
-        function getChessHint() {
-            if (chessGameInstance.game_over()) return;
-            if (chessGameInstance.turn() !== myChessColor) { alert("انتظر دورك لطلب تلميح مساعد!"); return; }
-
-            if (myChessColor === 'w' && whiteHintsLeft <= 0) { alert("لقد استنفدت التلميحين المتاحين لك كلاعب أبيض!"); return; }
-            if (myChessColor === 'b' && blackHintsLeft <= 0) { alert("لقد استنفدت التلميحين المتاحين لك كلاعب أسود!"); return; }
-
-            let moves = chessGameInstance.moves({ verbose: true }); if (moves.length === 0) return;
-
-            if (myChessColor === 'w') whiteHintsLeft--; else blackHintsLeft--;
-            updateHintButtonUI();
-
-            activeHints = [];
-            let uniqueMovesCount = Math.min(2, moves.length);
-            let shuffledMoves = moves.sort(() => 0.5 - Math.random());
-            
-            for(let i = 0; i < uniqueMovesCount; i++) {
-                activeHints.push(shuffledMoves[i].from);
-                activeHints.push(shuffledMoves[i].to);
-            }
-            renderChessBoardUI();
-            setTimeout(() => { activeHints = []; renderChessBoardUI(); }, 3000);
-        }
-
-        socket.on('chessInit', (data) => { 
-            myChessColor = data.color; 
-            if(myChessColor === 'w') {
-                document.getElementById('whitePlayerNameTag').innerText = `👤 أنت (أبيض): ${myUsername}`;
-            } else {
-                document.getElementById('blackPlayerNameTag').innerText = `👤 أنت (أسود): ${myUsername}`;
-                document.getElementById('whitePlayerNameTag').innerText = `👤 الخصم (أبيض): جاري اللعب...`;
-            }
-            updateHintButtonUI(); 
-        });
-        
-        socket.on('chessStart', () => { 
-            chessGameInstance = new Chess(); 
-            if(myChessColor === 'w') {
-                document.getElementById('blackPlayerNameTag').innerText = `👤 الخصم (أسود): متصل الآن`;
-            } else {
-                document.getElementById('whitePlayerNameTag').innerText = `👤 الخصم (أبيض): متصل الآن`;
-            }
-            renderChessBoardUI(); 
-            updateChessStatusText(); 
-            alert("🎮 بدأ التحدي أونلاين بالكامل!"); 
-        });
-        
-        socket.on('chessMoveUpdate', (data) => { chessGameInstance.move(data.move); renderChessBoardUI(); updateChessStatusText(); });
-
-        function updateChessStatusText() {
-            let status = ""; let turn = chessGameInstance.turn() === 'w' ? 'الأبيض' : 'الأسود';
-            if (chessGameInstance.in_checkmate()) status = `🏁 كش ملك! انتهت بفوز (${turn === 'الأبيض' ? 'الأسود' : 'الأبيض'})`;
-            else if (chessGameInstance.in_draw()) status = "🏁 انتهت المباراة بالتعادل!";
-            else {
-                status = `دور اللاعب: ${turn}`;
-                if (chessGameInstance.in_check()) status += " ⚠️ [ كش ملك / شاك ]";
-                if (gameMode === 'bot' && chessGameInstance.turn() === 'b') status = "🤖 البوت يقوم بتحليل الخطوة التالية...";
-            }
-            document.getElementById('chessStatusWidget').innerText = status;
-        }
-
-        const chessPiecesSymbols = {
-            'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
-            'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
-        };
-
-        function renderChessBoardUI() {
-            const boardDiv = document.getElementById('chessBoard'); boardDiv.innerHTML = "";
-            const board = chessGameInstance.board();
-            const isCheckNow = chessGameInstance.in_check();
-
-            // إذا كان اللاعب يلعب باللون الأسود، نقوم بقلب الرقعة ليراها من منظوره الخاص بشكل صحيح وثلاثي الأبعاد
-            const loopRange = myChessColor === 'b' ? [7, -1, -1] : [0, 8, 1];
-            const startR = loopRange[0], endR = loopRange[1], stepR = loopRange[2];
-            const startC = myChessColor === 'b' ? 7 : 0, endC = myChessColor === 'b' ? -1 : 8, stepC = myChessColor === 'b' ? -1 : 1;
-
-            for (let r = startR; r !== endR; r += stepR) {
-                for (let c = startC; c !== endC; c += stepC) {
-                    const square = board[r][c];
-                    const squareName = String.fromCharCode(97 + c) + (8 - r);
-                    
-                    const tile = document.createElement('button');
-                    tile.className = `h-full w-full flex items-center justify-center transition-all duration-300 relative ${((r+c)%2===0)?'tile-light':'tile-dark'}`;
-                    tile.id = `sq-${squareName}`;
-
-                    if(selectedChessSquare === squareName) tile.classList.add('tile-selected');
-                    if(activeHints.includes(squareName)) tile.classList.add('tile-hint');
-                    if(currentSquarePossibilities.includes(squareName)) tile.classList.add('tile-possible-target');
-
-                    if (square) {
-                        const pieceSpan = document.createElement('span');
-                        pieceSpan.className = "chess-piece text-3xl sm:text-4xl";
-                        
-                        let symbolKey = square.color === 'w' ? square.type.toUpperCase() : square.type.toLowerCase();
-                        pieceSpan.innerText = chessPiecesSymbols[symbolKey] || "";
-                        
-                        if(square.color === 'w') pieceSpan.style.color = '#38bdf8'; 
-                        if(square.color === 'b') pieceSpan.style.color = '#f43f5e'; 
-
-                        tile.appendChild(pieceSpan);
-
-                        if(isCheckNow && square.type === 'k' && square.color === chessGameInstance.turn()) {
-                            tile.className += " tile-check-alert";
-                        }
-                    }
-
-                    tile.onclick = () => handleChessSquareClick(squareName);
-                    boardDiv.appendChild(tile);
-                }
-            }
-        }
-
-        function handleChessSquareClick(squareName) {
-            if (chessGameInstance.game_over()) return;
-            if (chessGameInstance.turn() !== myChessColor) return;
-
-            if (selectedChessSquare === null) {
-                let piece = chessGameInstance.get(squareName);
-                if (piece && piece.color === myChessColor) {
-                    selectedChessSquare = squareName;
-                    
-                    let moves = chessGameInstance.moves({ square: squareName, verbose: true });
-                    currentSquarePossibilities = moves.map(m => m.to);
-                    
-                    renderChessBoardUI();
-                }
-            } else {
-                let move = chessGameInstance.move({ from: selectedChessSquare, to: squareName, promotion: 'q' });
-
-                selectedChessSquare = null;
-                currentSquarePossibilities = []; 
-                renderChessBoardUI();
-                updateChessStatusText();
-
-                if (move) {
-                    if (gameMode === 'online') {
-                        socket.emit('makeChessMove', { roomCode: currentRoom, move: move });
-                    } else if (gameMode === 'bot' && !chessGameInstance.game_over()) {
-                        let delay = botDifficulty === 'easy' ? 400 : botDifficulty === 'medium' ? 1200 : 600;
-                        setTimeout(triggerChessBotBrain, delay);
-                    }
-                } else {
-                    let piece = chessGameInstance.get(squareName);
-                    if (piece && piece.color === myChessColor) {
-                        selectedChessSquare = squareName;
-                        let moves = chessGameInstance.moves({ square: squareName, verbose: true });
-                        currentSquarePossibilities = moves.map(m => m.to);
-                        renderChessBoardUI();
-                    }
-                }
-            }
-        }
-
-        function triggerChessBotBrain() {
-            if (chessGameInstance.game_over()) return;
-            let moves = chessGameInstance.moves({ verbose: true }); if (moves.length === 0) return;
-            let chosenMove = null;
-
-            if (botDifficulty === 'easy') { chosenMove = moves[Math.floor(Math.random() * moves.length)]; } 
-            else if (botDifficulty === 'medium') {
-                let captures = moves.filter(m => m.captured);
-                chosenMove = captures.length > 0 ? captures[Math.floor(Math.random() * captures.length)] : moves[Math.floor(Math.random() * moves.length)];
-            } 
-            else if (botDifficulty === 'expert') {
-                let checkmates = moves.filter(m => m.san.includes('#'));
-                let checks = moves.filter(m => m.san.includes('+'));
-                let captures = moves.filter(m => m.captured);
-                if (checkmates.length > 0) chosenMove = checkmates[0];
-                else if (checks.length > 0) chosenMove = checks[Math.floor(Math.random() * checks.length)];
-                else if (captures.length > 0) chosenMove = captures[Math.floor(Math.random() * captures.length)];
-                else chosenMove = moves[Math.floor(Math.random() * moves.length)];
-            }
-
-            if (chosenMove) { chessGameInstance.move(chosenMove); renderChessBoardUI(); updateChessStatusText(); }
-        }
-
-        function sendChessLocalChatMessage() {
-            const input = document.getElementById('chessChatMsgInput'); if(!input.value.trim()) return;
-            socket.emit('sendChessChatMessage', { roomCode: currentRoom, sender: myUsername, message: input.value.trim() });
-            input.value = "";
-        }
-
-        socket.on('receiveChessChatMessage', (data) => {
-            const container = document.getElementById('chessChatMessagesWrapper');
-            container.innerHTML += `<div class="bg-gray-900/80 p-2 rounded-xl border border-gray-800 text-right"><span class="text-purple-400 font-bold">${data.sender}:</span> <span class="text-white ml-1">${data.message}</span></div>`;
-            container.scrollTop = container.scrollHeight;
-        });
-
-        // ================= [ نظام XO ] =================
-        function startXOBotMode(diff) {
-            gameMode = "bot"; botDifficulty = diff; localXOBoard.fill(""); currentRound = 1; mySymbol = "X"; localStartingSymbol = "X"; currentTurn = "X";
-            document.getElementById('xoChatBoxContainer').classList.add('hidden');
-            switchScreen('lobbyArea', 'xoPlayArea'); updateBotUIState(); clearXOFrontBoard();
-        }
-        function updateBotUIState() {
-            let diffText = botDifficulty === 'easy' ? 'سهل' : botDifficulty === 'medium' ? 'عادي' : 'الخبير';
-            document.getElementById('xoRoundWidget').innerText = `الجولة: ${currentRound} (${diffText})`;
-            document.getElementById('xoTurnStatus').innerText = currentTurn === mySymbol ? `دورك الآن (${mySymbol})` : `دور البوت (${currentTurn})`;
-        }
-        function handleXOCellClick(idx) {
-            if (gameMode === "bot") {
-                if (localXOBoard[idx] !== "" || currentTurn !== mySymbol) return;
-                localXOBoard[idx] = mySymbol; renderXOFrontUI();
-                if (checkClientWin(localXOBoard, mySymbol)) return endBotRound("🎉 انتصرت على البوت!");
-                if (!localXOBoard.includes("")) return endBotRound("تعادل");
-                currentTurn = mySymbol === "X" ? "O" : "X"; updateBotUIState();
-                setTimeout(triggerXOBotBrain, botDifficulty === 'medium' ? 1000 : 400);
-            } else {
-                if(currentTurn === mySymbol) socket.emit('makeXOMove', { roomCode: currentRoom, index: idx, symbol: mySymbol });
-            }
-        }
-        function triggerXOBotBrain() {
-            let botSymbol = mySymbol === "X" ? "O" : "X"; let move = null;
-            if (botDifficulty === "easy") {
-                let av = localXOBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-                move = av[Math.floor(Math.random() * av.length)];
-            } else {
-                move = findBestXOMove(botSymbol) || findBestXOMove(mySymbol);
-                if (move === null) {
-                    let av = localXOBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-                    move = av[Math.floor(Math.random() * av.length)];
-                }
-            }
-            if(move !== null) {
-                localXOBoard[move] = botSymbol; renderXOFrontUI();
-                if (checkClientWin(localXOBoard, botSymbol)) return endBotRound("❌ البوت انتصر!");
-                if (!localXOBoard.includes("")) return endBotRound("تعادل");
-                currentTurn = mySymbol; updateBotUIState();
-            }
-        }
-        function endBotRound(res) { alert(res); currentRound++; localXOBoard.fill(""); currentTurn = "X"; clearXOFrontBoard(); updateBotUIState(); }
-        function findBestXOMove(sym) {
-            const w = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-            for (let comb of w) {
-                let counts = comb.map(idx => localXOBoard[idx]);
-                if (counts.filter(v => v === sym).length === 2 && counts.filter(v => v === "").length === 1) return comb[counts.indexOf("")];
-            }
-            return null;
-        }
-        function checkClientWin(b, s) { return [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(p => b[p[0]] === s && b[p[1]] === s && b[p[2]] === s); }
-        function renderXOFrontUI() { localXOBoard.forEach((v, i) => { const c = document.getElementById(`cell-${i}`); c.innerText = v; c.className = `bg-gray-950 text-4xl font-black rounded-xl h-full w-full border border-gray-800 ${v==='X'?'text-cyan-400':'text-rose-500'}`; }); }
-        function clearXOFrontBoard() { for(let i=0;i<9;i++) document.getElementById(`cell-${i}`).innerText = ""; }
-        function sendXOLocalChatMessage() {
-            const input = document.getElementById('xoChatMsgInput'); if(!input.value.trim()) return;
-            socket.emit('sendXOChatMessage', { roomCode: currentRoom, sender: myUsername, message: input.value.trim() });
-            input.value = "";
-        }
-        socket.on('receiveXOChatMessage', (data) => {
-            const container = document.getElementById('xoChatMessagesWrapper');
-            container.innerHTML += `<div class="bg-gray-900/80 p-2 rounded-xl border border-gray-800 text-right"><span class="text-amber-400 font-bold">${data.sender}:</span> <span class="text-white ml-1">${data.message}</span></div>`;
-            container.scrollTop = container.scrollHeight;
-        });
-        function startXORoomOnline() { gameMode = "online"; currentRoom = document.getElementById('customRoomCode').value.trim(); if(!currentRoom) return alert("أدخل رمز الغرفة!"); document.getElementById('xoChatBoxContainer').classList.remove('hidden'); socket.emit('joinXOGame', { roomCode: currentRoom, username: myUsername }); switchScreen('lobbyArea', 'xoPlayArea'); clearXOFrontBoard(); }
-        socket.on('xoInit', (data) => { mySymbol = data.symbol; });
-        socket.on('xoStart', (data) => { currentTurn = data.turn; document.getElementById('xoRoundWidget').innerText = `الجولة: ${data.round}`; document.getElementById('xoTurnStatus').innerText = currentTurn === mySymbol ? "دورك الآن!" : "انتظر الخصم..."; });
-        socket.on('xoUpdate', (data) => { currentTurn = data.turn; data.board.forEach((v, i) => { document.getElementById(`cell-${i}`).innerText = v; }); document.getElementById('xoTurnStatus').innerText = currentTurn === mySymbol ? "دورك الآن!" : "انتظر الخصم..."; });
-        socket.on('xoRoundEnd', (data) => { alert(`انتهاء الجولة! الفائز: ${data.winnerSymbol}`); document.getElementById('xoRoundWidget').innerText = `الجولة: ${data.round}`; clearXOFrontBoard(); });
-
-        // ================= [ نظام الدودة والحلويات ] =================
-        function startSnakeRoomOnline() { isOfflineMode = false; currentRoom = document.getElementById('customRoomCode').value.trim(); if(!currentRoom) return alert("أدخل الرمز!"); resizeCanvas(); switchScreen('lobbyArea', 'snakeCanvasArea'); socket.emit('joinSnakeRoom', { roomCode: currentRoom, username: myUsername, color: myColor }); }
-        socket.on('snakeRoomUpdate', (data) => { if(isOfflineMode) return; currentCandies = data.candies; currentPlayers = data.players; currentBots = data.bots; currentMagnets = data.magnets || []; drawSnakeGame(currentPlayers[socket.id]); });
-        
-        function startSnakeOfflineMode() {
-            isOfflineMode = true; resizeCanvas(); switchScreen('lobbyArea', 'snakeCanvasArea');
-            offlineCandies = []; 
-            for(let i=0; i<600; i++) { offlineCandies.push({ x: Math.floor(Math.random()*(MAP_SIZE/20))*20, y: Math.floor(Math.random()*(MAP_SIZE/20))*20 }); }
-            offlineBots = []; const botColors = ["#ec4899", "#f59e0b", "#10b981", "#ef4444"];
-            for(let i=1; i<=4; i++) {
-                let rx = Math.floor(Math.random()*80 + 20)*20, ry = Math.floor(Math.random()*80 + 20)*20;
-                let body = []; for(let l=0; l<15; l++) body.push({ x: rx, y: ry + (l*20) });
-                offlineBots.push({ id: i, username: `🤖 بوت عملاق ${i}`, color: botColors[i-1], body: body, direction: "UP", score: 200, isDead: false });
-            }
-            offlineLoopInterval = setInterval(updateOfflineLogic, 100);
-        }
-        
-        function updateOfflineLogic() {
-            let head = { ...offlinePlayer.body[0] };
-            if (offlinePlayer.direction === "UP") head.y -= 20; if (offlinePlayer.direction === "DOWN") head.y += 20; if (offlinePlayer.direction === "LEFT") head.x -= 20; if (offlinePlayer.direction === "RIGHT") head.x += 20;
-            if (head.x < 0 || head.x >= MAP_SIZE || head.y < 0 || head.y >= MAP_SIZE) { resetOfflinePlayer(); return; }
-            let ate = false;
-            for(let i=offlineCandies.length-1; i>=0; i--) {
-                let c = offlineCandies[i]; if(Math.abs(head.x - c.x) < 20 && Math.abs(head.y - c.y) < 20) { offlinePlayer.score += 10; offlineCandies.splice(i, 1); ate = true; offlineCandies.push({ x: Math.floor(Math.random()*(MAP_SIZE/20))*20, y: Math.floor(Math.random()*(MAP_SIZE/20))*20 }); break; }
-            }
-            if(!ate) offlinePlayer.body.pop(); offlinePlayer.body.unshift(head);
-            drawSnakeGame(offlinePlayer);
-        }
-        function resetOfflinePlayer() { offlinePlayer.body = [{x: 1000, y: 1000}]; offlinePlayer.score = 0; offlinePlayer.direction = "RIGHT"; }
-        
-        function drawSnakeGame(focusPlayer) {
-            let offsetX = 0, offsetY = 0;
-            if (focusPlayer && focusPlayer.body[0]) { offsetX = canvas.width / 2 - focusPlayer.body[0].x; offsetY = canvas.height / 2 - focusPlayer.body[0].y; document.getElementById('snakeLiveScore').innerText = `عداد نقاطك: ${focusPlayer.score}`; }
-            ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.save(); ctx.translate(offsetX, offsetY);
-            ctx.fillStyle = "#0c1322"; ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
-            let candies = isOfflineMode ? offlineCandies : currentCandies;
-            candies.forEach(c => { ctx.fillStyle = "#f43f5e"; ctx.beginPath(); ctx.arc(c.x + 10, c.y + 10, 8, 0, 2*Math.PI); ctx.fill(); });
-            if(isOfflineMode) {
-                offlinePlayer.body.forEach((seg, index) => { ctx.fillStyle = myColor; ctx.beginPath(); ctx.arc(seg.x + 10, seg.y + 10, index === 0 ? 13 : 10, 0, 2 * Math.PI); ctx.fill(); });
-            } else {
-                let allEntities = { ...currentPlayers, ...currentBots };
-                for (let id in allEntities) {
-                    let ent = allEntities[id]; ent.body.forEach((seg, idx) => { ctx.fillStyle = ent.color; ctx.beginPath(); ctx.arc(seg.x + 10, seg.y + 10, idx === 0 ? 13 : 10, 0, 2 * Math.PI); ctx.fill(); });
-                }
-            }
-            ctx.restore();
-        }
-
-        window.addEventListener("keydown", (e) => {
-            let dir = "";
-            if (e.key === "ArrowUp" || e.key === "w") dir = "UP"; if (e.key === "ArrowDown" || e.key === "s") dir = "DOWN"; if (e.key === "ArrowLeft" || e.key === "a") dir = "LEFT"; if (e.key === "ArrowRight" || e.key === "d") dir = "RIGHT";
-            if(dir) { if(isOfflineMode) offlinePlayer.direction = dir; else socket.emit('snakeRoomDirection', { roomCode: currentRoom, direction: dir }); }
-        });
-
-        function exitToHubDirectly(currentAreaId) {
-            if(offlineLoopInterval) clearInterval(offlineLoopInterval);
-            if(!isOfflineMode) {
-                if(currentAreaId === 'xoPlayArea') socket.emit('leaveXORoom', { roomCode: currentRoom, username: myUsername });
-                if(currentAreaId === 'snakeCanvasArea') socket.emit('leaveSnakeRoom', { roomCode: currentRoom, username: myUsername });
-                if(currentAreaId === 'chessPlayArea') socket.emit('leaveChessRoom', { roomCode: currentRoom, username: myUsername });
-            }
-            document.getElementById(currentAreaId).classList.add('hidden');
-            document.getElementById('gameHub').classList.remove('hidden');
-        }
-        function exitToHubFromMenu() { switchScreen('lobbyArea', 'gameHub'); }
-    </script>
-</body>
-</html>
+            document.getElementById('blackPlayerNameTag').innerText = `🤖 البوت (${diffText}): الذكاء الاصطناعي

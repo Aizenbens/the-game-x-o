@@ -14,12 +14,14 @@ app.use(express.static(__dirname));
 let onlineUsers = {}; 
 let xoRooms = {};     
 let snakeRooms = {};  
+let chessRooms = {}; 
 
 const GRID_SIZE = 20;
 const MAP_WIDTH = 3000;   
 const MAP_HEIGHT = 3000;
 const CANDY_TYPES = ['donut', 'cupcake', 'icecream', 'lollipop', 'candy'];
 
+// تحديث مستمر لعناصر لعبة الدودة أونلاين
 setInterval(() => {
     for (let rCode in snakeRooms) {
         let room = snakeRooms[rCode];
@@ -154,7 +156,7 @@ setInterval(() => {
 
 io.on('connection', (socket) => {
     socket.on('joinHub', (data) => {
-        onlineUsers[socket.id] = { username: data.username, color: data.color };
+        onlineUsers[socket.id] = { username: data.username, color: data.color, roomXO: null, roomSnake: null, roomChess: null };
         io.emit('updateOnlineUsers', Object.values(onlineUsers));
     });
 
@@ -166,21 +168,47 @@ io.on('connection', (socket) => {
         io.to(data.roomCode).emit('receiveXOChatMessage', data);
     });
 
+    socket.on('sendChessChatMessage', (data) => {
+        io.to(data.roomCode).emit('receiveChessChatMessage', data);
+    });
+
+    // أحداث المغادرة اليدوية للغرف
+    socket.on('leaveXORoom', (data) => {
+        const { roomCode, username } = data;
+        socket.leave(roomCode);
+        if(xoRooms[roomCode]) {
+            xoRooms[roomCode].players = xoRooms[roomCode].players.filter(id => id !== socket.id);
+        }
+        io.to(roomCode).emit('playerLeftAlert', { username, game: "XO" });
+    });
+
     socket.on('leaveSnakeRoom', (data) => {
-        const { roomCode } = data;
+        const { roomCode, username } = data;
         if (snakeRooms[roomCode] && snakeRooms[roomCode].players[socket.id]) {
             delete snakeRooms[roomCode].players[socket.id];
         }
         socket.leave(roomCode);
+        io.to(roomCode).emit('playerLeftAlert', { username, game: "الدودة" });
+    });
+
+    socket.on('leaveChessRoom', (data) => {
+        const { roomCode, username } = data;
+        socket.leave(roomCode);
+        if(chessRooms[roomCode]) {
+            chessRooms[roomCode].players = chessRooms[roomCode].players.filter(id => id !== socket.id);
+        }
+        io.to(roomCode).emit('playerLeftAlert', { username, game: "الشطرنج" });
     });
 
     socket.on('joinSnakeRoom', (data) => {
         const { roomCode, username, color } = data;
         socket.join(roomCode);
+        if(onlineUsers[socket.id]) onlineUsers[socket.id].roomSnake = roomCode;
 
         if (!snakeRooms[roomCode]) {
+            // تحديث: زيادة هائلة للحلويات في الأونلاين إلى 600 عنصر ممتلئ
             snakeRooms[roomCode] = { players: {}, candies: [], bots: {}, magnets: [] };
-            for (let i = 0; i < 200; i++) {
+            for (let i = 0; i < 600; i++) {
                 snakeRooms[roomCode].candies.push({
                     x: Math.floor(Math.random() * (MAP_WIDTH / GRID_SIZE)) * GRID_SIZE,
                     y: Math.floor(Math.random() * (MAP_HEIGHT / GRID_SIZE)) * GRID_SIZE,
@@ -214,6 +242,8 @@ io.on('connection', (socket) => {
     socket.on('joinXOGame', (data) => {
         const { roomCode, username } = data;
         socket.join(roomCode);
+        if(onlineUsers[socket.id]) onlineUsers[socket.id].roomXO = roomCode;
+
         if (!xoRooms[roomCode]) {
             xoRooms[roomCode] = { 
                 players: [], 
@@ -261,12 +291,11 @@ io.on('connection', (socket) => {
                 room.turn = "X"; 
                 
                 io.to(roomCode).emit('xoRoundEnd', { 
-                    winnerSymbol: "تعادل (انقلاب الكفة!)", 
+                    winnerSymbol: "تعادل", 
                     scores: room.scores, 
                     round: room.round, 
                     board: room.board,
-                    isDraw: true,
-                    startingPlayer: room.startingPlayerIdx
+                    isDraw: true
                 });
             } else {
                 room.turn = symbol === "X" ? "O" : "X";
@@ -275,9 +304,44 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('joinChessGame', (data) => {
+        const { roomCode, username } = data;
+        socket.join(roomCode);
+        if(onlineUsers[socket.id]) onlineUsers[socket.id].roomChess = roomCode;
+
+        if(!chessRooms[roomCode]) {
+            chessRooms[roomCode] = { players: [], usernames: {} };
+        }
+        let room = chessRooms[roomCode];
+        if(room.players.length < 2 && !room.players.includes(socket.id)) {
+            room.players.push(socket.id);
+            room.usernames[socket.id] = username;
+        }
+
+        const color = room.players.indexOf(socket.id) === 0 ? "w" : "b";
+        socket.emit('chessInit', { color });
+
+        if(room.players.length === 2) {
+            io.to(roomCode).emit('chessStart');
+        }
+    });
+
+    socket.on('makeChessMove', (data) => {
+        const { roomCode, move } = data;
+        socket.to(roomCode).emit('chessMoveUpdate', { move });
+    });
+
+    // كشف انقطاع الاتصال المفاجئ وتنبيه الخصم في نفس الغرفة
     socket.on('disconnect', () => {
-        delete onlineUsers[socket.id];
-        io.emit('updateOnlineUsers', Object.values(onlineUsers));
+        let user = onlineUsers[socket.id];
+        if (user) {
+            if(user.roomXO) io.to(user.roomXO).emit('playerLeftAlert', { username: user.username, game: "XO" });
+            if(user.roomSnake) io.to(user.roomSnake).emit('playerLeftAlert', { username: user.username, game: "الدودة" });
+            if(user.roomChess) io.to(user.roomChess).emit('playerLeftAlert', { username: user.username, game: "الشطرنج" });
+            
+            delete onlineUsers[socket.id];
+            io.emit('updateOnlineUsers', Object.values(onlineUsers));
+        }
         for (let rCode in snakeRooms) {
             if (snakeRooms[rCode].players[socket.id]) delete snakeRooms[rCode].players[socket.id];
         }
@@ -290,4 +354,4 @@ function checkServerWin(b, s) {
 }
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`🚀 Server connected on port ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 السيرفر يعمل بالكامل على منفذ ${PORT}`));

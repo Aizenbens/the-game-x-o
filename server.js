@@ -21,12 +21,11 @@ const MAP_WIDTH = 1600;
 const MAP_HEIGHT = 1600;
 const CANDY_TYPES = ['donut', 'cupcake', 'icecream', 'lollipop', 'candy'];
 
-// توليد مغناطيس عشوائي في الغرف كل 10 ثوانٍ
+// محرك توليد المغانط لغرف الدودة أونلاين
 setInterval(() => {
     for (let rCode in snakeRooms) {
         let room = snakeRooms[rCode];
         room.magnets = room.magnets || [];
-        // الاحتفاظ بمغناطيس واحد فقط في الخريطة كحد أقصى لتوليد الحماس
         if (room.magnets.length < 2) {
             room.magnets.push({
                 x: Math.floor(Math.random() * (MAP_WIDTH / GRID_SIZE)) * GRID_SIZE,
@@ -36,14 +35,12 @@ setInterval(() => {
     }
 }, 10000);
 
-// محرك تحديث غرف الدودة (كل 100 ملي ثانية)
+// محرك تحديث حركة الدودة أونلاين
 setInterval(() => {
     for (let rCode in snakeRooms) {
         let room = snakeRooms[rCode];
-        room.magnets = room.magnets || [];
         let allActive = { ...room.players, ...room.bots };
 
-        // 1. تحريك البوتات ذكائياً نحو الحلويات أو المغانط
         for (let bId in room.bots) {
             let bot = room.bots[bId];
             let target = room.magnets.length > 0 ? room.magnets[0] : room.candies[0];
@@ -56,17 +53,14 @@ setInterval(() => {
             }
         }
 
-        // 2. تحديث مؤقت المغناطيس وتحريك الحلويات المجذوبة
         for (let id in allActive) {
             let p = allActive[id];
             if (p.magnetTimer > 0) {
-                p.magnetTimer -= 0.1; // تقليل المؤقت الزمني
-                
-                // جذب الحلويات القريبة من رأس الدودة أوتوماتيكياً
+                p.magnetTimer -= 0.1;
                 let head = p.body[0];
                 room.candies.forEach(c => {
                     let dist = Math.hypot(c.x - head.x, c.y - head.y);
-                    if (dist < 150) { // مدى جذب المغناطيس
+                    if (dist < 150) {
                         if (c.x < head.x) c.x += GRID_SIZE;
                         if (c.x > head.x) c.x -= GRID_SIZE;
                         if (c.y < head.y) c.y += GRID_SIZE;
@@ -76,7 +70,6 @@ setInterval(() => {
             }
         }
 
-        // 3. تحديث حركة وميكانيكية الديدان
         for (let id in allActive) {
             let p = allActive[id];
             let head = { ...p.body[0] };
@@ -86,22 +79,19 @@ setInterval(() => {
             if (p.direction === "LEFT") head.x -= GRID_SIZE;
             if (p.direction === "RIGHT") head.x += GRID_SIZE;
 
-            // شرط الحدود الجديد: إذا لمس الشخص حدود الخريطة يموت فوراً!
             if (head.x < 0 || head.x >= MAP_WIDTH || head.y < 0 || head.y >= MAP_HEIGHT) {
                 p.isDead = true;
                 continue;
             }
 
-            // التحقق من التقاط المغناطيس
             for (let i = room.magnets.length - 1; i >= 0; i--) {
                 let mag = room.magnets[i];
                 if (Math.abs(head.x - mag.x) < GRID_SIZE && Math.abs(head.y - mag.y) < GRID_SIZE) {
-                    p.magnetTimer = 6; // تفعيل المغناطيس لمدة 6 ثوانٍ
+                    p.magnetTimer = 6;
                     room.magnets.splice(i, 1);
                 }
             }
 
-            // التحقق من أكل الحلويات الكثيفة
             let ate = false;
             for (let i = room.candies.length - 1; i >= 0; i--) {
                 let c = room.candies[i];
@@ -109,7 +99,6 @@ setInterval(() => {
                     p.score += 10;
                     room.candies.splice(i, 1);
                     ate = true;
-                    // تعويض فوري للحفاظ على كثافة الأكل
                     room.candies.push({
                         x: Math.floor(Math.random() * (MAP_WIDTH / GRID_SIZE)) * GRID_SIZE,
                         y: Math.floor(Math.random() * (MAP_HEIGHT / GRID_SIZE)) * GRID_SIZE,
@@ -123,7 +112,6 @@ setInterval(() => {
             p.body.unshift(head);
         }
 
-        // 4. معالجة التصادم ونقل النقاط تلقائياً (سرقة نقاط الضحية)
         let killedScores = {};
         for (let id1 in allActive) {
             let p1 = allActive[id1];
@@ -131,37 +119,27 @@ setInterval(() => {
             let h1 = p1.body[0];
 
             for (let id2 in allActive) {
-                if (id1 === id2) {
-                    if (p1.body.slice(1).some(seg => seg.x === h1.x && seg.y === h1.y)) {
-                        p1.isDead = true;
-                    }
-                    continue;
-                }
+                if (id1 === id2) continue; 
                 let p2 = allActive[id2];
                 if (p2.isDead) continue;
                 let h2 = p2.body[0];
 
-                // اصطدام الرؤوس معاً
                 if (h1.x === h2.x && h1.y === h2.y) {
                     p1.isDead = true;
                     p2.isDead = true;
                     continue;
                 }
 
-                // اصطدام رأس لاعب بجسم لاعب آخر -> يموت ويدفع نقاطه للقاتل
                 if (p2.body.slice(1).some(seg => seg.x === h1.x && seg.y === h1.y)) {
                     p1.isDead = true;
-                    killedScores[id2] = (killedScores[id2] || 0) + p1.score; // تجميع النقاط المسروقة للقاتل
+                    killedScores[id2] = (killedScores[id2] || 0) + p1.score;
                 }
             }
         }
 
-        // تطبيق سرقة النقاط وإعادة الإحياء
         for (let id in allActive) {
             let p = allActive[id];
-            if (killedScores[id]) {
-                p.score += killedScores[id]; // نقل النقاط تلقائياً للقاتل
-            }
+            if (killedScores[id]) p.score += killedScores[id];
 
             if (p.isDead) {
                 p.score = 0;
@@ -180,13 +158,15 @@ setInterval(() => {
 }, 100);
 
 io.on('connection', (socket) => {
+    // الانضمام لغرفة الانتظار العامة
     socket.on('joinHub', (data) => {
         onlineUsers[socket.id] = { username: data.username, color: data.color };
         io.emit('updateOnlineUsers', Object.values(onlineUsers));
     });
 
-    socket.on('sendChatMessage', (data) => {
-        io.to(data.roomCode).emit('receiveChatMessage', data);
+    // استقبال رسائل شات XO وتوزيعها داخل الغرفة المحددة
+    socket.on('sendXOChatMessage', (data) => {
+        io.to(data.roomCode).emit('receiveXOChatMessage', data);
     });
 
     socket.on('joinSnakeRoom', (data) => {
@@ -194,27 +174,13 @@ io.on('connection', (socket) => {
         socket.join(roomCode);
 
         if (!snakeRooms[roomCode]) {
-            snakeRooms[roomCode] = { players: {}, candies: [], bots: [], magnets: [] };
-            // توليد 120 حلوى لزيادة الكثافة بناءً على طلبك
+            snakeRooms[roomCode] = { players: {}, candies: [], bots: {}, magnets: [] };
             for (let i = 0; i < 120; i++) {
                 snakeRooms[roomCode].candies.push({
                     x: Math.floor(Math.random() * (MAP_WIDTH / GRID_SIZE)) * GRID_SIZE,
                     y: Math.floor(Math.random() * (MAP_HEIGHT / GRID_SIZE)) * GRID_SIZE,
                     type: CANDY_TYPES[Math.floor(Math.random() * CANDY_TYPES.length)]
                 });
-            }
-            // توليد بوتات ذكية داخل الغرفة الخاصة
-            for (let b = 1; b <= 3; b++) {
-                let bId = `bot_${roomCode}_${b}`;
-                snakeRooms[roomCode].bots[bId] = {
-                    body: [{ x: 300 + b * 80, y: 300 }],
-                    direction: "DOWN",
-                    score: 0,
-                    username: `🤖 بوت ذكي ${b}`,
-                    color: "#a855f7",
-                    magnetTimer: 0,
-                    isDead: false
-                };
             }
         }
 
@@ -244,12 +210,13 @@ io.on('connection', (socket) => {
         const { roomCode, username } = data;
         socket.join(roomCode);
         if (!xoRooms[roomCode]) {
-            xoRooms[roomCode] = { players: [], board: Array(9).fill(""), turn: "X", scores: {}, round: 1 };
+            xoRooms[roomCode] = { players: [], board: Array(9).fill(""), turn: "X", scores: {}, usernames: {}, round: 1 };
         }
         let room = xoRooms[roomCode];
         if (room.players.length < 2 && !room.players.includes(socket.id)) {
             room.players.push(socket.id);
             room.scores[socket.id] = 0;
+            room.usernames[socket.id] = username;
         }
         const symbol = room.players.indexOf(socket.id) === 0 ? "X" : "O";
         socket.emit('xoInit', { symbol });
@@ -283,18 +250,4 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('disconnect', () => {
-        delete onlineUsers[socket.id];
-        for (let rCode in snakeRooms) {
-            if (snakeRooms[rCode].players[socket.id]) delete snakeRooms[rCode].players[socket.id];
-        }
-    });
-});
-
-function checkServerWin(b, s) {
-    const w = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-    return w.some(p => b[p[0]] === s && b[p[1]] === s && b[p[2]] === s);
-}
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`));
+    socket.on('disconnect', () =>

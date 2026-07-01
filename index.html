@@ -3,40 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مجمع الألعاب أونلاين</title>
+    <title>منصة الألعاب الأونلاين الكبرى</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+        canvas { display: block; background: #0f172a; }
+    </style>
 </head>
-<body class="h-screen flex flex-col justify-between overflow-hidden bg-gray-900 text-white font-sans">
+<body class="bg-gray-900 text-white font-sans h-full flex flex-col justify-between">
 
     <div id="loginScreen" class="flex-1 flex flex-col items-center justify-center p-4">
-        <div class="bg-gray-800 p-8 rounded-2xl border border-gray-700 w-full max-w-sm text-center space-y-4">
-            <h2 class="text-2xl font-bold">🎮 ادخل اسمك لبدء الأونلاين</h2>
-            <input type="text" id="usernameInput" class="w-full p-3 rounded bg-gray-700 border border-gray-600 text-center text-white" placeholder="اسمك المستعار...">
-            <button onclick="connectToOnline()" class="w-full bg-blue-600 hover:bg-blue-700 font-bold p-3 rounded-xl transition">دخول صالة الألعاب</button>
+        <div class="bg-gray-800 p-8 rounded-2xl border border-gray-700 w-full max-w-sm text-center space-y-4 shadow-2xl">
+            <h2 class="text-3xl font-black text-blue-400">🎮 مرحباً بك في المنصة</h2>
+            <input type="text" id="usernameInput" class="w-full p-3 rounded-xl bg-gray-700 border border-gray-600 text-center text-white" placeholder="اكتب اسمك المستعار...">
+            
+            <div class="text-right">
+                <label class="text-sm text-gray-400 block mb-1">اختر لون دودتك المفضل:</label>
+                <input type="color" id="snakeColorInput" class="w-full h-10 p-1 rounded bg-gray-700 border border-gray-600 cursor-pointer" value="#22c55e">
+            </div>
+
+            <button onclick="connectToHub()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 font-bold p-3 rounded-xl transition transform hover:scale-105">دخول عالم التحدي</button>
         </div>
     </div>
 
     <div id="gameHub" class="hidden flex-1 flex flex-col md:flex-row p-4 gap-4 h-full overflow-hidden">
-        <div class="flex-1 bg-gray-800 rounded-2xl p-6 border border-gray-700 flex flex-col justify-center items-center gap-6">
-            <h1 class="text-3xl font-black text-blue-400">مجمع الألعاب أونلاين 🌐</h1>
-            <div class="flex flex-wrap gap-4 justify-center">
-                <button onclick="goToLobby('xo')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 text-xl font-bold px-8 py-4 rounded-xl transition shadow-md">❌ XO تحدي الغرف أونلاين</button>
-                <button onclick="goToLobby('snake')" class="bg-lime-500 hover:bg-lime-600 text-slate-900 text-xl font-bold px-8 py-4 rounded-xl transition shadow-md">🐍 لعبة الدودة (فردي)</button>
+        <div class="flex-1 bg-gray-800 rounded-2xl p-6 border border-gray-700 flex flex-col justify-center items-center gap-6 text-center">
+            <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500">مجمع الألعاب التنافسي 🌐</h1>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
+                <button onclick="goToLobby('xo')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 text-lg font-bold p-4 rounded-xl transition shadow-lg">❌⭕ لعبة التحدي XO</button>
+                <button onclick="startSnakeOnlineMode()" class="bg-lime-500 hover:bg-lime-600 text-slate-900 text-lg font-bold p-4 rounded-xl transition shadow-lg">🐍 الدودة أونلاين (كامل الشاشة)</button>
             </div>
         </div>
 
-        <div class="w-full md:w-80 bg-gray-800 rounded-2xl p-4 border border-gray-700 flex flex-col justify-between h-96 md:h-full">
+        <div class="w-full md:w-80 bg-gray-800 rounded-2xl p-4 border border-gray-700 flex flex-col justify-between">
             <div>
-                <h4 class="font-bold border-b border-gray-700 pb-2 mb-2 text-emerald-400">🟢 اللاعبون المتصلون:</h4>
-                <div id="onlineUsersContainer" class="space-y-1 max-h-24 overflow-y-auto text-sm text-gray-300"></div>
+                <h4 class="font-black border-b border-gray-700 pb-2 mb-2 text-yellow-400 flex items-center gap-2">🏆 ترتيب الصدارة العالمي:</h4>
+                <div id="leaderboardContainer" class="space-y-2 max-h-48 overflow-y-auto text-sm"></div>
             </div>
             <div class="flex flex-col flex-1 mt-4 overflow-hidden">
                 <h4 class="font-bold text-blue-400 mb-1">💬 شات الصالة العام:</h4>
-                <div id="chatMessagesBox" class="flex-1 bg-gray-950 p-2 rounded-xl overflow-y-auto text-sm space-y-2 mb-2 border border-gray-700"></div>
+                <div id="hubChatBox" class="flex-1 bg-gray-950 p-2 rounded-xl overflow-y-auto text-sm space-y-2 border border-gray-700 mb-2"></div>
                 <div class="flex gap-2">
-                    <input type="text" id="chatInput" class="flex-1 p-2 rounded-lg bg-gray-700 text-white text-sm" placeholder="اكتب شيئاً...">
-                    <button onclick="sendChatMessage()" class="bg-blue-600 px-4 rounded-lg text-sm font-bold">إرسال</button>
+                    <input type="text" id="hubChatInput" class="flex-1 p-2 rounded-lg bg-gray-700 text-white text-sm" placeholder="اكتب رسالة...">
+                    <button onclick="sendGlobalMessage('', 'hubChatInput')" class="bg-blue-600 px-4 rounded-lg text-sm font-bold">إرسال</button>
                 </div>
             </div>
         </div>
@@ -44,210 +54,323 @@
 
     <div id="lobbyArea" class="hidden flex-1 flex flex-col items-center justify-center p-4">
         <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-700 text-center space-y-4">
-            <h2 id="lobbyTitle" class="text-2xl font-bold">اللوبي</h2>
-            <div id="xoOptions" class="hidden space-y-4">
-                <input type="text" id="xoRoomCode" class="w-full p-3 rounded bg-gray-700 text-center tracking-widest font-bold" placeholder="أدخل رقم أو كود الغرفة">
-                <button onclick="joinXORoom()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold p-3 rounded-xl transition">دخول الغرفة وبدء التحدي</button>
+            <h2 class="text-2xl font-bold text-amber-400">خيارات تحدي XO</h2>
+            
+            <div class="space-y-2">
+                <h4 class="text-sm text-gray-400 text-right">🤖 نمط اللعب الفردي ضد البوت:</h4>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="startXOBot('easy')" class="bg-green-600 hover:bg-green-700 font-bold p-2 rounded-lg text-xs">سهل (ضعيف)</button>
+                    <button onclick="startXOBot('medium')" class="bg-yellow-600 hover:bg-yellow-700 font-bold p-2 rounded-lg text-xs">عادي (متوسط)</button>
+                    <button onclick="startXOBot('hard')" class="bg-red-600 hover:bg-red-700 font-bold p-2 rounded-lg text-xs">صعب (قوي جداً)</button>
+                </div>
             </div>
-            <div id="snakeOptions" class="hidden">
-                <button onclick="startSnakeGame()" class="w-full bg-lime-500 hover:bg-lime-600 text-slate-900 font-bold p-3 rounded-xl transition">ابدأ اللعب الفردي</button>
+
+            <div class="border-t border-gray-700 my-4 pt-4 space-y-2">
+                <h4 class="text-sm text-gray-400 text-right">🌐 أو العب أونلاين في غرفة خاصة:</h4>
+                <input type="text" id="xoRoomCode" class="w-full p-3 rounded bg-gray-700 text-center font-bold" placeholder="أدخل كود الغرفة">
+                <button onclick="joinXORoomOnline()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold p-3 rounded-xl transition">انضمام للغرفة أونلاين</button>
             </div>
-            <button onclick="exitToHub()" class="text-sm text-gray-400 hover:text-white underline block w-full">العودة للرئيسية</button>
+            <button onclick="exitToHub()" class="text-sm text-gray-400 hover:text-white underline block w-full text-center">العودة للرئيسية</button>
         </div>
     </div>
 
-    <div id="xoPlayArea" class="hidden flex-1 flex flex-col items-center justify-center p-4">
-        <h3 id="xoTurnStatus" class="text-xl font-bold mb-4 text-amber-400 bg-gray-800 px-6 py-2 rounded-full">في انتظار اللاعب الآخر...</h3>
-        <div class="grid grid-cols-3 gap-3 w-80 h-80 bg-gray-800 p-3 rounded-2xl border border-gray-700">
-            <button onclick="triggerXOMove(0)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full" id="cell-0"></button>
-            <button onclick="triggerXOMove(1)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full" id="cell-1"></button>
-            <button onclick="triggerXOMove(2)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full" id="cell-2"></button>
-            <button onclick="triggerXOMove(3)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full" id="cell-3"></button>
-            <button onclick="triggerXOMove(4)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full" id="cell-4"></button>
-            <button onclick="triggerXOMove(5)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full" id="cell-5"></button>
-            <button onclick="triggerXOMove(6)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full" id="cell-6"></button>
-            <button onclick="triggerXOMove(7)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full" id="cell-7"></button>
-            <button onclick="triggerXOMove(8)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full" id="cell-8"></button>
+    <div id="xoPlayArea" class="hidden flex-1 flex flex-col lg:flex-row p-4 gap-4 h-full items-center justify-center">
+        <div class="flex-1 flex flex-col items-center justify-center">
+            <h3 id="xoTurnStatus" class="text-xl font-bold mb-4 text-amber-400 bg-gray-800 px-6 py-2 rounded-full border border-gray-700">جاري الإعداد...</h3>
+            <div class="grid grid-cols-3 gap-3 w-80 h-80 bg-gray-800 p-3 rounded-2xl border border-gray-700 shadow-xl">
+                <button onclick="handleXOClick(0)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full border border-gray-800" id="cell-0"></button>
+                <button onclick="handleXOClick(1)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full border border-gray-800" id="cell-1"></button>
+                <button onclick="handleXOClick(2)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full border border-gray-800" id="cell-2"></button>
+                <button onclick="handleXOClick(3)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full border border-gray-800" id="cell-3"></button>
+                <button onclick="handleXOClick(4)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full border border-gray-800" id="cell-4"></button>
+                <button onclick="handleXOClick(5)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full border border-gray-800" id="cell-5"></button>
+                <button onclick="handleXOClick(6)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full border border-gray-800" id="cell-6"></button>
+                <button onclick="handleXOClick(7)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full border border-gray-800" id="cell-7"></button>
+                <button onclick="handleXOClick(8)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full border border-gray-800" id="cell-8"></button>
+            </div>
+            <button onclick="exitToHub()" class="mt-4 bg-red-600 hover:bg-red-700 px-6 py-2 rounded-xl font-bold transition">خروج وانسحاب</button>
         </div>
-        <button onclick="exitToHub()" class="mt-4 bg-red-600 hover:bg-red-700 px-6 py-2 rounded-xl font-bold transition">انسحاب</button>
+
+        <div id="xoChatContainer" class="w-full lg:w-80 h-64 lg:h-full bg-gray-800 rounded-2xl p-4 border border-gray-700 flex flex-col justify-between hidden">
+            <h4 class="font-bold text-amber-400 border-b border-gray-700 pb-2 mb-2">💬 شات غرفتك الخاصة:</h4>
+            <div id="xoChatBox" class="flex-1 bg-gray-950 p-2 rounded-xl overflow-y-auto text-sm space-y-2 border border-gray-700 mb-2"></div>
+            <div class="flex gap-2">
+                <input type="text" id="xoChatInput" class="flex-1 p-2 rounded-lg bg-gray-700 text-white text-sm" placeholder="اكتب في الغرفة...">
+                <button onclick="sendGlobalMessage(currentRoom, 'xoChatInput')" class="bg-amber-500 text-slate-950 px-4 rounded-lg text-sm font-bold">إرسال</button>
+            </div>
+        </div>
     </div>
 
-    <div id="snakeCanvasArea" class="hidden flex-1 flex flex-col items-center justify-center p-4">
-        <div class="text-center space-y-4">
-            <div class="flex justify-between items-center bg-gray-800 px-6 py-2 rounded-xl border border-gray-700 w-full max-w-[400px]">
-                <span class="text-lime-400 font-bold">النتيجة الحالية: <span id="snakeScore">0</span></span>
-            </div>
-            <canvas id="snakeCanvas" width="400" height="400" class="bg-gray-950 border-4 border-gray-800 rounded-2xl shadow-2xl"></canvas>
-            <button onclick="exitToHub()" class="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-xl font-bold transition border border-gray-700">خروج للرئيسية</button>
+    <div id="snakeCanvasArea" class="hidden fixed inset-0 z-50 bg-black flex flex-col">
+        <div class="absolute top-4 right-4 z-50 bg-gray-900/80 px-4 py-2 rounded-xl border border-gray-750 flex gap-4 text-sm font-bold">
+            <span class="text-lime-400">انتبه! اضغط الأسهم للتوجيه</span>
+            <button onclick="exitToHub()" class="bg-red-600 text-white px-2 py-0.5 rounded hover:bg-red-700 transition">إنهاء اللعب الخروج</button>
         </div>
+        <canvas id="snakeFullScreenCanvas" class="w-full h-full flex-1"></canvas>
     </div>
 
     <script>
-        const socket = io(); // تشغيل الـ Socket للاتصال الفوري تلقائياً بالموقع
-        let myName = "";
-        let mySymbol = "";
-        let currentRoom = "";
-        let currentTurn = "";
+        const socket = io();
+        let myUsername = "", myColor = "", mySymbol = "", currentRoom = "", currentTurn = "", gameMode = "";
+        let botDifficulty = "easy";
+        let localBoard = Array(9).fill("");
 
-        // محرك الدودة
-        const canvas = document.getElementById("snakeCanvas");
+        const canvas = document.getElementById("snakeFullScreenCanvas");
         const ctx = canvas.getContext("2d");
-        const boxSize = 20;
-        let snake, snakeDirection, apple, snakeGameInterval, snakeScore = 0;
+        let apple = { x: 300, y: 300 };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
 
         function switchScreen(oldId, newId) {
             document.getElementById(oldId).classList.add('hidden');
             document.getElementById(newId).classList.remove('hidden');
         }
 
-        function connectToOnline() {
-            myName = document.getElementById('usernameInput').value.trim();
-            if(!myName) return alert("اكتب اسمك أولاً!");
-            socket.emit('joinHub', myName);
+        function connectToHub() {
+            myUsername = document.getElementById('usernameInput').value.trim();
+            myColor = document.getElementById('snakeColorInput').value;
+            if(!myUsername) return alert("الرجاء إدخال الاسم!");
+            socket.emit('joinHub', { username: myUsername, color: myColor });
             switchScreen('loginScreen', 'gameHub');
         }
 
-        socket.on('updateOnlineUsers', (users) => {
-            document.getElementById('onlineUsersContainer').innerHTML = users.map(u => `<div>🔹 ${u}</div>`).join('');
+        // تحديث المتصدرين والشات
+        socket.on('updateLeaderboard', (list) => {
+            document.getElementById('leaderboardContainer').innerHTML = list.map((user, index) => `
+                <div class="flex justify-between items-center bg-gray-900 p-2 rounded-lg border border-gray-850">
+                    <span class="font-bold text-gray-300">#${index+1} ${user.username}</span>
+                    <span class="px-2 py-0.5 rounded text-xs font-black" style="background:${user.color}; color:#000">${user.score} ن</span>
+                </div>
+            `).join('');
         });
 
-        function sendChatMessage() {
-            const input = document.getElementById('chatInput');
-            if(input.value.trim()) {
-                socket.emit('sendGlobalMessage', { name: myName, msg: input.value.trim() });
-                input.value = "";
+        socket.on('updateOnlineUsers', (users) => {
+            document.getElementById('hubChatBox').innerHTML += `<div class="text-xs text-gray-550 text-center">انضم لاعب جديد متصل الآن للشبكة</div>`;
+        });
+
+        function sendGlobalMessage(roomCode, inputId) {
+            const el = document.getElementById(inputId);
+            if(el.value.trim()) {
+                socket.emit('sendChatMessage', { name: myUsername, msg: el.value.trim(), roomCode: roomCode });
+                el.value = "";
             }
         }
 
-        socket.on('receiveGlobalMessage', (data) => {
-            const box = document.getElementById('chatMessagesBox');
-            box.innerHTML += `<div><strong class="text-blue-400">${data.name}:</strong> ${data.msg}</div>`;
-            box.scrollTop = box.scrollHeight;
+        socket.on('receiveChatMessage', (data) => {
+            const targetBox = data.roomCode ? document.getElementById('xoChatBox') : document.getElementById('hubChatBox');
+            if(targetBox) {
+                targetBox.innerHTML += `<div><strong class="text-blue-400">${data.name}:</strong> ${data.msg}</div>`;
+                targetBox.scrollTop = targetBox.scrollHeight;
+            }
         });
 
         function goToLobby(game) {
             switchScreen('gameHub', 'lobbyArea');
-            document.getElementById('xoOptions').classList.add('hidden');
-            document.getElementById('snakeOptions').classList.add('hidden');
-            if(game === 'xo') {
-                document.getElementById('lobbyTitle').innerText = "تحدي XO أونلاين";
-                document.getElementById('xoOptions').classList.remove('hidden');
+        }
+
+        // ================= [ محرك ذكاء بوت XO والمستويات الثلاثة ] =================
+        function startXOBot(difficulty) {
+            gameMode = "bot";
+            botDifficulty = difficulty;
+            localBoard.fill("");
+            currentTurn = "X";
+            switchScreen('lobbyArea', 'xoPlayArea');
+            document.getElementById('xoChatContainer').classList.add('hidden');
+            document.getElementById('xoTurnStatus').innerText = `دورك الآن (X) - بوت بمستوى ${difficulty}`;
+            resetXOWidgets();
+        }
+
+        function handleXOClick(idx) {
+            if (gameMode === "bot") {
+                if (localBoard[idx] !== "" || currentTurn !== "X") return;
+                localBoard[idx] = "X";
+                updateLocalUI();
+                if (checkWin(localBoard, "X")) return endXO("تهانينا! لقد تغلبت على البوت!");
+                if (!localBoard.includes("")) return endXO("مباراة قوية! انتهت بالتعادل.");
+
+                currentTurn = "O";
+                document.getElementById('xoTurnStatus').innerText = "🤖 البوت يفكر بالرد...";
+                setTimeout(makeBotMove, 600);
             } else {
-                document.getElementById('lobbyTitle').innerText = "لعبة الدودة فردي";
-                document.getElementById('snakeOptions').classList.remove('hidden');
+                if(currentTurn === mySymbol) socket.emit('makeXOMove', { roomCode: currentRoom, index: idx, symbol: mySymbol });
             }
         }
 
-        function joinXORoom() {
+        function makeBotMove() {
+            let move;
+            if (botDifficulty === 'easy') {
+                // سهل: حركة عشوائية بالكامل
+                let av = localBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+                move = av[Math.floor(Math.random() * av.length)];
+            } else if (botDifficulty === 'medium') {
+                // متوسط: يحاول الفوز أو المنع، وإلا يلعب عشوائياً
+                move = findWinningMove("O") || findWinningMove("X") || randomMove();
+            } else {
+                // صعب جداً: تفعيل خوارزمية Minimax لا يمكن الفوز عليه
+                move = minimax(localBoard, "O").index;
+            }
+
+            localBoard[move] = "O";
+            updateLocalUI();
+            if (checkWin(localBoard, "O")) return endXO("تفوق عليك البوت الذكي هذه المرة!");
+            if (!localBoard.includes("")) return endXO("انتهت المباراة بالتعادل المشرف.");
+            currentTurn = "X";
+            document.getElementById('xoTurnStatus').innerText = "دورك للعب الآن (X)";
+        }
+
+        function findWinningMove(sym) {
+            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            for (let p of wins) {
+                let counts = p.map(i => localBoard[i]);
+                if (counts.filter(v => v === sym).length === 2 && counts.filter(v => v === "").length === 1) {
+                    return p[counts.indexOf("")];
+                }
+            }
+            return null;
+        }
+
+        function randomMove() {
+            let av = localBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            return av[Math.floor(Math.random() * av.length)];
+        }
+
+        function minimax(newBoard, player) {
+            let availSpots = newBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            if (checkWin(newBoard, "X")) return { score: -10 };
+            if (checkWin(newBoard, "O")) return { score: 10 };
+            if (availSpots.length === 0) return { score: 0 };
+
+            let moves = [];
+            for (let i = 0; i < availSpots.length; i++) {
+                let currentMove = {};
+                currentMove.index = availSpots[i];
+                newBoard[availSpots[i]] = player;
+
+                if (player === "O") {
+                    let result = minimax(newBoard, "X");
+                    currentMove.score = result.score;
+                } else {
+                    let result = minimax(newBoard, "O");
+                    currentMove.score = result.score;
+                }
+
+                newBoard[availSpots[i]] = "";
+                moves.push(currentMove);
+            }
+
+            let bestMove;
+            if (player === "O") {
+                let bestScore = -10000;
+                for (let i = 0; i < moves.length; i++) {
+                    if (moves[i].score > bestScore) { bestScore = moves[i].score; bestMove = i; }
+                }
+            } else {
+                let bestScore = 10000;
+                for (let i = 0; i < moves.length; i++) {
+                    if (moves[i].score < bestScore) { bestScore = moves[i].score; bestMove = i; }
+                }
+            }
+            return moves[bestMove];
+        }
+
+        function checkWin(b, s) {
+            const w = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            return w.some(p => b[p[0]] === s && b[p[1]] === s && b[p[2]] === s);
+        }
+
+        function updateLocalUI() {
+            localBoard.forEach((val, idx) => {
+                const c = document.getElementById(`cell-${idx}`);
+                c.innerText = val;
+                c.className = `bg-gray-900 text-4xl font-black rounded-xl h-full w-full ${val==='X'?'text-blue-400':'text-red-400'}`;
+            });
+        }
+
+        function endXO(msg) { alert(msg); exitToHub(); }
+        function resetXOWidgets() { for(let i=0;i<9;i++) document.getElementById(`cell-${i}`).innerText = ""; }
+
+        // ================= [ نظام غرف XO أونلاين ] =================
+        function joinXORoomOnline() {
+            gameMode = "online";
             currentRoom = document.getElementById('xoRoomCode').value.trim();
             if(!currentRoom) return alert("أدخل كود الغرفة!");
-            socket.emit('joinXOGame', { roomCode: currentRoom, username: myName });
+            socket.emit('joinXOGame', { roomCode: currentRoom, username: myUsername });
             switchScreen('lobbyArea', 'xoPlayArea');
+            document.getElementById('xoChatContainer').classList.remove('hidden');
+            resetXOWidgets();
         }
 
         socket.on('xoInit', (data) => { mySymbol = data.symbol; });
         socket.on('xoWaiting', (msg) => { document.getElementById('xoTurnStatus').innerText = msg; });
-        
         socket.on('xoStart', (data) => {
             currentTurn = data.turn;
-            document.getElementById('xoTurnStatus').innerText = currentTurn === mySymbol ? "دورك الآن للعب!" : "انتظر حركة الخصم...";
+            document.getElementById('xoTurnStatus').innerText = currentTurn === mySymbol ? "دورك الآن!" : "انتظر الخصم...";
         });
-
-        function triggerXOMove(index) {
-            if(currentTurn === mySymbol) {
-                socket.emit('makeXOMove', { roomCode: currentRoom, index: index, symbol: mySymbol });
-            }
-        }
 
         socket.on('xoUpdate', (data) => {
             currentTurn = data.turn;
             data.board.forEach((val, idx) => {
-                const cell = document.getElementById(`cell-${idx}`);
-                cell.innerText = val;
-                if(val === "X") cell.className = "bg-gray-900 text-4xl font-black rounded-xl h-full w-full text-blue-400";
-                if(val === "O") cell.className = "bg-gray-900 text-4xl font-black rounded-xl h-full w-full text-red-400";
+                const c = document.getElementById(`cell-${idx}`);
+                c.innerText = val;
+                if(val === "X") c.className = "bg-gray-900 text-4xl font-black rounded-xl h-full w-full text-blue-400";
+                if(val === "O") c.className = "bg-gray-900 text-4xl font-black rounded-xl h-full w-full text-red-400";
             });
-
-            document.getElementById('xoTurnStatus').innerText = currentTurn === mySymbol ? "دورك الآن للعب!" : "انتظر حركة الخصم...";
-            checkLocalWinner(data.board);
+            document.getElementById('xoTurnStatus').innerText = currentTurn === mySymbol ? "دورك الآن!" : "انتظر حركة خصمك...";
+            if(checkWin(data.board, "X") || checkWin(data.board, "O")) {
+                alert("انتهت الماتش بفوز أحد الطرفين!");
+                exitToHub();
+            }
         });
 
-        function checkLocalWinner(board) {
-            const wins = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
-            wins.forEach(p => {
-                if(board[p[0]] && board[p[0]] === board[p[1]] && board[p[0]] === board[p[2]]) {
-                    alert(`🎉 انتهاء المباراة! الفائز هو: ${board[p[0]]}`);
-                    exitToHub();
-                }
-            });
-        }
-
-        // تشغيل لعبة السنيك الفردية كلياً
-        function startSnakeGame() {
-            switchScreen('lobbyArea', 'snakeCanvasArea');
-            snakeScore = 0;
-            document.getElementById('snakeScore').innerText = snakeScore;
-            snake = [{ x: 10 * boxSize, y: 10 * boxSize }];
-            snakeDirection = "RIGHT";
-            generateApple();
-            if (snakeGameInterval) clearInterval(snakeGameInterval);
-            snakeGameInterval = setInterval(drawSnakeGame, 100);
-        }
-
-        function generateApple() {
-            apple = {
-                x: Math.floor(Math.random() * (canvas.width / boxSize)) * boxSize,
-                y: Math.floor(Math.random() * (canvas.height / boxSize)) * boxSize
-            };
+        // ================= [ محرك الدودة أونلاين كامل الشاشة واختيار اللون والاسم فوق اللاعب ] =================
+        function startSnakeOnlineMode() {
+            resizeCanvas();
+            switchScreen('gameHub', 'snakeCanvasArea');
+            socket.emit('startSnakeOnline');
         }
 
         window.addEventListener("keydown", (e) => {
-            if (e.key === "ArrowUp" && snakeDirection !== "DOWN") snakeDirection = "UP";
-            else if (e.key === "ArrowDown" && snakeDirection !== "UP") snakeDirection = "DOWN";
-            else if (e.key === "ArrowLeft" && snakeDirection !== "RIGHT") snakeDirection = "LEFT";
-            else if (e.key === "ArrowRight" && snakeDirection !== "LEFT") snakeDirection = "RIGHT";
+            if (e.key === "ArrowUp") socket.emit('snakeChangeDirection', "UP");
+            if (e.key === "ArrowDown") socket.emit('snakeChangeDirection', "DOWN");
+            if (e.key === "ArrowLeft") socket.emit('snakeChangeDirection', "LEFT");
+            if (e.key === "ArrowRight") socket.emit('snakeChangeDirection', "RIGHT");
         });
 
-        function drawSnakeGame() {
-            ctx.fillStyle = "#0f172a";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        socket.on('updateApple', (data) => { apple = data; });
+
+        socket.on('snakeUpdatePlayers', (players) => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // رسم التفاحة
             ctx.fillStyle = "#ef4444";
             ctx.beginPath();
-            ctx.arc(apple.x + boxSize/2, apple.y + boxSize/2, boxSize/2 - 2, 0, 2 * Math.PI);
+            ctx.arc(apple.x + 10, apple.y + 10, 8, 0, 2 * Math.PI);
             ctx.fill();
 
-            for (let i = 0; i < snake.length; i++) {
-                ctx.fillStyle = i === 0 ? "#22c55e" : "#4ade80";
-                ctx.fillRect(snake[i].x, snake[i].y, boxSize - 2, boxSize - 2);
+            // رسم كل لاعب أونلاين
+            for (let id in players) {
+                let p = players[id];
+                ctx.fillStyle = p.color;
+
+                p.body.forEach((seg, index) => {
+                    ctx.fillRect(seg.x, seg.y, 18, 18);
+                    
+                    // طباعة اسم المستخدم فوق رأس دودة اللاعب مباشرة
+                    if (index === 0) {
+                        ctx.fillStyle = "#ffffff";
+                        ctx.font = "bold 12px sans-serif";
+                        ctx.fillText(p.username, seg.x - 10, seg.y - 8);
+                        ctx.fillStyle = p.color;
+                    }
+                });
             }
+        });
 
-            let headX = snake[0].x;
-            let headY = snake[0].y;
-            if (snakeDirection === "UP") headY -= boxSize;
-            if (snakeDirection === "DOWN") headY += boxSize;
-            if (snakeDirection === "LEFT") headX -= boxSize;
-            if (snakeDirection === "RIGHT") headX += boxSize;
-
-            if (headX < 0 || headX >= canvas.width || headY < 0 || headY >= canvas.height || snake.some(s => s.x === headX && s.y === headY)) {
-                clearInterval(snakeGameInterval);
-                alert(`🚨 انتهت اللعبة! نتيجتك: ${snakeScore}`);
-                exitToHub();
-                return;
-            }
-
-            if (headX === apple.x && headY === apple.y) {
-                snakeScore++;
-                document.getElementById('snakeScore').innerText = snakeScore;
-                generateApple();
-            } else {
-                snake.pop();
-            }
-            snake.unshift({ x: headX, y: headY });
-        }
-
-        function exitToHub() {
-            window.location.reload();
-        }
+        function exitToHub() { window.location.reload(); }
     </script>
 </body>
 </html>

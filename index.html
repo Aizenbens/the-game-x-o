@@ -30,9 +30,17 @@
     </div>
 
     <div id="gameHub" class="hidden flex-1 flex flex-col lg:flex-row p-6 gap-6 h-full overflow-hidden">
-        <div class="w-full lg:w-64 bg-gray-900/80 rounded-3xl p-4 border border-gray-700 flex flex-col h-auto lg:h-full">
-            <h3 class="text-sm font-black text-indigo-400 mb-3 flex items-center gap-2">🟢 المتواجدون بالانتظار العام:</h3>
-            <div id="lobbyOnlineUsersList" class="flex-1 overflow-y-auto space-y-2 text-xs"></div>
+        
+        <div class="w-full lg:w-72 bg-gray-900/80 rounded-3xl p-4 border border-gray-700 flex flex-col h-72 lg:h-full gap-3">
+            <h3 class="text-sm font-black text-indigo-400 flex items-center gap-2">🟢 قائمة الانتظار العام:</h3>
+            <div id="lobbyOnlineUsersList" class="h-28 overflow-y-auto space-y-2 text-xs border-b border-gray-800 pb-2"></div>
+            
+            <h4 class="text-xs font-bold text-amber-400">💬 دردشة صالة الانتظار:</h4>
+            <div id="hubChatMessagesWrapper" class="flex-1 overflow-y-auto space-y-2 text-xs bg-gray-950/50 p-2 rounded-xl"></div>
+            <div class="flex gap-1">
+                <input type="text" id="hubChatMsgInput" class="flex-1 bg-gray-800 rounded-lg px-2 py-1.5 text-xs text-white border border-gray-600" placeholder="تحدث مع الجميع...">
+                <button onclick="sendHubChatMessageFromServer()" class="bg-indigo-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs">إرسال</button>
+            </div>
         </div>
 
         <div class="flex-1 bg-gray-800/60 backdrop-blur-md rounded-3xl p-6 border border-gray-700 flex flex-col justify-center items-center gap-6 text-center">
@@ -50,17 +58,13 @@
             
             <div id="xoMenuOptions" class="hidden space-y-4">
                 <div class="bg-gray-900/60 p-4 rounded-xl space-y-2">
-                    <h4 class="text-xs text-gray-400 text-right">🤖 نمط فردي ضد البوت:</h4>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button onclick="startXOBotMode('easy')" class="bg-green-600 p-2 rounded-lg text-xs font-bold">سهل</button>
-                        <button onclick="startXOBotMode('medium')" class="bg-yellow-600 p-2 rounded-lg text-xs font-bold">متوسط</button>
-                        <button onclick="startXOBotMode('hard')" class="bg-red-600 p-2 rounded-lg text-xs font-bold">صعب</button>
-                    </div>
+                    <h4 class="text-xs text-gray-400 text-right">🤖 نمط فردي ضد البوت الذكي جداً:</h4>
+                    <button onclick="startXOBotMode('expert')" class="w-full bg-red-600 p-3 rounded-xl font-bold text-sm shadow-md transition hover:bg-red-700">🤖 العب ضد البوت الذكي (مستوى خبير)</button>
                 </div>
             </div>
 
             <div id="snakeMenuOptions" class="hidden space-y-2">
-                <button onclick="startSnakeOfflineMode()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 font-bold p-3 rounded-xl transition shadow-lg text-white">📴 اللعب أوفلاين (ضد 6 بوتات عملاقة وتصادم كامل)</button>
+                <button onclick="startSnakeOfflineMode()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 font-bold p-3 rounded-xl transition shadow-lg text-white">📴 اللعب أوفلاين (6 بوتات عملاقة ونظام سرقة النقاط)</button>
             </div>
 
             <div class="border-t border-gray-700 pt-4 space-y-2">
@@ -124,14 +128,13 @@
         const socket = io();
         let myUsername = "", myColor = "", mySymbol = "", currentRoom = "", currentTurn = "", activeMenu = "";
         let gameMode = "bot";
-        let botDifficulty = "easy";
         let localXOBoard = Array(9).fill("");
 
         const canvas = document.getElementById("snakeFullScreenCanvas");
         const ctx = canvas.getContext("2d");
         
         const GRID_SIZE = 20;
-        const MAP_SIZE = 3000; // أبعاد الخريطة الموسعة الجديدة
+        const MAP_SIZE = 3000; 
         let currentCandies = [], currentPlayers = {}, currentBots = {}, currentMagnets = [];
         
         let isOfflineMode = false;
@@ -166,6 +169,26 @@
             switchScreen('loginScreen', 'gameHub');
         }
 
+        // إرسال رسائل شات صالة الانتظار العامة (Hub)
+        function sendHubChatMessageFromServer() {
+            const input = document.getElementById('hubChatMsgInput');
+            const msg = input.value.trim();
+            if(!msg) return;
+            socket.emit('sendHubChatMessage', { sender: myUsername, message: msg, color: myColor });
+            input.value = "";
+        }
+
+        socket.on('receiveHubChatMessage', (data) => {
+            const wrapper = document.getElementById('hubChatMessagesWrapper');
+            wrapper.innerHTML += `
+                <div class="p-1.5 rounded-lg bg-gray-900 border border-gray-800 break-words">
+                    <span class="font-bold" style="color: ${data.color}">${data.sender}:</span>
+                    <span class="text-gray-200">${data.message}</span>
+                </div>
+            `;
+            wrapper.scrollTop = wrapper.scrollHeight;
+        });
+
         socket.on('updateOnlineUsers', (usersList) => {
             const listContainer = document.getElementById('lobbyOnlineUsersList');
             listContainer.innerHTML = usersList.map(u => `
@@ -198,15 +221,14 @@
             }
         }
 
-        function startXOBotMode(diff) {
+        function startXOBotMode() {
             gameMode = "bot";
-            botDifficulty = diff;
             localXOBoard.fill("");
             currentTurn = "X";
             document.getElementById('xoChatBoxContainer').classList.add('hidden');
             switchScreen('lobbyArea', 'xoPlayArea');
-            document.getElementById('xoRoundWidget').innerText = "نمط البوت الفردي";
-            document.getElementById('xoTurnStatus').innerText = `دورك (X) - بوت مستوى ${diff}`;
+            document.getElementById('xoRoundWidget').innerText = "نمط البوت الخبير الذكي";
+            document.getElementById('xoTurnStatus').innerText = `دورك (X) - ذكاء البوت مفعل!`;
             clearXOFrontBoard();
         }
 
@@ -224,10 +246,17 @@
             }
         }
 
+        // ذكاء اصطناعي متقدم جداً للبوت (يفحص خطوة الفوز أو يحجب فوز الخصم فوراً)
         function triggerXOBotBrain() {
-            let av = localXOBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-            let move = av[Math.floor(Math.random() * av.length)];
-            if(move !== undefined) {
+            let move = findBestXOMove("O"); // تفقد الفوز أولاً
+            if (move === null) move = findBestXOMove("X"); // حجب الفوز للاعب
+            
+            if (move === null) { // إذا لم يكن هناك فوز أو حجب، يختر خانة عشوائية متاحة
+                let av = localXOBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+                move = av[Math.floor(Math.random() * av.length)];
+            }
+
+            if(move !== undefined && move !== null) {
                 localXOBoard[move] = "O";
                 renderXOFrontUI();
                 if (checkClientWin(localXOBoard, "O")) return endMatchXO("البوت فاز!");
@@ -235,6 +264,17 @@
                 currentTurn = "X";
                 document.getElementById('xoTurnStatus').innerText = "دورك للعب الآن (X)";
             }
+        }
+
+        function findBestXOMove(sym) {
+            const w = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            for (let comb of w) {
+                let counts = comb.map(idx => localXOBoard[idx]);
+                if (counts.filter(v => v === sym).length === 2 && counts.filter(v => v === "").length === 1) {
+                    return comb[counts.indexOf("")];
+                }
+            }
+            return null;
         }
 
         function checkClientWin(b, s) {
@@ -300,7 +340,7 @@
             clearXOFrontBoard();
         });
 
-        // ================= [ الدودة أونلاين ] =================
+        // ================= [ الدودة ] =================
         function startSnakeRoomOnline() {
             isOfflineMode = false;
             currentRoom = document.getElementById('customRoomCode').value.trim();
@@ -320,15 +360,14 @@
             drawSnakeGame(currentPlayers[socket.id]);
         });
 
-        // ================= [ الدودة أوفلاين مع الموت الحقيقي والتصادم والمغناطيس ] =================
         function startSnakeOfflineMode() {
             isOfflineMode = true;
             resizeCanvas();
             switchScreen('lobbyArea', 'snakeCanvasArea');
-            document.getElementById('snakeModeTitle').innerText = "نمط أوفلاين (تصادم كامل ومغناطيس) 📴";
+            document.getElementById('snakeModeTitle').innerText = "نمط أوفلاين (سرقة النقاط والمغناطيس) 📴";
 
             offlineCandies = [];
-            for(let i=0; i<300; i++) { // زيادة عدد قطع الحلوى في المساحة الجديدة
+            for(let i=0; i<300; i++) {
                 offlineCandies.push({ x: Math.floor(Math.random()*(MAP_SIZE/20))*20, y: Math.floor(Math.random()*(MAP_SIZE/20))*20, type: 'donut' });
             }
 
@@ -356,7 +395,6 @@
         }
 
         function updateOfflineLogic() {
-            // محاكاة عشوائية لظهور المغناطيس في وضع الأوفلاين كل 10 ثوانٍ
             magnetSpawnTimer += 0.1;
             if (magnetSpawnTimer >= 10) {
                 magnetSpawnTimer = 0;
@@ -368,11 +406,9 @@
                 }
             }
 
-            // تحديث مؤقت مغناطيس اللاعب
             if (offlinePlayer.magnetTimer > 0) {
                 offlinePlayer.magnetTimer -= 0.1;
                 document.getElementById('magnetStatusWidget').classList.remove('hidden');
-                // جذب الحلويات للاعب
                 offlineCandies.forEach(c => {
                     let dist = Math.hypot(c.x - offlinePlayer.body[0].x, c.y - offlinePlayer.body[0].y);
                     if (dist < 200) {
@@ -386,20 +422,17 @@
                 document.getElementById('magnetStatusWidget').classList.add('hidden');
             }
 
-            // تحريك دودة اللاعب
             let head = { ...offlinePlayer.body[0] };
             if (offlinePlayer.direction === "UP") head.y -= 20;
             if (offlinePlayer.direction === "DOWN") head.y += 20;
             if (offlinePlayer.direction === "LEFT") head.x -= 20;
             if (offlinePlayer.direction === "RIGHT") head.x += 20;
 
-            // الموت عند لمس الحدود الخارجية (الحواف) لل خريطة الموسعة
             if (head.x < 0 || head.x >= MAP_SIZE || head.y < 0 || head.y >= MAP_SIZE) {
                 resetOfflinePlayer();
                 return;
             }
 
-            // التقاط المغناطيس للأوفلاين
             for (let i = offlineMagnets.length - 1; i >= 0; i--) {
                 let mag = offlineMagnets[i];
                 if (Math.abs(head.x - mag.x) < 20 && Math.abs(head.y - mag.y) < 20) {
@@ -422,7 +455,6 @@
             if(!ate) offlinePlayer.body.pop();
             offlinePlayer.body.unshift(head);
 
-            // تحريك وتحديث البوتات الـ 6 العملاقة وتصرفها
             offlineBots.forEach(bot => {
                 let bHead = { ...bot.body[0] };
                 let target = offlineMagnets.length > 0 ? offlineMagnets[0] : offlineCandies[0];
@@ -438,7 +470,6 @@
                 if (bot.direction === "LEFT") bHead.x -= 20;
                 if (bot.direction === "RIGHT") bHead.x += 20;
 
-                // البوتات تموت أيضاً عند لمس الحافة
                 if (bHead.x < 0 || bHead.x >= MAP_SIZE || bHead.y < 0 || bHead.y >= MAP_SIZE) {
                     bot.isDead = true;
                     return;
@@ -453,7 +484,7 @@
                 bot.body.unshift(bHead);
             });
 
-            // تطبيق قوانين التصادم لجميع الكائنات (رأس بجسم = موت كامل)
+            // تفعيل نظام سرقة ونقل النقاط عند القتل بالأوفلاين أيضاً
             let allEntities = [offlinePlayer, ...offlineBots];
             
             allEntities.forEach((ent1, idx1) => {
@@ -462,20 +493,18 @@
 
                 allEntities.forEach((ent2, idx2) => {
                     if (idx1 === idx2) {
-                        // الموت إذا لمس جسمه الخاص
                         if (ent1.body.slice(1).some(seg => seg.x === h.x && seg.y === h.y)) {
                             ent1.isDead = true;
                         }
                     } else {
-                        // الموت إذا لمس رأسك جسم بوت آخر أو العكس
                         if (ent2.body.some(seg => seg.x === h.x && seg.y === h.y)) {
                             ent1.isDead = true;
+                            ent2.score += ent1.score; // سرقة النقاط بالكامل للقاتل أوتوماتيكياً
                         }
                     }
                 });
             });
 
-            // معالجة العناصر التي ماتت وإعادتها للعبة بنقاط صفر
             if (offlinePlayer.isDead) {
                 resetOfflinePlayer();
                 return;
@@ -503,7 +532,6 @@
             offlinePlayer.isDead = false;
         }
 
-        // ================= [ تحسين جودة المظهر والرسومات بشكل كامل وواقعي ] =================
         function drawSnakeGame(focusPlayer) {
             let offsetX = 0, offsetY = 0;
             if (focusPlayer && focusPlayer.body[0]) {
@@ -516,7 +544,6 @@
             ctx.save();
             ctx.translate(offsetX, offsetY); 
 
-            // أرضية شبكية متطورة وجميلة للواقعية والعمق البصري
             ctx.fillStyle = "#090d16";
             ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
 
@@ -529,31 +556,26 @@
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(MAP_SIZE, y); ctx.stroke();
             }
 
-            // الحواف القاتلة بلون أحمر متوهج وواضح جداً
             ctx.strokeStyle = "#ef4444";
             ctx.lineWidth = 14;
             ctx.shadowColor = "#ef4444";
             ctx.shadowBlur = 20;
             ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
-            ctx.shadowBlur = 0; // إيقاف التوهج لباقي العناصر لحفظ السرعة سلاسة الإطارات
+            ctx.shadowBlur = 0; 
 
             let candies = isOfflineMode ? offlineCandies : currentCandies;
             let magnets = isOfflineMode ? offlineMagnets : currentMagnets;
 
-            // رسم الحلويات بشكل مشع وأكثر جمالاً (حلوى دائرية بلون نيون مضيء)
             candies.forEach(c => {
                 ctx.fillStyle = "#f43f5e";
                 ctx.shadowColor = "#f43f5e";
                 ctx.shadowBlur = 8;
                 ctx.beginPath(); ctx.arc(c.x + 10, c.y + 10, 8, 0, 2*Math.PI); ctx.fill();
-                
-                // قلب الحلوى الداخلي لإعطاء مظهر ثلاثي الأبعاد
                 ctx.fillStyle = "#ffffff";
                 ctx.shadowBlur = 0;
                 ctx.beginPath(); ctx.arc(c.x + 10, c.y + 10, 3, 0, 2*Math.PI); ctx.fill();
             });
 
-            // رسم أيقونة المغناطيس المتوهج على الخريطة
             magnets.forEach(m => {
                 ctx.shadowColor = "#38bdf8";
                 ctx.shadowBlur = 12;
@@ -564,12 +586,9 @@
             let leaderboardData = [];
 
             if(isOfflineMode) {
-                // رسم دودة اللاعب بجودة دائرية وظل منزلق
                 offlinePlayer.body.forEach((seg, index) => {
                     ctx.fillStyle = myColor;
-                    if(index === 0) {
-                        ctx.shadowColor = myColor; ctx.shadowBlur = 12;
-                    }
+                    if(index === 0) { ctx.shadowColor = myColor; ctx.shadowBlur = 12; }
                     ctx.beginPath(); ctx.arc(seg.x + 10, seg.y + 10, index === 0 ? 13 : 10, 0, 2 * Math.PI); ctx.fill();
                     ctx.shadowBlur = 0;
                     if(index === 0) {
@@ -579,13 +598,10 @@
                 });
                 leaderboardData.push({ username: myUsername || "أنت", score: offlinePlayer.score });
 
-                // رسم البوتات الـ 6 العملاقة
                 offlineBots.forEach(bot => {
                     bot.body.forEach((seg, index) => {
                         ctx.fillStyle = bot.color;
-                        if(index === 0) {
-                            ctx.shadowColor = bot.color; ctx.shadowBlur = 10;
-                        }
+                        if(index === 0) { ctx.shadowColor = bot.color; ctx.shadowBlur = 10; }
                         ctx.beginPath(); ctx.arc(seg.x + 10, seg.y + 10, index === 0 ? 13 : 10, 0, 2 * Math.PI); ctx.fill();
                         ctx.shadowBlur = 0;
                         if(index === 0) {
@@ -613,7 +629,6 @@
 
             ctx.restore();
 
-            // ترتيب اللافتة الحية
             leaderboardData.sort((a, b) => b.score - a.score);
             document.getElementById('snakeLiveLeaderboard').innerHTML = leaderboardData.slice(0, 7).map((entry, idx) => `
                 <div class="flex justify-between items-center bg-gray-950/80 p-1.5 rounded-lg border border-gray-850">

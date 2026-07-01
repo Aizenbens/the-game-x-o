@@ -32,8 +32,7 @@
     <div id="gameHub" class="hidden flex-1 flex flex-col lg:flex-row p-6 gap-6 h-full overflow-hidden">
         <div class="w-full lg:w-64 bg-gray-900/80 rounded-3xl p-4 border border-gray-700 flex flex-col h-auto lg:h-full">
             <h3 class="text-sm font-black text-indigo-400 mb-3 flex items-center gap-2">🟢 المتواجدون بالانتظار العام:</h3>
-            <div id="lobbyOnlineUsersList" class="flex-1 overflow-y-auto space-y-2 text-xs">
-                </div>
+            <div id="lobbyOnlineUsersList" class="flex-1 overflow-y-auto space-y-2 text-xs"></div>
         </div>
 
         <div class="flex-1 bg-gray-800/60 backdrop-blur-md rounded-3xl p-6 border border-gray-700 flex flex-col justify-center items-center gap-6 text-center">
@@ -61,7 +60,7 @@
             </div>
 
             <div id="snakeMenuOptions" class="hidden space-y-2">
-                <button onclick="startSnakeOfflineMode()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 font-bold p-3 rounded-xl transition shadow-lg text-white">📴 اللعب أوفلاين (ضد 6 بوتات عملاقة)</button>
+                <button onclick="startSnakeOfflineMode()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 font-bold p-3 rounded-xl transition shadow-lg text-white">📴 اللعب أوفلاين (ضد 6 بوتات عملاقة وتصادم كامل)</button>
             </div>
 
             <div class="border-t border-gray-700 pt-4 space-y-2">
@@ -74,7 +73,6 @@
     </div>
 
     <div id="xoPlayArea" class="hidden flex-1 flex flex-col lg:flex-row p-6 h-full items-center justify-center gap-6">
-        
         <div id="xoChatBoxContainer" class="hidden w-full lg:w-72 bg-gray-900/90 rounded-2xl border border-gray-700 flex flex-col h-80 lg:h-96">
             <div class="p-3 bg-gray-800 rounded-t-2xl border-b border-gray-700 text-xs font-bold text-amber-400">💬 شات الغرفة والمنافسة</div>
             <div id="xoChatMessagesWrapper" class="flex-1 p-3 overflow-y-auto space-y-2 text-xs"></div>
@@ -108,7 +106,7 @@
         <div class="absolute top-4 left-4 z-50 bg-gray-900/90 px-5 py-2 rounded-2xl border border-gray-700 flex items-center gap-6 text-xs font-bold">
             <span class="text-cyan-400" id="snakeModeTitle">غرفة الدودة 🐍</span>
             <span class="text-yellow-400" id="snakeLiveScore">عداد نقاطك: 0</span>
-            <span class="text-pink-500 hidden" id="magnetStatusWidget">🧲 فعال!</span>
+            <span class="text-pink-500 hidden" id="magnetStatusWidget">🧲 مغناطيس فعال!</span>
             <button onclick="exitToHub()" class="bg-red-600 text-white px-3 py-1 rounded-xl hover:bg-red-700 transition">خروج</button>
         </div>
 
@@ -133,15 +131,16 @@
         const ctx = canvas.getContext("2d");
         
         const GRID_SIZE = 20;
-        const MAP_SIZE = 1600;
+        const MAP_SIZE = 3000; // أبعاد الخريطة الموسعة الجديدة
         let currentCandies = [], currentPlayers = {}, currentBots = {}, currentMagnets = [];
         
         let isOfflineMode = false;
-        let offlinePlayer = { body: [{x: 400, y: 400}], direction: "RIGHT", score: 0, magnetTimer: 0 };
+        let offlinePlayer = { body: [{x: 1000, y: 1000}], direction: "RIGHT", score: 0, magnetTimer: 0, isDead: false };
         let offlineBots = [];
         let offlineCandies = [];
         let offlineMagnets = [];
         let offlineLoopInterval;
+        let magnetSpawnTimer = 0;
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -154,24 +153,19 @@
             document.getElementById(newId).classList.remove('hidden');
         }
 
-        // تسجيل الدخول مع تفعيل فحص التنبيه بالأسفل باللون الأحمر
         function connectToHub() {
             myUsername = document.getElementById('usernameInput').value.trim();
             myColor = document.getElementById('snakeColorInput').value;
-            
             if(!myUsername) {
                 const banner = document.getElementById('whoAreYouBanner');
                 banner.classList.remove('hidden');
-                // إخفاء التنبيه تلقائياً بعد 3 ثوانٍ
                 setTimeout(() => { banner.classList.add('hidden'); }, 3000);
                 return;
             }
-            
             socket.emit('joinHub', { username: myUsername, color: myColor });
             switchScreen('loginScreen', 'gameHub');
         }
 
-        // تحديث قائمة اللاعبين المتواجدين في غرفة الانتظار العامة (Hub)
         socket.on('updateOnlineUsers', (usersList) => {
             const listContainer = document.getElementById('lobbyOnlineUsersList');
             listContainer.innerHTML = usersList.map(u => `
@@ -209,7 +203,7 @@
             botDifficulty = diff;
             localXOBoard.fill("");
             currentTurn = "X";
-            document.getElementById('xoChatBoxContainer').classList.add('hidden'); // إخفاء الشات في وضع البوت
+            document.getElementById('xoChatBoxContainer').classList.add('hidden');
             switchScreen('lobbyArea', 'xoPlayArea');
             document.getElementById('xoRoundWidget').innerText = "نمط البوت الفردي";
             document.getElementById('xoTurnStatus').innerText = `دورك (X) - بوت مستوى ${diff}`;
@@ -258,7 +252,6 @@
         function clearXOFrontBoard() { for(let i=0;i<9;i++) document.getElementById(`cell-${i}`).innerText = ""; }
         function endMatchXO(m) { alert(m); exitToHub(); }
 
-        // إرسال رسالة الشات في غرف XO
         function sendXOLocalChatMessage() {
             const input = document.getElementById('xoChatMsgInput');
             const msg = input.value.trim();
@@ -267,7 +260,6 @@
             input.value = "";
         }
 
-        // استقبال رسائل الشات وتحديث الـ UI داخل XO
         socket.on('receiveXOChatMessage', (data) => {
             const container = document.getElementById('xoChatMessagesWrapper');
             container.innerHTML += `
@@ -283,7 +275,7 @@
             gameMode = "online";
             currentRoom = document.getElementById('customRoomCode').value.trim();
             if(!currentRoom) return alert("أدخل رمز الغرفة أولاً!");
-            document.getElementById('xoChatBoxContainer').classList.remove('hidden'); // إظهار الشات في الأونلاين
+            document.getElementById('xoChatBoxContainer').classList.remove('hidden');
             socket.emit('joinXOGame', { roomCode: currentRoom, username: myUsername });
             switchScreen('lobbyArea', 'xoPlayArea');
             clearXOFrontBoard();
@@ -328,25 +320,25 @@
             drawSnakeGame(currentPlayers[socket.id]);
         });
 
-        // ================= [ الدودة أوفلاين ضد 6 بوتات عملاقة ] =================
+        // ================= [ الدودة أوفلاين مع الموت الحقيقي والتصادم والمغناطيس ] =================
         function startSnakeOfflineMode() {
             isOfflineMode = true;
             resizeCanvas();
             switchScreen('lobbyArea', 'snakeCanvasArea');
-            document.getElementById('snakeModeTitle').innerText = "نمط أوفلاين (بدون إنترنت) 📴";
+            document.getElementById('snakeModeTitle').innerText = "نمط أوفلاين (تصادم كامل ومغناطيس) 📴";
 
             offlineCandies = [];
-            for(let i=0; i<150; i++) {
+            for(let i=0; i<300; i++) { // زيادة عدد قطع الحلوى في المساحة الجديدة
                 offlineCandies.push({ x: Math.floor(Math.random()*(MAP_SIZE/20))*20, y: Math.floor(Math.random()*(MAP_SIZE/20))*20, type: 'donut' });
             }
 
             offlineBots = [];
             const botColors = ["#ec4899", "#f59e0b", "#10b981", "#ef4444", "#a855f7", "#3b82f6"];
             for(let i=1; i<=6; i++) {
-                let startX = Math.floor(Math.random()*40 + 10)*20;
-                let startY = Math.floor(Math.random()*40 + 10)*20;
+                let startX = Math.floor(Math.random()*80 + 20)*20;
+                let startY = Math.floor(Math.random()*80 + 20)*20;
                 let body = [];
-                for(let l=0; l<15; l++) { body.push({ x: startX, y: startY + (l*20) }); }
+                for(let l=0; l<20; l++) { body.push({ x: startX, y: startY + (l*20) }); }
                 
                 offlineBots.push({
                     id: i,
@@ -354,8 +346,9 @@
                     color: botColors[i-1],
                     body: body,
                     direction: "UP",
-                    score: 300,
-                    magnetTimer: 0
+                    score: 400,
+                    magnetTimer: 0,
+                    isDead: false
                 });
             }
 
@@ -363,17 +356,56 @@
         }
 
         function updateOfflineLogic() {
+            // محاكاة عشوائية لظهور المغناطيس في وضع الأوفلاين كل 10 ثوانٍ
+            magnetSpawnTimer += 0.1;
+            if (magnetSpawnTimer >= 10) {
+                magnetSpawnTimer = 0;
+                if(offlineMagnets.length < 3) {
+                    offlineMagnets.push({
+                        x: Math.floor(Math.random() * (MAP_SIZE / 20)) * 20,
+                        y: Math.floor(Math.random() * (MAP_SIZE / 20)) * 20
+                    });
+                }
+            }
+
+            // تحديث مؤقت مغناطيس اللاعب
+            if (offlinePlayer.magnetTimer > 0) {
+                offlinePlayer.magnetTimer -= 0.1;
+                document.getElementById('magnetStatusWidget').classList.remove('hidden');
+                // جذب الحلويات للاعب
+                offlineCandies.forEach(c => {
+                    let dist = Math.hypot(c.x - offlinePlayer.body[0].x, c.y - offlinePlayer.body[0].y);
+                    if (dist < 200) {
+                        if (c.x < offlinePlayer.body[0].x) c.x += 20;
+                        if (c.x > offlinePlayer.body[0].x) c.x -= 20;
+                        if (c.y < offlinePlayer.body[0].y) c.y += 20;
+                        if (c.y > offlinePlayer.body[0].y) c.y -= 20;
+                    }
+                });
+            } else {
+                document.getElementById('magnetStatusWidget').classList.add('hidden');
+            }
+
+            // تحريك دودة اللاعب
             let head = { ...offlinePlayer.body[0] };
             if (offlinePlayer.direction === "UP") head.y -= 20;
             if (offlinePlayer.direction === "DOWN") head.y += 20;
             if (offlinePlayer.direction === "LEFT") head.x -= 20;
             if (offlinePlayer.direction === "RIGHT") head.x += 20;
 
+            // الموت عند لمس الحدود الخارجية (الحواف) لل خريطة الموسعة
             if (head.x < 0 || head.x >= MAP_SIZE || head.y < 0 || head.y >= MAP_SIZE) {
-                offlinePlayer.body = [{x: 400, y: 400}];
-                offlinePlayer.score = 0;
-                offlinePlayer.direction = "RIGHT";
+                resetOfflinePlayer();
                 return;
+            }
+
+            // التقاط المغناطيس للأوفلاين
+            for (let i = offlineMagnets.length - 1; i >= 0; i--) {
+                let mag = offlineMagnets[i];
+                if (Math.abs(head.x - mag.x) < 20 && Math.abs(head.y - mag.y) < 20) {
+                    offlinePlayer.magnetTimer = 6;
+                    offlineMagnets.splice(i, 1);
+                }
             }
 
             let ate = false;
@@ -390,9 +422,10 @@
             if(!ate) offlinePlayer.body.pop();
             offlinePlayer.body.unshift(head);
 
+            // تحريك وتحديث البوتات الـ 6 العملاقة وتصرفها
             offlineBots.forEach(bot => {
                 let bHead = { ...bot.body[0] };
-                let target = offlineCandies[0];
+                let target = offlineMagnets.length > 0 ? offlineMagnets[0] : offlineCandies[0];
                 if(target) {
                     if (target.x > bHead.x && bot.direction !== "LEFT") bot.direction = "RIGHT";
                     else if (target.x < bHead.x && bot.direction !== "RIGHT") bot.direction = "LEFT";
@@ -405,10 +438,11 @@
                 if (bot.direction === "LEFT") bHead.x -= 20;
                 if (bot.direction === "RIGHT") bHead.x += 20;
 
-                if (bHead.x < 0) bHead.x = MAP_SIZE - 20;
-                if (bHead.x >= MAP_SIZE) bHead.x = 0;
-                if (bHead.y < 0) bHead.y = MAP_SIZE - 20;
-                if (bHead.y >= MAP_SIZE) bHead.y = 0;
+                // البوتات تموت أيضاً عند لمس الحافة
+                if (bHead.x < 0 || bHead.x >= MAP_SIZE || bHead.y < 0 || bHead.y >= MAP_SIZE) {
+                    bot.isDead = true;
+                    return;
+                }
 
                 let bAte = false;
                 if(target && Math.abs(bHead.x - target.x) < 20 && Math.abs(bHead.y - target.y) < 20) {
@@ -419,18 +453,57 @@
                 bot.body.unshift(bHead);
             });
 
+            // تطبيق قوانين التصادم لجميع الكائنات (رأس بجسم = موت كامل)
+            let allEntities = [offlinePlayer, ...offlineBots];
+            
+            allEntities.forEach((ent1, idx1) => {
+                if (ent1.isDead) return;
+                let h = ent1.body[0];
+
+                allEntities.forEach((ent2, idx2) => {
+                    if (idx1 === idx2) {
+                        // الموت إذا لمس جسمه الخاص
+                        if (ent1.body.slice(1).some(seg => seg.x === h.x && seg.y === h.y)) {
+                            ent1.isDead = true;
+                        }
+                    } else {
+                        // الموت إذا لمس رأسك جسم بوت آخر أو العكس
+                        if (ent2.body.some(seg => seg.x === h.x && seg.y === h.y)) {
+                            ent1.isDead = true;
+                        }
+                    }
+                });
+            });
+
+            // معالجة العناصر التي ماتت وإعادتها للعبة بنقاط صفر
+            if (offlinePlayer.isDead) {
+                resetOfflinePlayer();
+                return;
+            }
+
             offlineBots.forEach(bot => {
-                let bHead = bot.body[0];
-                if(offlinePlayer.body.slice(1).some(seg => seg.x === bHead.x && seg.y === bHead.y)) {
-                    offlinePlayer.score += bot.score;
-                    bot.score = 150;
-                    bot.body = [{x: 100, y: 100}];
+                if (bot.isDead) {
+                    bot.score = 200;
+                    bot.isDead = false;
+                    let rx = Math.floor(Math.random() * 80 + 20) * 20;
+                    let ry = Math.floor(Math.random() * 80 + 20) * 20;
+                    bot.body = [];
+                    for(let l=0; l<20; l++) { bot.body.push({ x: rx, y: ry + (l*20) }); }
                 }
             });
 
             drawSnakeGame(offlinePlayer);
         }
 
+        function resetOfflinePlayer() {
+            offlinePlayer.body = [{x: 1000, y: 1000}];
+            offlinePlayer.score = 0;
+            offlinePlayer.direction = "RIGHT";
+            offlinePlayer.magnetTimer = 0;
+            offlinePlayer.isDead = false;
+        }
+
+        // ================= [ تحسين جودة المظهر والرسومات بشكل كامل وواقعي ] =================
         function drawSnakeGame(focusPlayer) {
             let offsetX = 0, offsetY = 0;
             if (focusPlayer && focusPlayer.body[0]) {
@@ -443,46 +516,81 @@
             ctx.save();
             ctx.translate(offsetX, offsetY); 
 
-            ctx.fillStyle = "#0f172a";
+            // أرضية شبكية متطورة وجميلة للواقعية والعمق البصري
+            ctx.fillStyle = "#090d16";
             ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
+
+            ctx.strokeStyle = "#1e293b";
+            ctx.lineWidth = 1;
+            for (let x = 0; x < MAP_SIZE; x += 40) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, MAP_SIZE); ctx.stroke();
+            }
+            for (let y = 0; y < MAP_SIZE; y += 40) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(MAP_SIZE, y); ctx.stroke();
+            }
+
+            // الحواف القاتلة بلون أحمر متوهج وواضح جداً
             ctx.strokeStyle = "#ef4444";
-            ctx.lineWidth = 10;
+            ctx.lineWidth = 14;
+            ctx.shadowColor = "#ef4444";
+            ctx.shadowBlur = 20;
             ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
+            ctx.shadowBlur = 0; // إيقاف التوهج لباقي العناصر لحفظ السرعة سلاسة الإطارات
 
             let candies = isOfflineMode ? offlineCandies : currentCandies;
             let magnets = isOfflineMode ? offlineMagnets : currentMagnets;
 
+            // رسم الحلويات بشكل مشع وأكثر جمالاً (حلوى دائرية بلون نيون مضيء)
             candies.forEach(c => {
-                ctx.fillStyle = "#ec4899";
-                ctx.beginPath(); ctx.arc(c.x + 10, c.y + 10, 9, 0, 2*Math.PI); ctx.fill();
-                ctx.fillStyle = "#0f172a";
-                ctx.beginPath(); ctx.arc(c.x + 10, c.y + 10, 4, 0, 2*Math.PI); ctx.fill();
+                ctx.fillStyle = "#f43f5e";
+                ctx.shadowColor = "#f43f5e";
+                ctx.shadowBlur = 8;
+                ctx.beginPath(); ctx.arc(c.x + 10, c.y + 10, 8, 0, 2*Math.PI); ctx.fill();
+                
+                // قلب الحلوى الداخلي لإعطاء مظهر ثلاثي الأبعاد
+                ctx.fillStyle = "#ffffff";
+                ctx.shadowBlur = 0;
+                ctx.beginPath(); ctx.arc(c.x + 10, c.y + 10, 3, 0, 2*Math.PI); ctx.fill();
             });
 
+            // رسم أيقونة المغناطيس المتوهج على الخريطة
             magnets.forEach(m => {
-                ctx.font = "20px Arial"; ctx.fillText("🧲", m.x, m.y + 15);
+                ctx.shadowColor = "#38bdf8";
+                ctx.shadowBlur = 12;
+                ctx.font = "24px Arial"; ctx.fillText("🧲", m.x - 2, m.y + 18);
+                ctx.shadowBlur = 0;
             });
 
             let leaderboardData = [];
 
             if(isOfflineMode) {
+                // رسم دودة اللاعب بجودة دائرية وظل منزلق
                 offlinePlayer.body.forEach((seg, index) => {
                     ctx.fillStyle = myColor;
-                    ctx.beginPath(); ctx.arc(seg.x + 10, seg.y + 10, index === 0 ? 12 : 10, 0, 2 * Math.PI); ctx.fill();
                     if(index === 0) {
-                        ctx.fillStyle = "#fff"; ctx.font = "bold 12px sans-serif";
-                        ctx.fillText(myUsername || "أنت", seg.x - 10, seg.y - 12);
+                        ctx.shadowColor = myColor; ctx.shadowBlur = 12;
+                    }
+                    ctx.beginPath(); ctx.arc(seg.x + 10, seg.y + 10, index === 0 ? 13 : 10, 0, 2 * Math.PI); ctx.fill();
+                    ctx.shadowBlur = 0;
+                    if(index === 0) {
+                        ctx.fillStyle = "#fff"; ctx.font = "bold 11px sans-serif";
+                        ctx.fillText(myUsername || "أنت", seg.x - 10, seg.y - 14);
                     }
                 });
                 leaderboardData.push({ username: myUsername || "أنت", score: offlinePlayer.score });
 
+                // رسم البوتات الـ 6 العملاقة
                 offlineBots.forEach(bot => {
                     bot.body.forEach((seg, index) => {
                         ctx.fillStyle = bot.color;
-                        ctx.beginPath(); ctx.arc(seg.x + 10, seg.y + 10, index === 0 ? 12 : 10, 0, 2 * Math.PI); ctx.fill();
                         if(index === 0) {
-                            ctx.fillStyle = "#fff"; ctx.font = "bold 12px sans-serif";
-                            ctx.fillText(bot.username, seg.x - 20, seg.y - 12);
+                            ctx.shadowColor = bot.color; ctx.shadowBlur = 10;
+                        }
+                        ctx.beginPath(); ctx.arc(seg.x + 10, seg.y + 10, index === 0 ? 13 : 10, 0, 2 * Math.PI); ctx.fill();
+                        ctx.shadowBlur = 0;
+                        if(index === 0) {
+                            ctx.fillStyle = "#fff"; ctx.font = "bold 11px sans-serif";
+                            ctx.fillText(bot.username, seg.x - 20, seg.y - 14);
                         }
                     });
                     leaderboardData.push({ username: bot.username, score: bot.score });
@@ -493,10 +601,10 @@
                     let ent = allEntities[id];
                     ent.body.forEach((seg, index) => {
                         ctx.fillStyle = ent.color;
-                        ctx.beginPath(); ctx.arc(seg.x + 10, seg.y + 10, index === 0 ? 12 : 10, 0, 2 * Math.PI); ctx.fill();
+                        ctx.beginPath(); ctx.arc(seg.x + 10, seg.y + 10, index === 0 ? 13 : 10, 0, 2 * Math.PI); ctx.fill();
                         if (index === 0) {
-                            ctx.fillStyle = "#ffffff"; ctx.font = "bold 12px sans-serif";
-                            ctx.fillText(ent.username, seg.x - 15, seg.y - 12);
+                            ctx.fillStyle = "#ffffff"; ctx.font = "bold 11px sans-serif";
+                            ctx.fillText(ent.username, seg.x - 15, seg.y - 14);
                         }
                     });
                     leaderboardData.push({ username: ent.username, score: ent.score });
@@ -505,6 +613,7 @@
 
             ctx.restore();
 
+            // ترتيب اللافتة الحية
             leaderboardData.sort((a, b) => b.score - a.score);
             document.getElementById('snakeLiveLeaderboard').innerHTML = leaderboardData.slice(0, 7).map((entry, idx) => `
                 <div class="flex justify-between items-center bg-gray-950/80 p-1.5 rounded-lg border border-gray-850">

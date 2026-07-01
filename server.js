@@ -250,4 +250,19 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('disconnect', () =>
+    socket.on('disconnect', () => {
+        delete onlineUsers[socket.id];
+        io.emit('updateOnlineUsers', Object.values(onlineUsers));
+        for (let rCode in snakeRooms) {
+            if (snakeRooms[rCode].players[socket.id]) delete snakeRooms[rCode].players[socket.id];
+        }
+    });
+});
+
+function checkServerWin(b, s) {
+    const w = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    return w.some(p => b[p[0]] === s && b[p[1]] === s && b[p[2]] === s);
+}
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`🚀 Server connected on port ${PORT}`));

@@ -93,9 +93,7 @@
 
 
     <script>
-// 📡 ضع رابط موقعك على Render بدلاً من الرابط التوضيحي أدناه
-const socket = io("https://the-game-x-o.onrender.com");
-        let currentGame = "";
+const socket = io(); // 📡 اتركه فارغاً هكذا وسيتصل تلقائياً بالرابط الصحيح الحالي دون مشاكل CORS        let currentGame = "";
 
         // 🟢 [دوال التنقل بين الشاشات الرئيسية وضمان عدم حدوث أخطاء الـ undefined]
         function switchScreen(oldId, newId) {

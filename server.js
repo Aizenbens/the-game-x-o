@@ -13,219 +13,186 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-const rooms = {};
-const canvasSize = 500;
-const step = 20;
-const candyTypes = ["🍬", "🍭", "🍩", "🍫", "🧁"];
+const activeRooms = {};
+const candyIcons = ["🍬", "🍭", "🍫", "🍩", "🧁"];
 
-function generateCode() {
-    return Math.random().toString(36).substring(2, 7).toUpperCase();
-}
+const randomDir = () => ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random() * 4)];
 
 io.on('connection', (socket) => {
 
-    // تفعيل لعبة الدودة الفردية والمحلية بـ 12 بوت عالي الأداء فوراً
     socket.on('startSingleSnake', (data) => {
-        const roomCode = "SINGLE_" + socket.id;
-        rooms[roomCode] = {
+        const roomCode = "ROOM_" + socket.id;
+        activeRooms[roomCode] = {
             game: 'snake',
-            isSingle: true,
             players: {},
             candies: [],
-            loop: null
+            interval: null
         };
 
-        // إضافة دودة اللاعب البشري الأساسي
-        rooms[roomCode].players[socket.id] = {
+        activeRooms[roomCode].players[socket.id] = {
+            id: socket.id,
             name: data.name || "أنت",
-            body: [{ x: 200, y: 200 }],
+            color: data.color || "#10b981",
+            body: [{ x: 300, y: 300 }, { x: 280, y: 300 }],
             dir: 'RIGHT',
             score: 0,
-            color: data.color || '#22c55e',
             isBot: false
         };
 
-        // حقن وضخ 12 بوت متفاعل ومنظم داخل بيئة اللعب الفردية
+        // ضخ 12 بوت
         for (let i = 1; i <= 12; i++) {
-            rooms[roomCode].players["BOT_" + i] = {
-                name: "البوت الخصم " + i,
-                body: [{ x: Math.floor(Math.random() * 20) * step, y: Math.floor(Math.random() * 20) * step }],
-                dir: ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random() * 4)],
+            activeRooms[roomCode].players["BOT_" + i] = {
+                id: "BOT_" + i,
+                name: "🤖 بوت خصم " + i,
+                color: ["#f43f5e", "#a855f7", "#38bdf8", "#eab308", "#64748b"][Math.floor(Math.random() * 5)],
+                body: [{ x: Math.random() * 1100 + 50, y: Math.random() * 700 + 50 }],
+                dir: randomDir(),
                 score: 0,
-                color: '#64748b',
                 isBot: true
             };
         }
 
-        // نشر وتوزيع الحلويات والسكاكر العشوائية
-        for (let j = 0; j < 15; j++) {
-            rooms[roomCode].candies.push({
-                x: Math.floor(Math.random() * 24) * step,
-                y: Math.floor(Math.random() * 24) * step,
-                type: candyTypes[Math.floor(Math.random() * candyTypes.length)]
+        // توزيع 40 حلوى
+        for (let j = 0; j < 40; j++) {
+            activeRooms[roomCode].candies.push({
+                x: Math.random() * 1100 + 50,
+                y: Math.random() * 700 + 50,
+                type: candyIcons[Math.floor(Math.random() * candyIcons.length)]
             });
         }
 
-        socket.emit('roomReady', { roomCode, game: 'snake' });
+        socket.join(roomCode);
+        socket.emit('roomConnected', { roomCode, game: 'snake' });
+        
         runSnakeEngine(roomCode);
     });
 
-    socket.on('createRoom', (data) => {
-        const roomCode = generateCode();
-        rooms[roomCode] = {
-            game: data.game,
-            isSingle: false,
-            players: {},
-            candies: [],
-            xoBoard: Array(9).fill(null),
-            xoTurn: 'X'
+    socket.on('createNewRoom', (data) => {
+        const roomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+        activeRooms[roomCode] = { game: data.game, players: {}, candies: [], interval: null };
+        
+        activeRooms[roomCode].players[socket.id] = {
+            id: socket.id, name: data.name, color: data.color,
+            body: [{ x: 200, y: 200 }], dir: 'RIGHT', score: 0, isBot: false
         };
-
-        rooms[roomCode].players[socket.id] = {
-            name: data.name,
-            body: [{ x: 60, y: 60 }],
-            dir: 'RIGHT',
-            score: 0,
-            color: data.color,
-            sign: 'X',
-            isBot: false
-        };
-
         socket.join(roomCode);
-        socket.emit('roomReady', { roomCode, game: data.game });
+        socket.emit('roomConnected', { roomCode, game: data.game });
     });
 
-    socket.on('joinRoom', (data) => {
-        const room = rooms[data.roomCode];
-        if(!room) return;
-
-        room.players[socket.id] = {
-            name: data.name,
-            body: [{ x: 300, y: 300 }],
-            dir: 'LEFT',
-            score: 0,
-            color: data.color,
-            sign: 'O',
-            isBot: false
-        };
-
-        socket.join(data.roomCode);
-        io.to(data.roomCode).emit('roomReady', { roomCode: data.roomCode, game: room.game });
-
-        if(room.game === 'snake') {
-            for (let j = 0; j < 12; j++) {
-                room.candies.push({
-                    x: Math.floor(Math.random() * 24) * step,
-                    y: Math.floor(Math.random() * 24) * step,
-                    type: candyTypes[Math.floor(Math.random() * candyTypes.length)]
-                });
-            }
-            runSnakeEngine(data.roomCode);
-        } else {
-            io.to(data.roomCode).emit('startRoundXO', { currentTurn: 'X' });
-        }
-    });
-
-    socket.on('snakeDirection', (data) => {
-        const room = rooms[data.roomCode];
-        if(room && room.players[socket.id]) {
-            const p = room.players[socket.id];
-            if(data.direction === 'UP' && p.dir !== 'DOWN') p.dir = 'UP';
-            if(data.direction === 'DOWN' && p.dir !== 'UP') p.dir = 'DOWN';
-            if(data.direction === 'LEFT' && p.dir !== 'RIGHT') p.dir = 'LEFT';
-            if(data.direction === 'RIGHT' && p.dir !== 'LEFT') p.dir = 'RIGHT';
+    socket.on('moveSnakeDirect', (data) => {
+        const room = activeRooms[data.roomCode];
+        if (room && room.players[socket.id]) {
+            room.players[socket.id].dir = data.dir;
         }
     });
 
     socket.on('disconnect', () => {
-        for(let code in rooms) {
-            if(rooms[code].players[socket.id]) {
-                clearInterval(rooms[code].loop);
-                delete rooms[code];
+        for (let code in activeRooms) {
+            if (activeRooms[code].players[socket.id]) {
+                clearInterval(activeRooms[code].interval);
+                delete activeRooms[code];
             }
         }
     });
 });
 
-// محرك الدورة الشامل لحساب حركات الـ 12 بوت والموت والتجدد المباشر
 function runSnakeEngine(code) {
-    const room = rooms[code];
-    if(!room) return;
+    const room = activeRooms[code];
+    if (!room) return;
 
-    room.loop = setInterval(() => {
+    room.interval = setInterval(() => {
         const playersList = Object.keys(room.players);
+        const deadPlayers = new Set(); // لتخزين من سيموت في هذا الفريم لمنع الأخطاء التزامنية
 
+        // 1. تحريك كل الدود (اللاعبين والبوتات) خطوة للأمام
         playersList.forEach(id => {
             const p = room.players[id];
-            
-            // ذكاء اصطناعي بسيط ومبهر لحركة الـ 12 بوت نحو أقرب حلوى
-            if(p.isBot && room.candies.length > 0) {
-                const target = room.candies[0];
-                const head = p.body[0];
-                if(target.x > head.x && p.dir !== 'LEFT') p.dir = 'RIGHT';
-                else if(target.x < head.x && p.dir !== 'RIGHT') p.dir = 'LEFT';
-                else if(target.y > head.y && p.dir !== 'UP') p.dir = 'DOWN';
-                else if(target.y < head.y && p.dir !== 'DOWN') p.dir = 'UP';
+            if (!p) return;
+
+            if (p.isBot && Math.random() < 0.15) {
+                p.dir = randomDir();
             }
 
             let head = { ...p.body[0] };
-            if (p.dir === 'UP') head.y -= step;
-            if (p.dir === 'DOWN') head.y += step;
-            if (p.dir === 'LEFT') head.x -= step;
-            if (p.dir === 'RIGHT') head.x += step;
+            if (p.dir === 'UP') head.y -= 12;
+            if (p.dir === 'DOWN') head.y += 12;
+            if (p.dir === 'LEFT') head.x -= 12;
+            if (p.dir === 'RIGHT') head.x += 12;
 
-            // حماية حدود جدران الساحة
-            if(head.x < 0) head.x = canvasSize - step;
-            if(head.x >= canvasSize) head.x = 0;
-            if(head.y < 0) head.y = canvasSize - step;
-            if(head.y >= canvasSize) head.y = 0;
+            if (head.x < 0) head.x = 1300; if (head.x > 1300) head.x = 0;
+            if (head.y < 0) head.y = 800; if (head.y > 800) head.y = 0;
 
             p.body.unshift(head);
 
-            // التحقق من التهام الحلويات الملونة
-            let ate = false;
-            room.candies.forEach((candy, cIdx) => {
-                if(head.x === candy.x && head.y === candy.y) {
-                    p.score += 10; // زيادة الرصيد بمقدار 10 نقاط لكل قطة حلوى
-                    ate = true;
-                    room.candies[cIdx] = {
-                        x: Math.floor(Math.random() * 24) * step,
-                        y: Math.floor(Math.random() * 24) * step,
-                        type: candyTypes[Math.floor(Math.random() * candyTypes.length)]
+            // أكل الحلويات
+            let ateCandy = false;
+            room.candies.forEach((candy, index) => {
+                if (Math.hypot(head.x - candy.x, head.y - candy.y) < 25) {
+                    p.score += 10;
+                    ateCandy = true;
+                    room.candies[index] = {
+                        x: Math.random() * 1200 + 40,
+                        y: Math.random() * 750 + 40,
+                        type: candyIcons[Math.floor(Math.random() * candyIcons.length)]
                     };
                 }
             });
 
-            if(!ate) p.body.pop();
+            if (!ateCandy) p.body.pop();
+        });
 
-            // تحقق من شروط الموت والاصطدام (التجدد الفوري للبوتات من الصفر)
-            playersList.forEach(otherId => {
-                if(id !== otherId) {
-                    const other = room.players[otherId];
-                    other.body.forEach(part => {
-                        if(head.x === part.x && head.y === part.y) {
-                            // إذا مات البوت أو اللاعب يعود من الأول بصفر نقاط
-                            p.body = [{ x: Math.floor(Math.random() * 20) * step, y: Math.floor(Math.random() * 20) * step }];
-                            p.score = 0;
-                        }
-                    });
+        // 2. فحص قوانين الاصطدام المتقدمة (رأس برأس أو رأس بجسم)
+        playersList.forEach(id1 => {
+            const p1 = room.players[id1];
+            if (!p1) return;
+            const head1 = p1.body[0];
+
+            playersList.forEach(id2 => {
+                if (id1 === id2) return; // لا يفحص نفسه مع نفسه
+                
+                const p2 = room.players[id2];
+                if (!p2) return;
+                const head2 = p2.body[0];
+
+                // أ. فحص اصطدام (رأس برأس) -> يموت الاثنان معاً
+                if (Math.hypot(head1.x - head2.x, head1.y - head2.y) < 15) {
+                    deadPlayers.add(id1);
+                    deadPlayers.add(id2);
+                }
+
+                // ب. فحص اصطدام (رأس لاعب 1 بجسم لاعب 2) -> يموت لاعب 1 فقط
+                // نبدأ الفحص من العقدة رقم 1 (تخطي الرأس لأنه فُحص بالأعلى)
+                for (let i = 1; i < p2.body.length; i++) {
+                    if (Math.hypot(head1.x - p2.body[i].x, head1.y - p2.body[i].y) < 12) {
+                        deadPlayers.add(id1);
+                        break; 
+                    }
                 }
             });
         });
 
-        // إنشاء وتحديث قائمة الترتيب المباشر (Leaderboard) على السيرفر
+        // 3. إعادة إحياء (Respawn) وتصفير نقاط كل من مات في هذا الفريم
+        deadPlayers.forEach(id => {
+            const p = room.players[id];
+            if (p) {
+                p.body = [{ x: Math.random() * 1100 + 50, y: Math.random() * 700 + 50 }];
+                p.score = 0;
+            }
+        });
+
+        // 4. إرسال البيانات وتحديث المتصدرين
         const leaderboard = Object.values(room.players)
-            .map(p => ({ name: p.name, score: p.score }))
+            .map(p => ({ id: p.id, name: p.name, score: p.score }))
             .sort((a, b) => b.score - a.score);
 
-        io.to(code).emit('snakeUpdate', {
+        io.to(code).emit('renderSnakeFrame', {
             snakes: Object.values(room.players),
             candies: room.candies,
             leaderboard: leaderboard
         });
 
-    }, 130);
+    }, 100);
 }
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log('Platform live on port ' + PORT));
+server.listen(PORT, () => console.log(`Fixed physics engine running on port ${PORT}`));

@@ -2,586 +2,285 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>منصة التحدي المتكاملة للهواتف والكمبيوتر 🎮</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مجمع الألعاب أونلاين - الدودة و XO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <style>
-        :root {
-            --bg-color: #05070f;
-            --container-bg: rgba(15, 22, 42, 0.9);
-            --text-color: #f8fafc;
-            --x-color: #38bdf8;
-            --o-color: #f43f5e;
-            --accent-color: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; touch-action: manipulation; }
-        body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, sans-serif; }
         .hidden { display: none !important; }
-        
-        .hub-container, .lobby-container { 
-            background: var(--container-bg); padding: 25px; border-radius: 24px; text-align: center; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.05); width: 92%; max-width: 530px; backdrop-filter: blur(15px); 
-            max-height: 95vh; overflow-y: auto;
-        }
-        .input-field { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); color: white; text-align: center; margin-bottom: 15px; outline: none; font-size: 1.1rem; }
-        
-        .skin-section { margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 16px; }
-        .skin-options { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .skin-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); cursor: pointer; transition: 0.2s; }
-        .skin-btn.active { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 15px var(--x-color); }
-        
-        .head-skin-options { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-        .head-skin-btn { background: #1e293b; border: 2px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 12px; cursor: pointer; color: white; font-size: 1rem; transition: 0.2s; }
-        .head-skin-btn.active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.2); transform: scale(1.05); }
-
-        .color-picker-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; font-size: 0.95rem; }
-        .custom-picker { border: none; width: 45px; height: 30px; border-radius: 6px; cursor: pointer; background: none; }
-
-        .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
-        .game-card { background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.08); padding: 20px 10px; border-radius: 16px; cursor: pointer; transition: 0.3s; }
-        .game-card:hover { transform: translateY(-4px); border-color: var(--x-color); background: rgba(56, 189, 248, 0.06); }
-        
-        .btn { background: var(--x-color); border: none; padding: 14px 20px; border-radius: 12px; color: #000; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.1rem; transition: 0.2s; margin-bottom: 10px; -webkit-tap-highlight-color: transparent; }
-        .btn:hover { opacity: 0.9; transform: scale(1.01); }
-        .btn.secondary { background: var(--accent-color); color: #fff; }
-        .btn.orange { background: #f59e0b; color: #fff; }
-        .btn.purple { background: #8b5cf6; color: #fff; }
-        .btn.back { background: #334155; color: #fff; margin-top: 15px; }
-
-        .difficulty-container { display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; width: 100%; }
-        .diff-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: #1e293b; color: #fff; font-weight: bold; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
-        .diff-btn.easy.active { background: #10b981; color: black; border-color: #10b981; }
-        .diff-btn.medium.active { background: #f59e0b; color: black; border-color: #f59e0b; }
-        .diff-btn.hard.active { background: #f43f5e; color: white; border-color: #f43f5e; }
-
-        .full-screen-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; z-index: 9999; flex-direction: column; }
-        #snakeCanvas { width: 100%; height: 100%; display: block; background: radial-gradient(circle, #0e172e 0%, #03050d 100%); position: absolute; top: 0; left: 0; z-index: 1; }
-        
-        .game-hud { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; z-index: 10; width: calc(100% - 20px); }
-        .hud-row-container { display: flex; gap: 10px; width: 100%; justify-content: flex-start; flex-wrap: wrap; }
-        .hud-card { background: rgba(15, 23, 42, 0.9); padding: 8px 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); font-weight: bold; pointer-events: auto; font-size: 0.9rem; }
-        
-        .live-leaderboard { position: absolute; top: 120px; right: 10px; width: 200px; background: rgba(15, 23, 42, 0.9); border-radius: 16px; padding: 10px; border: 1px solid rgba(255,255,255,0.1); z-index: 10; max-height: 200px; overflow: hidden; }
-        .lead-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.8rem; padding: 4px 6px; border-radius: 6px; background: rgba(255,255,255,0.02); }
-        .lead-row.me { background: rgba(56, 189, 248, 0.2); border: 1px solid var(--x-color); font-weight: bold; }
-        
-        #magnetIndicator { color: #eab308; display: none; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
-
-        .game-layout { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; gap: 15px; position: relative; z-index: 5; flex-wrap: wrap; padding: 15px; overflow-y: auto; }
-        .xo-centered-box { background: var(--container-bg); padding: 20px; border-radius: 24px; text-align: center; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px); box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; max-width: 100%; }
-        
-        .board { display: grid; grid-template-columns: repeat(3, min(28vw, 90px)); grid-template-rows: repeat(3, min(28vw, 90px)); gap: 10px; margin-top: 15px; }
-        .cell { background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; display: flex; justify-content: center; align-items: center; font-size: calc(1.5rem + 2vw); font-weight: bold; cursor: pointer; transition: 0.2s; user-select: none; -webkit-tap-highlight-color: transparent; }
-        .cell:hover { background: rgba(255,255,255,0.05); }
-        .cell.X { color: var(--x-color); } .cell.O { color: var(--o-color); }
-
-        .chat-container { width: min(100%, 320px); height: min(35vh, 320px); background: var(--container-bg); border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; backdrop-filter: blur(12px); overflow: hidden; }
-        .chat-header { background: rgba(0,0,0,0.2); padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 0.95rem; text-align: center; color: var(--x-color); }
-        .chat-messages { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; text-align: right; }
-        .msg { background: rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 12px; font-size: 0.85rem; max-width: 85%; word-break: break-word; }
-        .msg.system { background: rgba(245, 158, 11, 0.1); color: #f59e0b; align-self: center; text-align: center; font-size: 0.75rem; }
-        .chat-input-area { display: flex; padding: 8px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05); }
-        .chat-input { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; color: white; outline: none; font-size: 0.85rem; }
-        .chat-send-btn { background: var(--x-color); border: none; padding: 0 12px; border-radius: 8px; color: black; font-weight: bold; margin-right: 6px; cursor: pointer; font-size: 0.85rem; }
-
-        .phone-tip { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; pointer-events: none; text-align: center; width: max-content; color: #94a3b8; z-index: 10; }
-
-        @media (max-width: 600px) {
-            .game-layout { flex-direction: column; justify-content: flex-start; padding-top: 110px; }
-            .live-leaderboard { top: auto; bottom: 60px; right: 10px; width: 140px; max-height: 120px; }
-            .chat-container { width: 100%; height: 180px; }
-        }
+        canvas { background-color: #1e293b; border: 4px solid #334155; border-radius: 8px; }
     </style>
 </head>
-<body>
+<body class="h-screen flex flex-col justify-between overflow-hidden">
 
-<div class="hub-container" id="gameHub">
-    <h1 style="margin-bottom: 5px; font-size: 1.6rem;">عالم التحديات المتكامل 📱🎮</h1>
-    <p style="color: #64748b; margin-bottom: 15px; font-size: 0.9rem;">يدعم اللمس للهواتف، غرف خاصة وسكنات رأس مجسمة</p>
-    
-    <input type="text" class="input-field" id="globalNameInput" placeholder="أدخل اسمك المستعار">
-    
-    <div class="skin-section">
-        <h4 style="margin-bottom: 10px; font-size: 0.95rem;">اختر سكن رأس الدودة (3D)</h4>
-        <div class="head-skin-options">
-            <button class="head-skin-btn active" onclick="selectHeadSkin('default', this)">🐍 كلاسيك</button>
-            <button class="head-skin-btn" onclick="selectHeadSkin('crown', this)">👑 التاج</button>
-            <button class="head-skin-btn" onclick="selectHeadSkin('dragon', this)">🐲 التنين</button>
-            <button class="head-skin-btn" onclick="selectHeadSkin('ninja', this)">🥷 نينجا</button>
-        </div>
-
-        <h4 style="margin-bottom: 10px; margin-top: 15px; font-size: 0.95rem;">استايل الألوان والمظهر</h4>
-        <div class="skin-options">
-            <div class="skin-btn active" style="background: #10b981;" onclick="selectSkin('#10b981', this)"></div>
-            <div class="skin-btn" style="background: #38bdf8;" onclick="selectSkin('#38bdf8', this)"></div>
-            <div class="skin-btn" style="background: #ec4899;" onclick="selectSkin('#ec4899', this)"></div>
-            <div class="skin-btn" style="background: #f59e0b;" onclick="selectSkin('#f59e0b', this)"></div>
-        </div>
-        <div class="color-picker-container">
-            <span>🎨 لون مخصص:</span>
-            <input type="color" id="customColorPicker" class="custom-picker" value="#a855f7" onchange="applyCustomColor(this.value)">
-        </div>
-    </div>
-
-    <div class="games-grid">
-        <div class="game-card" onclick="goToLobby('xo')">
-            <h3>لعبة XO ❌⭕</h3>
-            <span style="font-size:0.8rem;">مستويات ذكاء اصطناعي + شات مباشر</span>
-        </div>
-        <div class="game-card" onclick="goToLobby('snake')">
-            <h3>لعبة الدودة 3D 🐍</h3>
-            <span style="font-size:0.8rem;">تحكم باللمس، سيرفر وبوتات</span>
-        </div>
-    </div>
-</div>
-
-<div class="lobby-container hidden" id="lobbyArea">
-    <h2 id="lobbyTitle" style="margin-bottom: 15px; font-size: 1.3rem;">اختر مود اللعب المناسب</h2>
-    
-    <div id="snakeOnlineOptions" class="hidden">
-        <button class="btn secondary" onclick="joinMode('global')">السيرفر الرئيسي (أونلاين + 14 بوت) 🌐</button>
-        <button class="btn orange" onclick="joinMode('bots')">غرفة البوتات (ضد 14 بوت فقط) 🤖</button>
-        <button class="btn purple" onclick="createPrivateRoom()">إنشاء غرفة خاصة للأصدقاء 🔗</button>
-    </div>
-    
-    <div id="xoOptions" class="hidden">
-        <h4 style="margin-bottom: 10px; font-size:0.9rem; text-align:right;">حدد مستوى صعوبة البوت:</h4>
-        <div class="difficulty-container">
-            <button class="diff-btn easy active" onclick="setDifficulty('easy', this)">سهل 🟢</button>
-            <button class="diff-btn medium" onclick="setDifficulty('medium', this)">متوسط 🟡</button>
-            <button class="diff-btn hard" onclick="setDifficulty('hard', this)">مستحيل 🔴</button>
-        </div>
-        <button class="btn" onclick="startXO('local')">اللعب ضد البوت محلياً 🤖</button>
-        <button class="btn purple" onclick="createXOPrivateRoom()">إنشاء غرفة XO أونلاين + شات 🔗</button>
-    </div>
-    <button class="btn back" onclick="exitToHub()">رجوع</button>
-</div>
-
-<div class="full-screen-container hidden" id="gameArea">
-    <div class="game-hud id-snake-hud" id="snakeHud">
-        <div class="hud-row-container">
-            <div class="hud-card" style="color: #38bdf8;" id="scoreDisplay">النقاط: 0</div>
-            <div class="hud-card" id="magnetIndicator">🧲 مغناطيس 3D!</div>
-        </div>
-        <div class="hud-card hidden" id="roomLinkCard" style="background: #1e293b; color: #fff; pointer-events: auto;">
-            <span style="font-size:0.8rem;">الرابط: <strong id="roomCodeText"></strong></span>
-            <button onclick="copyRoomLink()" style="margin-right:8px; background:#38bdf8; border:none; padding:3px 6px; border-radius:5px; cursor:pointer; color:#000; font-weight:bold; font-size:0.75rem;">نسخ 🔗</button>
-        </div>
-    </div>
-    
-    <div class="live-leaderboard hidden" id="snakeLeaderboard">
-        <h4 style="color: #f59e0b; text-align: center; margin-bottom: 5px; font-size:0.85rem;">🏆 المتصدرون</h4>
-        <div id="leaderboardRows"></div>
-    </div>
-    
-    <div class="game-layout">
-        <canvas id="snakeCanvas" class="hidden"></canvas>
-        <div class="phone-tip hidden" id="snakePhoneTip">💡 المس واسحب في أي مكان على الشاشة لتوجيه الدودة!</div>
-
-        <div class="xo-centered-box hidden" id="xoBox">
-            <h2 id="xoStatusText" style="margin-bottom: 10px; color: var(--x-color); font-size:1.2rem;">دورك الآن (X)</h2>
-            <div class="board" id="xoBoard">
-                <div class="cell" data-index="0"></div><div class="cell" data-index="1"></div><div class="cell" data-index="2"></div>
-                <div class="cell" data-index="3"></div><div class="cell" data-index="4"></div><div class="cell" data-index="5"></div>
-                <div class="cell" data-index="6"></div><div class="cell" data-index="7"></div><div class="cell" data-index="8"></div>
+    <div id="authScreen" class="flex-1 flex flex-col items-center justify-center p-4">
+        <div class="bg-slate-800 p-8 rounded-xl shadow-2xl w-full max-w-md border border-slate-700 text-center">
+            <h1 class="text-3xl font-bold mb-6 text-indigo-400">🎮 مجمع الألعاب أونلاين</h1>
+            
+            <div class="space-y-4">
+                <input id="usernameInput" type="text" placeholder="اسم المستخدم" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                <input id="passwordInput" type="password" placeholder="كلمة المرور" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
             </div>
-            <button class="btn back" onclick="location.reload()" style="padding:10px; font-size:1rem;">انسحاب للقائمة</button>
-        </div>
 
-        <div class="chat-container hidden" id="xoChatBox">
-            <div class="chat-header" id="xoChatHeader">💬 شات التحدي المباشر</div>
-            <div class="chat-messages" id="chatMessages"></div>
-            <div class="chat-input-area">
-                <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة هنا...">
-                <button class="chat-send-btn" onclick="sendChatMessage()">إرسال</button>
+            <p id="authError" class="text-red-400 text-sm mt-3 hidden"></p>
+
+            <div class="flex gap-4 mt-6">
+                <button onclick="handleAuth('login')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 p-3 rounded-lg font-semibold transition">تسجيل الدخول</button>
+                <button onclick="handleAuth('register')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-lg font-semibold transition">إنشاء حساب</button>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-<script>
-    const socket = io({ transports: ['websocket', 'polling'] });
-    let currentGame = "", nickname = "لاعب", playerColor = "#10b981", headSkin = "default", roomCode = "";
-    let xoMode = "local", myXOSign = "X", myXOTurn = true, botDifficulty = "easy";
-    
-    const canvas = document.getElementById('snakeCanvas');
-    const ctx = canvas.getContext('2d');
+    <div id="gameHub" class="flex-1 flex flex-col md:flex-row hidden p-4 gap-4 h-full overflow-hidden">
+        <div class="flex-1 bg-slate-800 rounded-xl p-6 border border-slate-700 flex flex-col justify-center items-center gap-6">
+            <h2 class="text-2xl font-bold text-center text-indigo-400 mb-4">اختر لعبة للبدء</h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-xl">
+                <div onclick="goToLobby('snake')" class="bg-slate-900 p-6 rounded-xl border border-slate-700 hover:border-emerald-500 cursor-pointer transition transform hover:-translate-y-1 text-center">
+                    <span class="text-5xl">🐍</span>
+                    <h3 class="text-xl font-bold mt-3 text-emerald-400">لعبة الدودة</h3>
+                    <p class="text-gray-400 text-sm mt-1">العب واجمع النقاط أونلاين</p>
+                </div>
+                <div onclick="goToLobby('xo')" class="bg-slate-900 p-6 rounded-xl border border-slate-700 hover:border-indigo-500 cursor-pointer transition transform hover:-translate-y-1 text-center">
+                    <span class="text-5xl">❌⭕</span>
+                    <h3 class="text-xl font-bold mt-3 text-indigo-400">لعبة X - O</h3>
+                    <p class="text-gray-400 text-sm mt-1">تحدى أصدقائك في غرف خاصة</p>
+                </div>
+            </div>
+        </div>
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const targetRoom = urlParams.get('room');
-    const targetXORoom = urlParams.get('xoroom');
+        <div class="w-full md:w-80 bg-slate-800 rounded-xl p-4 border border-slate-700 flex flex-col h-full justify-between">
+            <div>
+                <h3 class="font-bold text-lg border-b border-slate-700 pb-2 text-indigo-300">👥 المتصلون الآن</h3>
+                <ul id="onlineUsers" class="mt-2 space-y-1 max-h-32 overflow-y-auto text-sm text-gray-300"></ul>
+            </div>
+            
+            <div class="flex flex-col flex-1 mt-4 justify-between overflow-hidden">
+                <h3 class="font-bold text-lg border-b border-slate-700 pb-2 text-emerald-400">💬 شات المجتمع العام</h3>
+                <div id="chatBox" class="flex-1 my-2 p-2 bg-slate-900 rounded-lg overflow-y-auto space-y-2 text-sm"></div>
+                
+                <div class="flex gap-2">
+                    <input id="chatInput" type="text" placeholder="اكتب رسالة..." class="flex-1 p-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm">
+                    <button onclick="sendGlobalMessage()" class="bg-indigo-600 px-4 rounded-lg text-sm hover:bg-indigo-700">إرسال</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
+    <div id="lobbyArea" class="flex-1 flex flex-col items-center justify-center hidden p-4">
+        <div class="bg-slate-800 p-8 rounded-xl shadow-2xl w-full max-w-md border border-slate-700 text-center relative">
+            <button onclick="exitToHub()" class="absolute top-4 left-4 text-gray-400 hover:text-white">➡️ عودة</button>
+            <h2 id="lobbyTitle" class="text-2xl font-bold mb-6 text-indigo-400">قاعة الانتظار</h2>
 
-    document.addEventListener("DOMContentLoaded", function() {
-        if (targetRoom) {
-            document.getElementById('lobbyArea').classList.add('hidden');
-            goToLobby('snake');
-            document.getElementById('lobbyTitle').innerText = "أنت مدعو لغرفة دودة خاصة!";
-            document.getElementById('snakeOnlineOptions').innerHTML = `<button class="btn purple" onclick="joinPrivateRoom('${targetRoom}')">دخول غرفة الدودة 🚀</button>`;
-        } else if (targetXORoom) {
-            document.getElementById('lobbyArea').classList.add('hidden');
-            goToLobby('xo');
-            document.getElementById('lobbyTitle').innerText = "أنت مدعو لتحدي XO أونلاين!";
-            document.getElementById('xoOptions').innerHTML = `<button class="btn purple" onclick="joinXOPrivateRoom('${targetXORoom}')">دخول تحدي XO والشات ❌⭕</button>`;
+            <div id="snakeOnlineOptions" class="space-y-4 hidden">
+                <button onclick="startSnakeGame('solo')" class="w-full bg-emerald-600 hover:bg-emerald-700 p-3 rounded-lg font-semibold transition">لعب فردي (سولو)</button>
+                <button onclick="startSnakeGame('multi')" class="w-full bg-indigo-600 hover:bg-indigo-700 p-3 rounded-lg font-semibold transition">تحدي أونلاين (قريباً)</button>
+            </div>
+
+            <div id="xoOptions" class="space-y-4 hidden">
+                <input id="roomCodeInput" type="text" placeholder="أدخل كود الغرفة (مثال: 123)" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-lg text-white text-center">
+                <button onclick="joinXORoom()" class="w-full bg-indigo-600 hover:bg-indigo-700 p-3 rounded-lg font-semibold transition">دخول الغرفة وبدء التحدي</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="snakeCanvasArea" class="flex-1 flex flex-col items-center justify-center hidden p-4 relative">
+        <button onclick="exitGameToHub('snakeCanvasArea')" class="absolute top-4 left-4 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-semibold">إغلاق اللعبة</button>
+        <div class="text-xl font-bold mb-2">النقاط: <span id="snakeScore" class="text-emerald-400">0</span></div>
+        <canvas id="snakeCanvas" width="400" height="400"></canvas>
+    </div>
+
+
+    <script>
+        const socket = io(); // الاتصال الفوري بالسيرفر
+        let myUsername = "";
+        let currentGame = "";
+
+        // 🟢 [دوال التنقل بين الشاشات الرئيسية وضمان عدم حدوث أخطاء الـ undefined]
+        function switchScreen(oldId, newId) {
+            document.getElementById(oldId).classList.add('hidden');
+            document.getElementById(newId).classList.remove('hidden');
         }
-    });
 
-    function setDifficulty(diff, el) {
-        botDifficulty = diff;
-        document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-    }
-
-    function selectSkin(color, el) {
-        playerColor = color;
-        document.querySelectorAll('.skin-btn').forEach(b => b.classList.remove('active'));
-        if(el) el.classList.add('active');
-    }
-
-    function selectHeadSkin(skinType, el) {
-        headSkin = skinType;
-        document.querySelectorAll('.head-skin-btn').forEach(b => b.classList.remove('active'));
-        if(el) el.classList.add('active');
-    }
-
-    function applyCustomColor(color) {
-        playerColor = color;
-        document.querySelectorAll('.skin-btn').forEach(b => b.classList.remove('active'));
-    }
-
-    function goToLobby(game) {
-        nickname = document.getElementById('globalNameInput').value.trim() || "لاعب";
-        currentGame = game;
-        document.getElementById('gameHub').classList.add('hidden');
-        document.getElementById('lobbyArea').classList.remove('hidden');
-        document.getElementById('snakeOnlineOptions').classList.add('hidden');
-        document.getElementById('xoOptions').classList.add('hidden');
-
-        if(game === 'snake') {
-            document.getElementById('snakeOnlineOptions').classList.remove('hidden');
-        } else {
-            document.getElementById('xoOptions').classList.remove('hidden');
+        function goToLobby(game) {
+            currentGame = game;
+            switchScreen('gameHub', 'lobbyArea');
+            
+            // إخفاء الخيارات السابقة وإظهار خيارات اللعبة المحددة
+            document.getElementById('snakeOnlineOptions').classList.add('hidden');
+            document.getElementById('xoOptions').classList.add('hidden');
+            
+            if (game === 'snake') {
+                document.getElementById('lobbyTitle').innerText = "لوبي لعبة الدودة 🐍";
+                document.getElementById('snakeOnlineOptions').classList.remove('hidden');
+            } else {
+                document.getElementById('lobbyTitle').innerText = "لوبي تحدي XO ❌⭕";
+                document.getElementById('xoOptions').classList.remove('hidden');
+            }
         }
-    }
 
-    function exitToHub() {
-        document.getElementById('lobbyArea').classList.add('hidden');
-        document.getElementById('gameHub').classList.remove('hidden');
-    }
-
-    function enterGameArea() {
-        document.getElementById('lobbyArea').classList.add('hidden');
-        document.getElementById('gameArea').classList.remove('hidden');
-    }
-
-    function joinMode(mode) {
-        enterGameArea();
-        document.getElementById('snakeCanvas').classList.remove('hidden');
-        document.getElementById('snakeLeaderboard').classList.remove('hidden');
-        document.getElementById('snakeHud').classList.remove('hidden');
-        document.getElementById('snakePhoneTip').classList.remove('hidden');
-        resizeCanvas();
-        roomCode = mode === 'global' ? 'GLOBAL_SERVER' : 'BOTS_' + Math.random().toString(36).substring(5);
-        socket.emit('joinSnakeGame', { mode: mode, roomCode: roomCode, name: nickname, color: playerColor, headSkin: headSkin });
-    }
-
-    function createPrivateRoom() {
-        enterGameArea();
-        document.getElementById('snakeCanvas').classList.remove('hidden');
-        document.getElementById('snakeLeaderboard').classList.remove('hidden');
-        document.getElementById('snakeHud').classList.remove('hidden');
-        document.getElementById('snakePhoneTip').classList.remove('hidden');
-        resizeCanvas();
-        roomCode = 'PRV_' + Math.random().toString(36).substring(2, 7).toUpperCase();
-        document.getElementById('roomLinkCard').classList.remove('hidden');
-        document.getElementById('roomCodeText').innerText = roomCode;
-        socket.emit('joinSnakeGame', { mode: 'private', roomCode: roomCode, name: nickname, color: playerColor, headSkin: headSkin });
-    }
-
-    function joinPrivateRoom(rCode) {
-        nickname = document.getElementById('globalNameInput').value.trim() || "ضيف";
-        enterGameArea();
-        document.getElementById('snakeCanvas').classList.remove('hidden');
-        document.getElementById('snakeLeaderboard').classList.remove('hidden');
-        document.getElementById('snakeHud').classList.remove('hidden');
-        document.getElementById('snakePhoneTip').classList.remove('hidden');
-        resizeCanvas();
-        roomCode = rCode;
-        socket.emit('joinSnakeGame', { mode: 'private', roomCode: roomCode, name: nickname, color: playerColor, headSkin: headSkin });
-    }
-
-    function copyRoomLink() {
-        const param = xoMode === 'online' ? `xoroom=${roomCode}` : `room=${roomCode}`;
-        const link = `${window.location.origin}${window.location.pathname}?${param}`;
-        navigator.clipboard.writeText(link);
-        alert("تم نسخ رابط الغرفة بنجاح! أرسله لصديقك ليدخل معك مباشرة 🌐");
-    }
-
-    function startXO(type) {
-        xoMode = "local";
-        enterGameArea();
-        document.getElementById('xoBox').classList.remove('hidden');
-        document.getElementById('xoChatBox').classList.remove('hidden');
-        document.getElementById('xoChatHeader').innerText = "🤖 محادثات وتعليقات البوت الذكي";
-        document.getElementById('snakeHud').classList.add('hidden');
-        initLocalXO();
-    }
-
-    function createXOPrivateRoom() {
-        xoMode = "online";
-        enterGameArea();
-        document.getElementById('xoBox').classList.remove('hidden');
-        document.getElementById('xoChatBox').classList.remove('hidden');
-        document.getElementById('xoChatHeader').innerText = "💬 شات الغرفة المباشر";
-        document.getElementById('snakeHud').classList.remove('hidden');
-        document.getElementById('roomLinkCard').classList.remove('hidden');
-        
-        roomCode = 'XO_' + Math.random().toString(36).substring(2, 7).toUpperCase();
-        document.getElementById('roomCodeText').innerText = roomCode;
-        
-        socket.emit('joinXOGame', { roomCode: roomCode, name: nickname });
-    }
-
-    function joinXOPrivateRoom(rCode) {
-        xoMode = "online";
-        nickname = document.getElementById('globalNameInput').value.trim() || "تحدي XO";
-        enterGameArea();
-        document.getElementById('xoBox').classList.remove('hidden');
-        document.getElementById('xoChatBox').classList.remove('hidden');
-        document.getElementById('xoChatHeader').innerText = "💬 شات الغرفة المباشر";
-        document.getElementById('snakeHud').classList.remove('hidden');
-        
-        roomCode = rCode;
-        socket.emit('joinXOGame', { roomCode: roomCode, name: nickname });
-    }
-
-    function sendChatMessage() {
-        const inp = document.getElementById('chatInput');
-        const txt = inp.value.trim();
-        if(!txt) return;
-
-        if (xoMode === 'local') {
-            appendMessage(nickname, txt);
-            inp.value = "";
-            setTimeout(function() {
-                const botResponses = [
-                    "خطوة جيدة.. ولكن هل تستطيع الفوز؟ 😏",
-                    "أنا مبرمج لأكتشف ثغراتك بالكامل! 🤖🔥",
-                    "ركز في اللعب بدلاً من تشتيت انتباهي بالشات! 🤫",
-                    "حساباتي تؤكد أن فوزك مستحيل في هذا المستوى 🔴"
-                ];
-                appendMessage(`🤖 البوت (${botDifficulty})`, botResponses[Math.floor(Math.random() * botResponses.length)]);
-            }, 700);
-        } else {
-            socket.emit('sendXOMessage', { roomCode: roomCode, name: nickname, msg: txt });
-            inp.value = "";
+        function exitToHub() { 
+            switchScreen('lobbyArea', 'gameHub'); 
         }
-    }
 
-    function appendMessage(sender, text, isSystem) {
-        const container = document.getElementById('chatMessages');
-        const div = document.createElement('div');
-        if (isSystem) {
-            div.className = "msg system";
-            div.innerText = text;
-        } else {
-            div.className = "msg";
-            div.innerHTML = `<strong style="color:var(--x-color)">${sender}:</strong> ${text}`;
+        function exitGameToHub(canvasAreaId) {
+            switchScreen(canvasAreaId, 'gameHub');
+            // إيقاف اللعبة الفردية إذا كانت تعمل
+            if(snakeInterval) clearInterval(snakeInterval);
         }
-        container.appendChild(div);
-        container.scrollTop = container.scrollHeight;
-    }
 
-    socket.on('receiveXOMessage', function(data) {
-        appendMessage(data.name, data.msg, data.system);
-    });
 
-    socket.on('updateXOBoard', function(data) {
-        const cells = document.querySelectorAll('#xoBoard .cell');
-        data.board.forEach(function(val, idx) {
-            cells[idx].innerText = val || "";
-            cells[idx].className = `cell ${val || ''}`;
+        // 🔐 [نظام الحسابات والتحقق]
+        function handleAuth(type) {
+            const username = document.getElementById('usernameInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+            
+            if(!username || !password) {
+                showAuthError("الرجاء ملء الحقول أولاً!");
+                return;
+            }
+            socket.emit('authRequest', { type, username, password });
+        }
+
+        socket.on('authResponse', (data) => {
+            if (data.success) {
+                myUsername = data.username;
+                switchScreen('authScreen', 'gameHub');
+            } else {
+                showAuthError(data.message);
+            }
         });
 
-        myXOSign = data.players[socket.id];
-        myXOTurn = (data.turn === socket.id);
-
-        if (data.winner) {
-            if (data.winner === 'draw') {
-                document.getElementById('xoStatusText').innerText = "🤝 تعادل وايربورد ممتد!";
-            } else {
-                document.getElementById('xoStatusText').innerText = data.winner === socket.id ? "🏆 لقد فزت بالتحدي!" : "😢 صديقك انتصر عليك!";
-            }
-        } else {
-            if (Object.keys(data.players).length < 2) {
-                document.getElementById('xoStatusText').innerText = "⏳ في انتظار دخول منافسك عبر الرابط...";
-            } else {
-                document.getElementById('xoStatusText').innerText = myXOTurn ? `دورك الآن (${myXOSign})` : "⏳ دور صديقك الآن...";
-            }
+        function showAuthError(msg) {
+            const errEl = document.getElementById('authError');
+            errEl.innerText = msg;
+            errEl.classList.remove('hidden');
         }
-    });
 
-    document.querySelectorAll('#xoBoard .cell').forEach(function(cell) {
-        cell.addEventListener('click', function(e) {
-            const idx = parseInt(e.target.dataset.index);
-            if (xoMode === 'local') {
-                if (!localTurn || localBoard[idx]) return;
-                makeLocalMove(idx, 'X');
-                if (checkLocalWin('X')) { 
-                    document.getElementById('xoStatusText').innerText = "🏆 تهانينا! لقد فزت!"; 
-                    appendMessage("🎉 نظام", "لقد تغلبت على البوت بنجاح!", true); 
-                    localTurn = false; 
-                    return; 
-                }
-                if (localBoard.every(b => b !== null)) { document.getElementById('xoStatusText').innerText = "🤝 تعادل!"; return; }
-                localTurn = false; 
-                document.getElementById('xoStatusText').innerText = "🤖 البوت يفكر...";
-                setTimeout(botLocalMove, 600);
-            } else {
-                if (!myXOTurn) return;
-                socket.emit('makeXOMove', { roomCode: roomCode, index: idx });
-            }
+
+        // 💬 [منطق الشات والمجتمع]
+        function sendGlobalMessage() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if(!msg) return;
+            socket.emit('sendGlobalCommunityMessage', { name: myUsername, msg: msg });
+            input.value = "";
+        }
+
+        socket.on('receiveGlobalCommunityMessage', (data) => {
+            const chatBox = document.getElementById('chatBox');
+            chatBox.innerHTML += `<div><strong class="text-indigo-400">${data.name}:</strong> <span class="text-slate-200">${data.msg}</span></div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
         });
-    });
 
-    let localBoard = Array(9).fill(null);
-    let localTurn = true;
-
-    function initLocalXO() {
-        localBoard = Array(9).fill(null); 
-        localTurn = true;
-        document.getElementById('xoStatusText').innerText = "دورك الآن (X)";
-        document.querySelectorAll('#xoBoard .cell').forEach(function(c) { c.innerText = ''; c.className = 'cell'; });
-        appendMessage("🤖 البوت", `تم بدء التحدي، مستوى الصعوبة الحالي: [ ${botDifficulty.toUpperCase()} ] حظاً موفقاً! 🔥`);
-    }
-
-    function makeLocalMove(idx, sign) { 
-        localBoard[idx] = sign; 
-        const cell = document.querySelector(`#xoBoard [data-index="${idx}"]`); 
-        cell.innerText = sign; 
-        cell.className = `cell ${sign}`; 
-    }
-    
-    function botLocalMove() {
-        let choice = -1;
-        let empty = localBoard.map((val, i) => val === null ? i : null).filter(v => v !== null);
-        if (empty.length === 0) return;
-
-        if (botDifficulty === 'easy') {
-            choice = empty[Math.floor(Math.random() * empty.length)];
-        } 
-        else if (botDifficulty === 'medium') {
-            choice = findWinningMove('O') || findWinningMove('X');
-            if (choice === null || choice === -1) {
-                choice = empty[Math.floor(Math.random() * empty.length)];
-            }
-        } 
-        else if (botDifficulty === 'hard') {
-            choice = findWinningMove('O') || findWinningMove('X');
-            if (choice === null || choice === -1) {
-                if (localBoard[4] === null) choice = 4;
-                else choice = empty[Math.floor(Math.random() * empty.length)];
-            }
-        }
-
-        makeLocalMove(choice, 'O');
-        if (checkLocalWin('O')) { 
-            document.getElementById('xoStatusText').innerText = "😢 خسرت! البوت فاز!"; 
-            appendMessage("🤖 البوت", "انتصرت عليك بسهولة، جرب مرة أخرى لتطوير مهاراتك!", true); 
-            return; 
-        }
-        if (localBoard.every(b => b !== null)) { document.getElementById('xoStatusText').innerText = "🤝 تعادل!"; return; }
-        localTurn = true; 
-        document.getElementById('xoStatusText').innerText = "دورك الآن (X)";
-    }
-
-    function findWinningMove(sign) {
-        const wins = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
-        for (let w of wins) {
-            let count = 0, emptyIdx = -1;
-            for (let i of w) {
-                if (localBoard[i] === sign) count++;
-                else if (localBoard[i] === null) emptyIdx = i;
-            }
-            if (count === 2 && emptyIdx !== -1) return emptyIdx;
-        }
-        return null;
-    }
-
-    function checkLocalWin(sign) { 
-        const wins = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]]; 
-        return wins.some(w => w.every(i => localBoard[i] === sign)); 
-    }
-
-    let touchStartX = 0, touchStartY = 0;
-    window.addEventListener('touchstart', function(e) {
-        if (currentGame !== 'snake') return;
-        touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
-    }, { passive: true });
-
-    window.addEventListener('touchmove', function(e) {
-        if (currentGame !== 'snake') return;
-        let touchEndX = e.touches[0].clientX; let touchEndY = e.touches[0].clientY;
-        let diffX = touchEndX - touchStartX; let diffY = touchEndY - touchStartY;
-        if (Math.max(Math.abs(diffX), Math.abs(diffY)) > 30) {
-            let nextDir = Math.abs(diffX) > Math.abs(diffY) ? (diffX > 0 ? 'RIGHT' : 'LEFT') : (diffY > 0 ? 'DOWN' : 'UP');
-            socket.emit('moveSnake', { roomCode: roomCode, dir: nextDir });
-            touchStartX = touchEndX; touchStartY = touchEndY;
-        }
-    }, { passive: true });
-
-    const keys = { w: 'UP', s: 'DOWN', a: 'LEFT', d: 'RIGHT', ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT' };
-    window.addEventListener('keydown', function(e) { 
-        if (keys[e.key] && currentGame === 'snake') socket.emit('moveSnake', { roomCode: roomCode, dir: keys[e.key] }); 
-    });
-
-    function draw3DSnake(s) {
-        for (let i = s.body.length - 1; i > 0; i--) {
-            const dot = s.body[i]; let radius = 11;
-            ctx.save(); ctx.beginPath(); ctx.ellipse(dot.x, dot.y + radius * 0.4, radius, radius * 0.5, 0, 0, Math.PI * 2); ctx.fillStyle = "rgba(0, 0, 0, 0.25)"; ctx.fill();
-            let gradient = ctx.createRadialGradient(dot.x - radius*0.3, dot.y - radius*0.3, radius*0.1, dot.x, dot.y, radius);
-            gradient.addColorStop(0, '#ffffff'); gradient.addColorStop(0.2, s.color); gradient.addColorStop(0.8, s.color); gradient.addColorStop(1, 'rgba(0,0,0,0.8)');
-            ctx.beginPath(); ctx.arc(dot.x, dot.y, radius, 0, Math.PI * 2); ctx.fillStyle = gradient; ctx.fill(); ctx.restore();
-        }
-        const head = s.body[0]; let hRadius = 16; ctx.save();
-        ctx.beginPath(); ctx.ellipse(head.x, head.y + hRadius * 0.4, hRadius, hRadius * 0.5, 0, 0, Math.PI * 2); ctx.fillStyle = "rgba(0, 0, 0, 0.35)"; ctx.fill();
-        let headGrad = ctx.createRadialGradient(head.x - hRadius*0.3, head.y - hRadius*0.3, hRadius*0.1, head.x, head.y, hRadius);
-        headGrad.addColorStop(0, '#ffffff'); headGrad.addColorStop(0.4, s.color); headGrad.addColorStop(1, '#000000');
-        ctx.beginPath(); ctx.arc(head.x, head.y, hRadius, 0, Math.PI * 2); ctx.fillStyle = headGrad; ctx.fill();
-        ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(head.x - 5, head.y - 4, 3, 0, Math.PI*2); ctx.arc(head.x + 5, head.y - 4, 3, 0, Math.PI*2); ctx.fill();
-        if (s.headSkin === 'crown') { ctx.font = "20px Arial"; ctx.fillText("👑", head.x - 10, head.y - 12); }
-        else if (s.headSkin === 'dragon') { ctx.font = "20px Arial"; ctx.fillText("🐲", head.x - 10, head.y - 12); }
-        else if (s.headSkin === 'ninja') { ctx.fillStyle = "rgba(15, 23, 42, 0.85)"; ctx.fillRect(head.x - 10, head.y - 8, 20, 6); }
-        ctx.restore();
-        ctx.save(); ctx.font = "bold 13px 'Segoe UI', sans-serif"; ctx.textAlign = "center"; ctx.fillStyle = "rgba(15, 23, 42, 0.75)"; ctx.lineJoin = "round"; ctx.lineWidth = 4;
-        ctx.strokeText(`${s.name} (${s.score})`, head.x, head.y - 28); ctx.fillStyle = s.id === socket.id ? "#38bdf8" : "#f8fafc"; ctx.fillText(`${s.name} (${s.score})`, head.x, head.y - 28); ctx.restore();
-    }
-
-    function draw3DItem(x, y, type) { ctx.save(); ctx.font = "32px Arial"; ctx.shadowBlur = 15; ctx.shadowColor = type === "🧲" ? "#eab308" : "#ff477e"; ctx.fillText(type, x - 10, y + 10); ctx.restore(); }
-
-    socket.on('renderSnakeFrame', function(state) {
-        if (currentGame !== 'snake') return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        if (state.magnet && !state.magnet.taken) draw3DItem(state.magnet.x, state.magnet.y, "🧲");
-        state.candies.forEach(function(candy) { draw3DItem(candy.x, candy.y, candy.type); });
-        state.snakes.forEach(function(s) { draw3DSnake(s); });
-        const myData = state.snakes.find(s => s.id === socket.id);
-        if (myData) { 
-            document.getElementById('scoreDisplay').innerText = `النقاط: ${myData.score}`; 
-            document.getElementById('magnetIndicator').style.display = myData.magnetActive ? "block" : "none"; 
-        }
-        const lb = document.getElementById('leaderboardRows'); lb.innerHTML = "";
-        state.leaderboard.slice(0, 5).forEach(function(item, i) {
-            const div = document.createElement('div'); div.className = `lead-row ${item.id === socket.id ? 'me' : ''}`;
-            div.innerHTML = `<span>${i+1}. ${item.name}</span><strong>${item.score}</strong>`; lb.appendChild(div);
+        socket.on('updateOnlineUsers', (usersList) => {
+            const listEl = document.getElementById('onlineUsers');
+            listEl.innerHTML = "";
+            usersList.forEach(user => {
+                listEl.innerHTML += `<li class="flex items-center gap-2">🟢 ${user} ${user === myUsername ? '(أنت)' : ''}</li>`;
+            });
         });
-    });
-</script>
+
+
+        // 🐍 [كود تشغيل لعبة الدودة الفردية بالكامل]
+        let canvas, ctx, snake, food, dx, dy, score, snakeInterval;
+        const boxSize = 20;
+
+        function startSnakeGame(mode) {
+            if(mode === 'solo') {
+                switchScreen('lobbyArea', 'snakeCanvasArea');
+                initSoloSnake();
+            }
+        }
+
+        function initSoloSnake() {
+            canvas = document.getElementById('snakeCanvas');
+            ctx = canvas.getContext('2d');
+            snake = [{x: 160, y: 160}, {x: 140, y: 160}, {x: 120, y: 160}];
+            score = 0;
+            document.getElementById('snakeScore').innerText = score;
+            dx = boxSize; 
+            dy = 0;
+            generateFood();
+            
+            if(snakeInterval) clearInterval(snakeInterval);
+            snakeInterval = setInterval(updateSnakeFrame, 100);
+        }
+
+        function generateFood() {
+            food = {
+                x: Math.floor(Math.random() * (canvas.width / boxSize)) * boxSize,
+                y: Math.floor(Math.random() * (canvas.height / boxSize)) * boxSize
+            };
+        }
+
+        function updateSnakeFrame() {
+            if (checkSnakeCollision()) {
+                clearInterval(snakeInterval);
+                alert(`🎮 انتهت اللعبة! مجموع نقاطك: ${score}`);
+                exitGameToHub('snakeCanvasArea');
+                return;
+            }
+
+            // رسم الخلفية
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // رسم الأكل
+            ctx.fillStyle = '#f43f5e';
+            ctx.fillRect(food.x, food.y, boxSize, boxSize);
+
+            // تحريك الرأس
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            snake.unshift(head);
+
+            // التحقق من أكل الطعام
+            if (head.x === food.x && head.y === food.y) {
+                score += 10;
+                document.getElementById('snakeScore').innerText = score;
+                generateFood();
+            } else {
+                snake.pop();
+            }
+
+            // رسم الدودة
+            snake.forEach((part, index) => {
+                ctx.fillStyle = index === 0 ? '#10b981' : '#34d399';
+                ctx.fillRect(part.x, part.y, boxSize, boxSize);
+                ctx.strokeStyle = '#1e293b';
+                ctx.strokeRect(part.x, part.part, boxSize, boxSize);
+            });
+        }
+
+        function checkSnakeCollision() {
+            const head = snake[0];
+            // التصادم مع الجدران
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) return true;
+            // التصادم مع الجسم نفسه
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) return true;
+            }
+            return false;
+        }
+
+        // استماع لأزرار الكيبورد للتحكم بالدودة
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp' && dy === 0) { dx = 0; dy = -boxSize; }
+            else if (e.key === 'ArrowDown' && dy === 0) { dx = 0; dy = boxSize; }
+            else if (e.key === 'ArrowLeft' && dx === 0) { dx = -boxSize; dy = 0; }
+            else if (e.key === 'ArrowRight' && dx === 0) { dx = boxSize; dy = 0; }
+        });
+
+
+        // ❌⭕ [منطق لعبة XO أونلاين والغرف]
+        function joinXORoom() {
+            const roomCode = document.getElementById('roomCodeInput').value.trim();
+            if(!roomCode) { alert("أدخل كود الغرفة أولاً!"); return; }
+            
+            socket.emit('joinXOGame', { roomCode: roomCode, name: myUsername });
+            alert(`تم طلب دخول الغرفة رقم: ${roomCode}. (يمكنك الآن تخصيص لوحة الـ XO أونلاين بناءً على تحديثات السيرفر)`);
+        }
+    </script>
 </body>
 </html>

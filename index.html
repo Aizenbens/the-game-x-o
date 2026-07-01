@@ -61,11 +61,9 @@
         #magnetIndicator { color: #eab308; display: none; animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0.5; } }
 
-        /* تعديلات التصميم المتجاوب للهواتف للـ XO والشات */
         .game-layout { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; gap: 15px; position: relative; z-index: 5; flex-wrap: wrap; padding: 15px; overflow-y: auto; }
         .xo-centered-box { background: var(--container-bg); padding: 20px; border-radius: 24px; text-align: center; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px); box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; max-width: 100%; }
         
-        /* جعل لوحة الـ XO مرنة على مقاس شاشة الهاتف */
         .board { display: grid; grid-template-columns: repeat(3, min(28vw, 90px)); grid-template-rows: repeat(3, min(28vw, 90px)); gap: 10px; margin-top: 15px; }
         .cell { background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; display: flex; justify-content: center; align-items: center; font-size: calc(1.5rem + 2vw); font-weight: bold; cursor: pointer; transition: 0.2s; user-select: none; -webkit-tap-highlight-color: transparent; }
         .cell:hover { background: rgba(255,255,255,0.05); }
@@ -80,7 +78,6 @@
         .chat-input { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; color: white; outline: none; font-size: 0.85rem; }
         .chat-send-btn { background: var(--x-color); border: none; padding: 0 12px; border-radius: 8px; color: black; font-weight: bold; margin-right: 6px; cursor: pointer; font-size: 0.85rem; }
 
-        /* رسالة توجيهية للهواتف للتحكم بالدودة */
         .phone-tip { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; pointer-events: none; text-align: center; width: max-content; color: #94a3b8; z-index: 10; }
 
         @media (max-width: 600px) {
@@ -265,7 +262,6 @@
         document.getElementById('gameArea').classList.remove('hidden');
     }
 
-    // --- مودات الدودة ثلاثية الأبعاد ---
     function joinMode(mode) {
         enterGameArea();
         document.getElementById('snakeCanvas').classList.remove('hidden');
@@ -309,7 +305,6 @@
         alert("تم نسخ رابط الغرفة بنجاح! أرسله لصديقك ليدخل معك مباشرة 🌐");
     }
 
-    // --- مودات الـ XO المطور (البوت والأونلاين مع الشات) ---
     function startXO(type) {
         xoMode = "local";
         enterGameArea();
@@ -344,4 +339,166 @@
         socket.emit('joinXOGame', { roomCode: roomCode, name: nickname });
     }
 
-    // --- شات غ
+    function sendChatMessage() {
+        const inp = document.getElementById('chatInput');
+        const txt = inp.value.trim();
+        if(!txt) return;
+        socket.emit('sendXOMessage', { roomCode: roomCode, name: nickname, msg: txt });
+        inp.value = "";
+    }
+
+    socket.on('receiveXOMessage', (data) => {
+        const container = document.getElementById('chatMessages');
+        const div = document.createElement('div');
+        if (data.system) {
+            div.className = "msg system";
+            div.innerText = data.msg;
+        } else {
+            div.className = "msg";
+            div.innerHTML = `<strong style="color:var(--x-color)">${data.name}:</strong> ${data.msg}`;
+        }
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    });
+
+    socket.on('updateXOBoard', (data) => {
+        const cells = document.querySelectorAll('#xoBoard .cell');
+        data.board.forEach((val, idx) => {
+            cells[idx].innerText = val || "";
+            cells[idx].className = `cell ${val || ''}`;
+        });
+
+        myXOSign = data.players[socket.id];
+        myXOTurn = (data.turn === socket.id);
+
+        if (data.winner) {
+            if (data.winner === 'draw') {
+                document.getElementById('xoStatusText').innerText = "🤝 تعادل وايربورد ممتد!";
+            } else {
+                document.getElementById('xoStatusText').innerText = data.winner === socket.id ? "🏆 لقد فزت بالتحدي!" : "😢 صديقك انتصر عليك!";
+            }
+        } else {
+            if (Object.keys(data.players).length < 2) {
+                document.getElementById('xoStatusText').innerText = "⏳ في انتظار دخول منافسك عبر الرابط...";
+            } else {
+                document.getElementById('xoStatusText').innerText = myXOTurn ? `دورك الآن (${myXOSign})` : "⏳ دور صديقك الآن...";
+            }
+        }
+    });
+
+    document.querySelectorAll('#xoBoard .cell').forEach(cell => {
+        cell.addEventListener('click', (e) => {
+            const idx = e.target.dataset.index;
+            if (xoMode === 'local') {
+                if (!localTurn || localBoard[idx]) return;
+                makeLocalMove(idx, 'X');
+                if (checkLocalWin('X')) { document.getElementById('xoStatusText').innerText = "🏆 تهانينا! لقد فزت!"; localTurn = false; return; }
+                if (localBoard.every(b => b !== null)) { document.getElementById('xoStatusText').innerText = "🤝 تعادل!"; return; }
+                localTurn = false; document.getElementById('xoStatusText').innerText = "🤖 البوت يفكر...";
+                setTimeout(botLocalMove, 500);
+            } else {
+                if (!myXOTurn) return;
+                socket.emit('makeXOMove', { roomCode: roomCode, index: idx });
+            }
+        });
+    });
+
+    let localBoard = Array(9).fill(null);
+    let localTurn = true;
+    function initLocalXO() {
+        localBoard = Array(9).fill(null); localTurn = true;
+        document.getElementById('xoStatusText').innerText = "دورك الآن (X)";
+        document.querySelectorAll('#xoBoard .cell').forEach(c => { c.innerText = ''; c.className = 'cell'; });
+    }
+    function makeLocalMove(idx, sign) { localBoard[idx] = sign; const cell = document.querySelector(`#xoBoard [data-index="${idx}"]`); cell.innerText = sign; cell.className = `cell ${sign}`; }
+    function botLocalMove() {
+        let empty = localBoard.map((val, i) => val === null ? i : null).filter(v => v !== null); if (empty.length === 0) return;
+        let choice = empty[Math.floor(Math.random() * empty.length)]; makeLocalMove(choice, 'O');
+        if (checkLocalWin('O')) { document.getElementById('xoStatusText').innerText = "😢 خسرت! البوت فاز!"; return; }
+        localTurn = true; document.getElementById('xoStatusText').innerText = "دورك الآن (X)";
+    }
+    function checkLocalWin(sign) { const wins = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]]; return wins.some(w => w.every(i => localBoard[i] === sign)); }
+
+    let touchStartX = 0, touchStartY = 0;
+    
+    window.addEventListener('touchstart', (e) => {
+        if (currentGame !== 'snake') return;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+        if (currentGame !== 'snake') return;
+        let touchEndX = e.touches[0].clientX;
+        let touchEndY = e.touches[0].clientY;
+
+        let diffX = touchEndX - touchStartX;
+        let diffY = touchEndY - touchStartY;
+
+        if (Math.max(Math.abs(diffX), Math.abs(diffY)) > 30) {
+            let nextDir = "";
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                nextDir = diffX > 0 ? 'RIGHT' : 'LEFT';
+            } else {
+                nextDir = diffY > 0 ? 'DOWN' : 'UP';
+            }
+            socket.emit('moveSnake', { roomCode: roomCode, dir: nextDir });
+            
+            touchStartX = touchEndX;
+            touchStartY = touchEndY;
+        }
+    }, { passive: true });
+
+    const keys = { w: 'UP', s: 'DOWN', a: 'LEFT', d: 'RIGHT', ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT' };
+    window.addEventListener('keydown', (e) => {
+        if (keys[e.key] && currentGame === 'snake') {
+            socket.emit('moveSnake', { roomCode: roomCode, dir: keys[e.key] });
+        }
+    });
+
+    function draw3DSnake(s) {
+        for (let i = s.body.length - 1; i > 0; i--) {
+            const dot = s.body[i]; let radius = 11;
+            ctx.save();
+            ctx.beginPath(); ctx.ellipse(dot.x, dot.y + radius * 0.4, radius, radius * 0.5, 0, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(0, 0, 0, 0.25)"; ctx.fill();
+            let gradient = ctx.createRadialGradient(dot.x - radius*0.3, dot.y - radius*0.3, radius*0.1, dot.x, dot.y, radius);
+            gradient.addColorStop(0, '#ffffff'); gradient.addColorStop(0.2, s.color); gradient.addColorStop(0.8, s.color); gradient.addColorStop(1, 'rgba(0,0,0,0.8)');
+            ctx.beginPath(); ctx.arc(dot.x, dot.y, radius, 0, Math.PI * 2); ctx.fillStyle = gradient; ctx.fill(); ctx.restore();
+        }
+        const head = s.body[0]; let hRadius = 16; ctx.save();
+        ctx.beginPath(); ctx.ellipse(head.x, head.y + hRadius * 0.4, hRadius, hRadius * 0.5, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(0, 0, 0, 0.35)"; ctx.fill();
+        let headGrad = ctx.createRadialGradient(head.x - hRadius*0.3, head.y - hRadius*0.3, hRadius*0.1, head.x, head.y, hRadius);
+        headGrad.addColorStop(0, '#ffffff'); headGrad.addColorStop(0.4, s.color); headGrad.addColorStop(1, '#000000');
+        ctx.beginPath(); ctx.arc(head.x, head.y, hRadius, 0, Math.PI * 2); ctx.fillStyle = headGrad; ctx.fill();
+        ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(head.x - 5, head.y - 4, 3, 0, Math.PI*2); ctx.arc(head.x + 5, head.y - 4, 3, 0, Math.PI*2); ctx.fill();
+        if (s.headSkin === 'crown') { ctx.font = "20px Arial"; ctx.fillText("👑", head.x - 10, head.y - 12); }
+        else if (s.headSkin === 'dragon') { ctx.font = "20px Arial"; ctx.fillText("🐲", head.x - 10, head.y - 12); }
+        else if (s.headSkin === 'ninja') { ctx.fillStyle = "rgba(15, 23, 42, 0.85)"; ctx.fillRect(head.x - 10, head.y - 8, 20, 6); }
+        ctx.restore();
+        ctx.save(); ctx.font = "bold 13px 'Segoe UI', sans-serif"; ctx.textAlign = "center"; ctx.fillStyle = "rgba(15, 23, 42, 0.75)"; ctx.lineJoin = "round"; ctx.lineWidth = 4;
+        ctx.strokeText(`${s.name} (${s.score})`, head.x, head.y - 28); ctx.fillStyle = s.id === socket.id ? "#38bdf8" : "#f8fafc"; ctx.fillText(`${s.name} (${s.score})`, head.x, head.y - 28); ctx.restore();
+    }
+
+    function draw3DItem(x, y, type) {
+        ctx.save(); ctx.font = "32px Arial"; ctx.shadowBlur = 15; ctx.shadowColor = type === "🧲" ? "#eab308" : "#ff477e"; ctx.fillText(type, x - 10, y + 10); ctx.restore();
+    }
+
+    socket.on('renderSnakeFrame', (state) => {
+        if (currentGame !== 'snake') return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (state.magnet && !state.magnet.taken) draw3DItem(state.magnet.x, state.magnet.y, "🧲");
+        state.candies.forEach(candy => draw3DItem(candy.x, candy.y, candy.type));
+        state.snakes.forEach(s => draw3DSnake(s));
+        const myData = state.snakes.find(s => s.id === socket.id);
+        if (myData) { document.getElementById('scoreDisplay').innerText = `النقاط: ${myData.score}`; document.getElementById('magnetIndicator').style.display = myData.magnetActive ? "block" : "none"; }
+        const lb = document.getElementById('leaderboardRows'); lb.innerHTML = "";
+        state.leaderboard.slice(0, 5).forEach((item, i) => {
+            const div = document.createElement('div'); div.className = `lead-row ${item.id === socket.id ? 'me' : ''}`;
+            div.innerHTML = `<span>${i+1}. ${item.name}</span><strong>${item.score}</strong>`; lb.appendChild(div);
+        });
+    });
+</script>
+</body>
+</html>

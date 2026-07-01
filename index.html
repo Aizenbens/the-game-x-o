@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة الألعاب المطورة 3D وأونلاين 🎮</title>
+    <title>منصة التحدي 3D وسكنات الرأس 🎮</title>
     <style>
         :root {
             --bg-color: #05070f;
@@ -24,9 +24,14 @@
         .input-field { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); color: white; text-align: center; margin-bottom: 15px; outline: none; font-size: 1.1rem; }
         
         .skin-section { margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 16px; }
-        .skin-options { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+        .skin-options { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .skin-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); cursor: pointer; transition: 0.2s; }
         .skin-btn.active { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 15px var(--x-color); }
+        
+        .head-skin-options { display: flex; justify-content: center; gap: 12px; margin-bottom: 10px; }
+        .head-skin-btn { background: #1e293b; border: 2px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 12px; cursor: pointer; color: white; font-size: 1.1rem; transition: 0.2s; }
+        .head-skin-btn.active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.2); transform: scale(1.05); }
+
         .color-picker-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; font-size: 0.95rem; }
         .custom-picker { border: none; width: 45px; height: 30px; border-radius: 6px; cursor: pointer; background: none; }
 
@@ -34,16 +39,18 @@
         .game-card { background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.08); padding: 20px 10px; border-radius: 16px; cursor: pointer; transition: 0.3s; }
         .game-card:hover { transform: translateY(-4px); border-color: var(--x-color); background: rgba(56, 189, 248, 0.06); }
         
-        .btn { background: var(--x-color); border: none; padding: 14px 20px; border-radius: 12px; color: #000; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.1rem; transition: 0.2s; }
+        .btn { background: var(--x-color); border: none; padding: 14px 20px; border-radius: 12px; color: #000; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.1rem; transition: 0.2s; margin-bottom: 10px; }
         .btn:hover { opacity: 0.9; transform: scale(1.01); }
-        .btn.secondary { background: var(--accent-color); color: #fff; margin-bottom: 10px; }
+        .btn.secondary { background: var(--accent-color); color: #fff; }
+        .btn.orange { background: #f59e0b; color: #fff; }
+        .btn.purple { background: #8b5cf6; color: #fff; }
         .btn.back { background: #334155; color: #fff; margin-top: 15px; }
 
         .full-screen-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; z-index: 9999; }
         #snakeCanvas { width: 100%; height: 100%; display: block; background: radial-gradient(circle, #0e172e 0%, #03050d 100%); }
         
         .game-hud { position: absolute; top: 20px; left: 20px; display: flex; gap: 15px; pointer-events: none; z-index: 10; }
-        .hud-card { background: rgba(15, 23, 42, 0.9); padding: 12px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); font-weight: bold; }
+        .hud-card { background: rgba(15, 23, 42, 0.9); padding: 12px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); font-weight: bold; pointer-events: auto; }
         
         .live-leaderboard { position: absolute; top: 20px; right: 20px; width: 280px; background: rgba(15, 23, 42, 0.9); border-radius: 16px; padding: 15px; border: 1px solid rgba(255,255,255,0.1); z-index: 10; }
         .lead-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; padding: 6px; border-radius: 6px; background: rgba(255,255,255,0.02); }
@@ -62,13 +69,21 @@
 <body>
 
 <div class="hub-container" id="gameHub">
-    <h1 style="margin-bottom: 5px;">منصة التحدي 3D وأونلاين 🌐</h1>
-    <p style="color: #64748b; margin-bottom: 15px;">فيزياء مجسمة، أطوار جماعية، وتخصيص كامل للألوان</p>
+    <h1 style="margin-bottom: 5px;">عالم التحديات وسكنات الرأس 🌐</h1>
+    <p style="color: #64748b; margin-bottom: 15px;">غرف مخصصة، إظهار الأسماء، سكنات مجسمة للرأس، ولعبة XO ثابتة</p>
     
     <input type="text" class="input-field" id="globalNameInput" placeholder="أدخل اسمك المستعار">
     
     <div class="skin-section">
-        <h4 style="margin-bottom: 10px;">استايل الألوان والمظهر</h4>
+        <h4 style="margin-bottom: 10px;">اختر سكن الرأس المحسن (3D)</h4>
+        <div class="head-skin-options">
+            <button class="head-skin-btn active" onclick="selectHeadSkin('default', this)">🐍 كلاسيك</button>
+            <button class="head-skin-btn" onclick="selectHeadSkin('crown', this)">👑 التاج</button>
+            <button class="head-skin-btn" onclick="selectHeadSkin('dragon', this)">🐲 التنين</button>
+            <button class="head-skin-btn" onclick="selectHeadSkin('ninja', this)">🥷 نينجا</button>
+        </div>
+
+        <h4 style="margin-bottom: 10px; margin-top: 15px;">استايل الألوان والمظهر</h4>
         <div class="skin-options">
             <div class="skin-btn active" style="background: #10b981;" onclick="selectSkin('#10b981', this)"></div>
             <div class="skin-btn" style="background: #38bdf8;" onclick="selectSkin('#38bdf8', this)"></div>
@@ -84,20 +99,24 @@
     <div class="games-grid">
         <div class="game-card" onclick="goToLobby('xo')">
             <h3>لعبة XO ❌⭕</h3>
-            <span>تحدي ذكاء محلي</span>
+            <span>تحدي ذكاء محلي ثابت</span>
         </div>
         <div class="game-card" onclick="goToLobby('snake')">
             <h3>لعبة الدودة 3D 🐍</h3>
-            <span>سيرفر أونلاين جماعي وبوتات</span>
+            <span>سيرفر أونلاين، غرف خاصة وسكنات</span>
         </div>
     </div>
 </div>
 
 <div class="lobby-container hidden" id="lobbyArea">
-    <h2 id="lobbyTitle" style="margin-bottom: 15px;">خيارات الدخول للسيرفر</h2>
+    <h2 id="lobbyTitle" style="margin-bottom: 15px;">اختر مود اللعب المناسب</h2>
+    
     <div id="snakeOnlineOptions" class="hidden">
-        <button class="btn secondary" onclick="joinGlobalServer()">دخول السيرفر الرئيسي (أونلاين + بوتات) 🌐</button>
+        <button class="btn secondary" onclick="joinMode('global')">السيرفر الرئيسي (أونلاين + 14 بوت) 🌐</button>
+        <button class="btn orange" onclick="joinMode('bots')">غرفة البوتات (أنت ضد 14 بوت فقط) 🤖</button>
+        <button class="btn purple" onclick="createPrivateRoom()">إنشاء غرفة خاصة بالأصدقاء (بدون بوتات) 🔗</button>
     </div>
+    
     <div id="xoOptions" class="hidden">
         <button class="btn" onclick="startXO()">ابدأ اللعب ضد البوت 🤖</button>
     </div>
@@ -108,10 +127,14 @@
     <div class="game-hud" id="snakeHud">
         <div class="hud-card" style="color: #38bdf8;" id="scoreDisplay">النقاط: 0</div>
         <div class="hud-card" id="magnetIndicator">🧲 المغناطيس ثلاثي الأبعاد نشط!</div>
+        <div class="hud-card hidden" id="roomLinkCard" style="background: #1e293b; color: #fff;">
+            <span>كود الغرفة: <strong id="roomCodeText"></strong></span>
+            <button onclick="copyRoomLink()" style="margin-right:10px; background:#38bdf8; border:none; padding:3px 8px; border-radius:5px; cursor:pointer; color:#000; font-weight:bold;">نسخ الرابط 🔗</button>
+        </div>
     </div>
     
     <div class="live-leaderboard hidden" id="snakeLeaderboard">
-        <h4 style="color: #f59e0b; text-align: center; margin-bottom: 10px;">🏆 متصدرو الأونلاين</h4>
+        <h4 style="color: #f59e0b; text-align: center; margin-bottom: 10px;">🏆 متصدرو السيرفر</h4>
         <div id="leaderboardRows"></div>
     </div>
     
@@ -133,9 +156,12 @@
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
     const socket = io({ transports: ['websocket', 'polling'] });
-    let currentGame = "", nickname = "لاعب", playerColor = "#10b981", roomCode = "GLOBAL_SERVER";
+    let currentGame = "", nickname = "لاعب", playerColor = "#10b981", headSkin = "default", roomCode = "GLOBAL_SERVER";
     const canvas = document.getElementById('snakeCanvas');
     const ctx = canvas.getContext('2d');
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetRoom = urlParams.get('room');
 
     function resizeCanvas() {
         canvas.width = window.innerWidth;
@@ -143,9 +169,24 @@
     }
     window.addEventListener('resize', resizeCanvas);
 
+    if (targetRoom) {
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById('lobbyArea').classList.add('hidden');
+            goToLobby('snake');
+            document.getElementById('lobbyTitle').innerText = "أنت مدعو لغرفة خاصة! أدخل اسمك واضغط بالأسفل";
+            document.getElementById('snakeOnlineOptions').innerHTML = `<button class="btn purple" onclick="joinPrivateRoom('${targetRoom}')">دخول الغرفة الخاصة مباشرة 🚀</button>`;
+        });
+    }
+
     function selectSkin(color, el) {
         playerColor = color;
         document.querySelectorAll('.skin-btn').forEach(b => b.classList.remove('active'));
+        if(el) el.classList.add('active');
+    }
+
+    function selectHeadSkin(skinType, el) {
+        headSkin = skinType;
+        document.querySelectorAll('.head-skin-btn').forEach(b => b.classList.remove('active'));
         if(el) el.classList.add('active');
     }
 
@@ -164,10 +205,8 @@
         document.getElementById('xoOptions').classList.add('hidden');
 
         if(game === 'snake') {
-            document.getElementById('lobbyTitle').innerText = "سيرفر الدودة 3D أونلاين";
             document.getElementById('snakeOnlineOptions').classList.remove('hidden');
         } else {
-            document.getElementById('lobbyTitle').innerText = "تحدي الـ XO المطور";
             document.getElementById('xoOptions').classList.remove('hidden');
         }
     }
@@ -177,15 +216,40 @@
         document.getElementById('gameHub').classList.remove('hidden');
     }
 
-    function joinGlobalServer() {
+    function enterSnakeLayout() {
         document.getElementById('lobbyArea').classList.add('hidden');
         document.getElementById('gameArea').classList.remove('hidden');
         document.getElementById('snakeCanvas').classList.remove('hidden');
         document.getElementById('snakeLeaderboard').classList.remove('hidden');
         document.getElementById('snakeHud').classList.remove('hidden');
         resizeCanvas();
-        
-        socket.emit('joinGlobalSnake', { name: nickname, color: playerColor });
+    }
+
+    function joinMode(mode) {
+        enterSnakeLayout();
+        roomCode = mode === 'global' ? 'GLOBAL_SERVER' : 'BOTS_' + Math.random().toString(36).substring(5);
+        socket.emit('joinSnakeGame', { mode: mode, roomCode: roomCode, name: nickname, color: playerColor, headSkin: headSkin });
+    }
+
+    function createPrivateRoom() {
+        enterSnakeLayout();
+        roomCode = 'PRV_' + Math.random().toString(36).substring(2, 7).toUpperCase();
+        document.getElementById('roomLinkCard').classList.remove('hidden');
+        document.getElementById('roomCodeText').innerText = roomCode;
+        socket.emit('joinSnakeGame', { mode: 'private', roomCode: roomCode, name: nickname, color: playerColor, headSkin: headSkin });
+    }
+
+    function joinPrivateRoom(rCode) {
+        nickname = document.getElementById('globalNameInput').value.trim() || "ضيف الغرفة";
+        enterSnakeLayout();
+        roomCode = rCode;
+        socket.emit('joinSnakeGame', { mode: 'private', roomCode: roomCode, name: nickname, color: playerColor, headSkin: headSkin });
+    }
+
+    function copyRoomLink() {
+        const link = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+        navigator.clipboard.writeText(link);
+        alert("تم نسخ رابط الغرفة بنجاح! أرسله لأصدقائك ليدخلوا معك مباشرة بدون بوتات 🌐");
     }
 
     function startXO() {
@@ -199,91 +263,130 @@
     const keys = { w: 'UP', s: 'DOWN', a: 'LEFT', d: 'RIGHT', ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT' };
     window.addEventListener('keydown', (e) => {
         if (keys[e.key] && currentGame === 'snake') {
-            socket.emit('moveSnakeOnline', { dir: keys[e.key] });
+            socket.emit('moveSnake', { roomCode: roomCode, dir: keys[e.key] });
         }
     });
 
-    // رسم مجسم 3D زائف للكرة (العقدة) باستخدام التدرج الشعاعي الشبيه بـ Spheres
-    function draw3DNode(x, y, radius, baseColor, isHead) {
+    // تحسين رسم العقد والسكنات المضافة للرأس لتصبح مجسمة بالكامل
+    function draw3DSnake(s) {
+        // 1. رسم عُقد الجسم
+        for (let i = s.body.length - 1; i > 0; i--) {
+            const dot = s.body[i];
+            let radius = 11;
+            
+            ctx.save();
+            ctx.beginPath();
+            ctx.ellipse(dot.x, dot.y + radius * 0.4, radius, radius * 0.5, 0, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+            ctx.fill();
+
+            let gradient = ctx.createRadialGradient(
+                dot.x - radius * 0.3, dot.y - radius * 0.3, radius * 0.1, 
+                dot.x, dot.y, radius
+            );
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.2, s.color);
+            gradient.addColorStop(0.8, s.color);
+            gradient.addColorStop(1, 'rgba(0,0,0,0.8)');
+
+            ctx.beginPath();
+            ctx.arc(dot.x, dot.y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // 2. رسم الرأس المحسن بناءً على السكن المختار
+        const head = s.body[0];
+        let hRadius = 16;
         ctx.save();
-        // تظليل ساقط على الأرض (Drop Shadow)
+        
+        // ظل رأس الدودة الأساسي
         ctx.beginPath();
-        ctx.ellipse(x, y + radius*0.4, radius, radius*0.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(head.x, head.y + hRadius * 0.4, hRadius, hRadius * 0.5, 0, 0, Math.PI * 2);
         ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
         ctx.fill();
 
-        // التدرج اللوني المجسم ثلاثي الأبعاد لتبدو كروية ومضيئة
-        let gradient = ctx.createRadialGradient(
-            x - radius * 0.3, y - radius * 0.3, radius * 0.1, 
-            x, y, radius
+        let headGrad = ctx.createRadialGradient(
+            head.x - hRadius * 0.3, head.y - hRadius * 0.3, hRadius * 0.1, 
+            head.x, head.y, hRadius
         );
-        
-        if (isHead) {
-            gradient.addColorStop(0, '#ffffff');
-            gradient.addColorStop(0.4, baseColor);
-            gradient.addColorStop(1, '#000000');
-        } else {
-            gradient.addColorStop(0, '#ffffff');
-            gradient.addColorStop(0.2, baseColor);
-            gradient.addColorStop(0.8, baseColor);
-            gradient.addColorStop(1, 'rgba(0,0,0,0.8)');
-        }
+        headGrad.addColorStop(0, '#ffffff');
+        headGrad.addColorStop(0.4, s.color);
+        headGrad.addColorStop(1, '#000000');
 
         ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
+        ctx.arc(head.x, head.y, hRadius, 0, Math.PI * 2);
+        ctx.fillStyle = headGrad;
         ctx.fill();
+
+        // إضافة تفاصيل العيون المجسمة المضنية
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(head.x - 5, head.y - 4, 3, 0, Math.PI*2);
+        ctx.arc(head.x + 5, head.y - 4, 3, 0, Math.PI*2);
+        ctx.fill();
+
+        // رسم سكن الرأس الإضافي (الأكسسوار ثلاثي الأبعاد) فوق الرأس
+        const currentSkin = s.headSkin || 'default';
+        if (currentSkin === 'crown') {
+            ctx.font = "20px Arial";
+            ctx.fillText("👑", head.x - 10, head.y - 12);
+        } else if (currentSkin === 'dragon') {
+            ctx.font = "20px Arial";
+            ctx.fillText("🐲", head.x - 10, head.y - 12);
+        } else if (currentSkin === 'ninja') {
+            // رسم قناع النينجا المظلل حول العينين
+            ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+            ctx.fillRect(head.x - 10, head.y - 8, 20, 6);
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(head.x - 4, head.y - 7, 2, 2);
+            ctx.fillRect(head.x + 2, head.y - 7, 2, 2);
+        }
+        ctx.restore();
+
+        // 3. عرض الاسم والسكور بوضوح فوق الرأس
+        ctx.save();
+        ctx.font = "bold 13px 'Segoe UI', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "rgba(15, 23, 42, 0.75)";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = 4;
+        ctx.strokeText(`${s.name} (${s.score})`, head.x, head.y - 28);
+        ctx.fillStyle = s.id === socket.id ? "#38bdf8" : "#f8fafc";
+        ctx.fillText(`${s.name} (${s.score})`, head.x, head.y - 28);
         ctx.restore();
     }
 
-    // رسم الحلويات والمغناطيس كأشكال مجسمة مع تدرجات إضاءة 3D
     function draw3DItem(x, y, type) {
         ctx.save();
         ctx.font = "32px Arial";
-        // تأثير توهج ثلاثي الأبعاد خلف الأكل والمغناطيس
         ctx.shadowBlur = 15;
         ctx.shadowColor = type === "🧲" ? "#eab308" : "#ff477e";
         ctx.fillText(type, x - 10, y + 10);
         ctx.restore();
     }
 
-    socket.on('renderOnlineSnakeFrame', (state) => {
+    socket.on('renderSnakeFrame', (state) => {
         if (currentGame !== 'snake') return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // رسم شبكة الخلفية الأنيقة ذات الأبعاد الانسيابية
         ctx.strokeStyle = "rgba(255,255,255,0.015)";
         ctx.lineWidth = 1;
         for(let i=0; i<canvas.width; i+=50) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke(); }
         for(let j=0; j<canvas.height; j+=50) { ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke(); }
 
-        // رسم المغناطيس 3D
-        if (state.magnet && !state.magnet.taken) {
-            draw3DItem(state.magnet.x, state.magnet.y, "🧲");
-        }
+        if (state.magnet && !state.magnet.taken) draw3DItem(state.magnet.x, state.magnet.y, "🧲");
+        state.candies.forEach(candy => draw3DItem(candy.x, candy.y, candy.type));
 
-        // رسم الحلويات 3D
-        state.candies.forEach(candy => {
-            draw3DItem(candy.x, candy.y, candy.type);
-        });
+        state.snakes.forEach(s => draw3DSnake(s));
 
-        // رسم كل الديدان (اللاعبين أونلاين الحقيقيين + البوتات)
-        state.snakes.forEach(s => {
-            for (let i = s.body.length - 1; i >= 0; i--) {
-                const dot = s.body[i];
-                let radius = i === 0 ? 15 : 12;
-                draw3DNode(dot.x, dot.y, radius, s.color, i === 0);
-            }
-        });
-
-        // تحديث النقاط وحالة المغناطيس للاعب الحالي
         const myData = state.snakes.find(s => s.id === socket.id);
         if (myData) {
             document.getElementById('scoreDisplay').innerText = `النقاط: ${myData.score}`;
             document.getElementById('magnetIndicator').style.display = myData.magnetActive ? "block" : "none";
         }
 
-        // تحديث المتصدرين في السيرفر الأونلاين
         const lb = document.getElementById('leaderboardRows');
         lb.innerHTML = "";
         state.leaderboard.slice(0, 6).forEach((item, i) => {
@@ -294,54 +397,32 @@
         });
     });
 
-    // --- نظام الـ XO المحلي المحسن ضد البوت ---
+    // نظام الـ XO الثابت والمحمي بالكامل
     let board = Array(9).fill(null);
     let playerTurn = true;
-
     function initXO() {
-        board = Array(9).fill(null);
-        playerTurn = true;
+        board = Array(9).fill(null); playerTurn = true;
         document.getElementById('xoStatusText').innerText = "دورك الآن (X)";
         document.querySelectorAll('.cell').forEach(c => { c.innerText = ''; c.className = 'cell'; });
     }
-
     document.querySelectorAll('.cell').forEach(cell => {
         cell.addEventListener('click', (e) => {
-            const idx = e.target.dataset.index;
-            if (!playerTurn || board[idx]) return;
-
+            const idx = e.target.dataset.index; if (!playerTurn || board[idx]) return;
             makeMove(idx, 'X');
             if (checkWin('X')) { document.getElementById('xoStatusText').innerText = "🏆 تهانينا! لقد فزت!"; playerTurn = false; return; }
             if (board.every(b => b !== null)) { document.getElementById('xoStatusText').innerText = "🤝 تعادل!"; return; }
-
-            playerTurn = false;
-            document.getElementById('xoStatusText').innerText = "🤖 البوت يفكر...";
+            playerTurn = false; document.getElementById('xoStatusText').innerText = "🤖 البوت يفكر...";
             setTimeout(botMove, 500);
         });
     });
-
-    function makeMove(idx, sign) {
-        board[idx] = sign;
-        const cell = document.querySelector(`[data-index="${idx}"]`);
-        cell.innerText = sign;
-        cell.classList.add(sign);
-    }
-
+    function makeMove(idx, sign) { board[idx] = sign; const cell = document.querySelector(`[data-index="${idx}"]`); cell.innerText = sign; cell.classList.add(sign); }
     function botMove() {
-        let empty = board.map((val, i) => val === null ? i : null).filter(v => v !== null);
-        if (empty.length === 0) return;
-        let choice = empty[Math.floor(Math.random() * empty.length)];
-        makeMove(choice, 'O');
-
+        let empty = board.map((val, i) => val === null ? i : null).filter(v => v !== null); if (empty.length === 0) return;
+        let choice = empty[Math.floor(Math.random() * empty.length)]; makeMove(choice, 'O');
         if (checkWin('O')) { document.getElementById('xoStatusText').innerText = "😢 خسرت! البوت فاز!"; return; }
-        playerTurn = true;
-        document.getElementById('xoStatusText').innerText = "دورك الآن (X)";
+        playerTurn = true; document.getElementById('xoStatusText').innerText = "دورك الآن (X)";
     }
-
-    function checkWin(sign) {
-        const wins = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
-        return wins.some(w => w.every(i => board[i] === sign));
-    }
+    function checkWin(sign) { const wins = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]]; return wins.some(w => w.every(i => board[i] === sign)); }
 </script>
 </body>
 </html>

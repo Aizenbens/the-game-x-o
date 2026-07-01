@@ -6,7 +6,7 @@ const admin = require("firebase-admin");
 const app = express();
 const server = http.createServer(app);
 
-// 🔥 إعداد CORS المرن لقبول الواجهات بجميع ميزاتها
+// إعداد CORS مرن ومفتوح لمنع مشاكل الاتصال على منصات الاستضافة
 const io = new Server(server, { 
     cors: { 
         origin: "*",
@@ -16,16 +16,26 @@ const io = new Server(server, {
 
 app.use(express.static(__dirname));
 
-const firebaseConfig = process.env.FIREBASE_SERVICE_ACCOUNT 
-    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) 
-    : require("./firebase-key.json"); 
+// التحقق من وجود مفتاح Firebase سواء كمتغير بيئة أو كملف محلي
+let firebaseConfig;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    firebaseConfig = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+} else {
+    try {
+        firebaseConfig = require("./firebase-key.json");
+    } catch (e) {
+        console.error("⚠️ تحذير: لم يتم العثور على ملف firebase-key.json أو متغير البيئة!");
+    }
+}
 
-admin.initializeApp({
-  credential: admin.credential.cert(firebaseConfig),
-  databaseURL: "https://thegame-9d23d-default-rtdb.firebaseio.com/" 
-});
+if (firebaseConfig) {
+    admin.initializeApp({
+      credential: admin.credential.cert(firebaseConfig),
+      databaseURL: "https://thegame-9d23d-default-rtdb.firebaseio.com/" 
+    });
+}
 
-const db = admin.database();
+const db = admin.apps.length ? admin.database() : null;
 let onlineUsersList = [];
 
 io.on('connection', (socket) => {
@@ -36,6 +46,11 @@ io.on('connection', (socket) => {
         const { type, username, password } = data;
         if (!username || !password) {
             socket.emit('authResponse', { success: false, message: "الرجاء ملء جميع الحقول!" });
+            return;
+        }
+
+        if (!db) {
+            socket.emit('authResponse', { success: false, message: "عذراً، قاعدة البيانات غير متصلة حالياً." });
             return;
         }
 

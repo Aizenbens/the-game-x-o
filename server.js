@@ -6,7 +6,7 @@ const admin = require("firebase-admin");
 const app = express();
 const server = http.createServer(app);
 
-// 🔥 تحديث الـ CORS هنا للسماح بالاتصال المشترك من جميع الروابط الفرعية لـ Render
+// 🔥 تحديث الـ CORS هنا للسماح بالاتصال من أي رابط فرعي تمنحه لك منصة Render
 const io = new Server(server, { 
     cors: { 
         origin: "*",
@@ -14,10 +14,10 @@ const io = new Server(server, {
     } 
 });
 
-// تخدم ملفات الواجهة من المجلد الحالي تلقائياً
+// تخديم ملفات الواجهة (مثل index.html) من المجلد الحالي تلقائياً
 app.use(express.static(__dirname));
 
-// ربط Firebase بالسيرفر عبر متغيرات البيئة بـ Render
+// ربط Firebase بالسيرفر عبر متغيرات البيئة بـ Render أو عبر ملف محلي في بيئة التطوير
 const firebaseConfig = process.env.FIREBASE_SERVICE_ACCOUNT 
     ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) 
     : require("./firebase-key.json"); 
@@ -106,7 +106,8 @@ io.on('connection', (socket) => {
     });
 });
 
+// المنفذ الديناميكي الخاص بـ Render
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`🚀 السيرفر يعمل على بورت: ${PORT}`);
+    console.log(`🚀 السيرفر يعمل بنجاح على بورت: ${PORT}`);
 });

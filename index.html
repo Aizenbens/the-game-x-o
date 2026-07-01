@@ -19,9 +19,21 @@
         .tile-dark { background-color: #475569; color: #f8fafc; }
         .tile-selected { background-color: #a855f7 !important; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); }
         
-        /* ستايل التلميحات النيون الأصفر المضيء للمساعدة */
-        .tile-hint { background-color: #f59e0b !important; box-shadow: inset 0 0 15px rgba(255, 255, 0, 0.6); color: #000 !important; }
+        /* تأثيرات الشطرنج ثلاثي الأبعاد والاشعاعات النيون */
+        .chess-container-3d { perspective: 1000px; padding: 20px; }
+        .board-3d { transform: rotateX(25deg) rotateZ(0deg); transform-style: preserve-3d; transition: transform 0.5s ease; box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 40px rgba(139, 92, 246, 0.2); }
         
+        /* تلميحات المساعدة العادية (أصفر نيون) */
+        .tile-hint { background-color: #f59e0b !important; box-shadow: inset 0 0 15px rgba(255, 255, 0, 0.8); color: #000 !important; }
+        
+        /* تلميحات الاحتمالات عند الضغط على قطعة مثل الحصان أو القلعة (أزرق نيون شعاعي) */
+        .tile-possible-target { position: relative; }
+        .tile-possible-target::after { content: ''; position: absolute; width: 16px; height: 16px; background-color: #38bdf8; border-radius: 50%; box-shadow: 0 0 12px #0ea5e9; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+        
+        /* إضاءة الملك باللون الأحمر النيوني الفلاشي عند وجود كش ملك (شاك) */
+        .tile-check-alert { background-color: #ef4444 !important; box-shadow: 0 0 30px #dc2626, inset 0 0 15px #7f1d1d !important; animation: checkPulse 0.8s infinite alternate; }
+        @keyframes checkPulse { from { opacity: 0.7; } to { opacity: 1; } }
+
         .toast-alert { animation: slideIn 0.3s ease forwards; }
         @keyframes slideIn { from { transform: translate(-50%, 100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
     </style>
@@ -75,8 +87,8 @@
                     <span>تحدي XO</span>
                 </button>
                 <button onclick="openGameMenu('chess')" class="neon-btn text-purple-400 bg-gradient-to-br from-gray-900 to-purple-950 border border-purple-500/30 text-lg font-black p-6 rounded-2xl flex flex-col items-center justify-center gap-2">
-                    <span class="text-3xl">👑♟️</span>
-                    <span>ساحة الشطرنج</span>
+                    <span class="text-3xl">👑 3D</span>
+                    <span>شطرنج ثلاثي الأبعاد</span>
                 </button>
                 <button onclick="openGameMenu('snake')" class="neon-btn text-cyan-400 bg-gradient-to-br from-gray-900 to-cyan-950 border border-cyan-500/30 text-lg font-black p-6 rounded-2xl flex flex-col items-center justify-center gap-2">
                     <span class="text-3xl">🐍🧲</span>
@@ -159,7 +171,7 @@
             <div class="p-3 bg-gray-900/80 rounded-t-2xl border-b border-gray-800 text-xs font-black text-purple-400">💬 دردشة الشطرنج الخاصة</div>
             <div id="chessChatMessagesWrapper" class="flex-1 p-3 overflow-y-auto space-y-2 text-xs"></div>
             <div class="p-2.5 border-t border-gray-800 flex gap-1.5">
-                <input type="text" id="chessChatMsgInput" class="flex-1 bg-gray-900 rounded-xl px-3 py-1.5 text-xs text-white border border-gray-700 focus:outline-none" placeholder="اكتب رسالتك لخصمك هنا...">
+                <input type="text" id="chessChatMsgInput" class="flex-1 bg-gray-900 rounded-xl px-3 py-1.5 text-xs text-white border border-gray-700 focus:outline-none" placeholder="اكتب رسالتك للخصم هنا...">
                 <button onclick="sendChessLocalChatMessage()" class="bg-purple-600 text-white font-black px-4 rounded-xl text-xs transition hover:bg-purple-700">إرسال</button>
             </div>
         </div>
@@ -168,11 +180,15 @@
             <div class="flex gap-2 mb-3">
                 <h3 id="chessStatusWidget" class="text-xs font-black text-purple-400 bg-gray-900/90 px-6 py-2 rounded-full border border-gray-800 shadow-md">جاري إعداد الرقعة...</h3>
                 <button onclick="getChessHint()" class="text-xs font-black text-amber-400 bg-amber-950/80 hover:bg-amber-900 px-4 py-2 rounded-full border border-amber-500/40 shadow-md transition">
-                    💡 طلب تلميح محتمل
+                    💡 طلب تلميح عشوائي
                 </button>
             </div>
-            <div id="chessBoard" class="grid grid-cols-8 grid-rows-8 w-80 h-80 sm:w-[440px] sm:h-[440px] border-4 border-gray-800 rounded-2xl overflow-hidden shadow-2xl"></div>
-            <button onclick="exitToHubDirectly('chessPlayArea')" class="mt-5 bg-gradient-to-r from-red-600 to-rose-700 text-white px-8 py-2.5 rounded-xl font-bold text-sm transition">خروج للرئيسية</button>
+            
+            <div class="chess-container-3d">
+                <div id="chessBoard" class="board-3d grid grid-cols-8 grid-rows-8 w-80 h-80 sm:w-[440px] sm:h-[440px] border-[12px] border-amber-900/90 rounded-2xl overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.9)]"></div>
+            </div>
+            
+            <button onclick="exitToHubDirectly('chessPlayArea')" class="mt-8 bg-gradient-to-r from-red-600 to-rose-700 text-white px-8 py-2.5 rounded-xl font-bold text-sm transition">خروج للرئيسية</button>
         </div>
     </div>
 
@@ -204,6 +220,7 @@
         let myChessColor = "w"; 
         let selectedChessSquare = null;
         let activeHints = []; 
+        let currentSquarePossibilities = []; // لتخزين احتمالات الحركة الفورية للقطعة المحددة
 
         const canvas = document.getElementById("snakeFullScreenCanvas");
         const ctx = canvas.getContext("2d");
@@ -221,7 +238,6 @@
             document.getElementById(newId).classList.remove('hidden');
         }
 
-        // استقبال نداء المغادرة والانسحاب من السيرفر فوراً
         socket.on('playerLeftAlert', (data) => {
             const toast = document.getElementById('globalLeftToast');
             document.getElementById('toastLeftUser').innerText = data.username;
@@ -288,24 +304,16 @@
             }
         }
 
-        // ================= [ نظام الشطرنج والتلميحات ] =================
+        // ================= [ نظام الشطرنج الاحترافي المطور 3D ] =================
         function startChessBotMode(diff) {
-            gameMode = "bot";
-            botDifficulty = diff;
-            chessGameInstance = new Chess();
-            myChessColor = "w"; 
-            activeHints = [];
+            gameMode = "bot"; botDifficulty = diff; chessGameInstance = new Chess(); myChessColor = "w"; activeHints = []; currentSquarePossibilities = [];
             document.getElementById('chessChatBoxContainer').classList.add('hidden');
-            switchScreen('lobbyArea', 'chessPlayArea');
-            renderChessBoardUI();
-            updateChessStatusText();
+            switchScreen('lobbyArea', 'chessPlayArea'); renderChessBoardUI(); updateChessStatusText();
         }
 
         function startChessRoomOnline() {
-            gameMode = "online";
-            activeHints = [];
-            currentRoom = document.getElementById('customRoomCode').value.trim();
-            if(!currentRoom) return alert("أدخل رمز الغرفة الخاصة أولاً!");
+            gameMode = "online"; activeHints = []; currentSquarePossibilities = [];
+            currentRoom = document.getElementById('customRoomCode').value.trim(); if(!currentRoom) return alert("أدخل رمز الغرفة الخاصة أولاً!");
             document.getElementById('chessChatBoxContainer').classList.remove('hidden');
             socket.emit('joinChessGame', { roomCode: currentRoom, username: myUsername });
             switchScreen('lobbyArea', 'chessPlayArea');
@@ -313,13 +321,9 @@
 
         function getChessHint() {
             if (chessGameInstance.game_over()) return;
-            if (chessGameInstance.turn() !== myChessColor) {
-                alert("انتظر دورك لطلب المساعدة وتوليد تلميح!");
-                return;
-            }
+            if (chessGameInstance.turn() !== myChessColor) { alert("انتظر دورك لطلب تلميح مساعد!"); return; }
 
-            let moves = chessGameInstance.moves({ verbose: true });
-            if (moves.length === 0) return;
+            let moves = chessGameInstance.moves({ verbose: true }); if (moves.length === 0) return;
 
             activeHints = [];
             let uniqueMovesCount = Math.min(2, moves.length);
@@ -329,42 +333,22 @@
                 activeHints.push(shuffledMoves[i].from);
                 activeHints.push(shuffledMoves[i].to);
             }
-
             renderChessBoardUI();
-            
-            setTimeout(() => {
-                activeHints = [];
-                renderChessBoardUI();
-            }, 3000);
+            setTimeout(() => { activeHints = []; renderChessBoardUI(); }, 3000);
         }
 
         socket.on('chessInit', (data) => { myChessColor = data.color; });
-        socket.on('chessStart', () => {
-            chessGameInstance = new Chess();
-            renderChessBoardUI();
-            updateChessStatusText();
-            alert("🎮 اكتمل اللاعبان! بدأت المعركة الآن بالكامل.");
-        });
-
-        socket.on('chessMoveUpdate', (data) => {
-            chessGameInstance.move(data.move);
-            renderChessBoardUI();
-            updateChessStatusText();
-        });
+        socket.on('chessStart', () => { chessGameInstance = new Chess(); renderChessBoardUI(); updateChessStatusText(); alert("🎮 بدأ التحدي أونلاين بالكامل!"); });
+        socket.on('chessMoveUpdate', (data) => { chessGameInstance.move(data.move); renderChessBoardUI(); updateChessStatusText(); });
 
         function updateChessStatusText() {
-            let status = "";
-            let turn = chessGameInstance.turn() === 'w' ? 'الأبيض' : 'الأسود';
-            
-            if (chessGameInstance.in_checkmate()) {
-                status = `🏁 كش ملك! انتهت المباراة بفوز اللاعب (${turn === 'الأبيض' ? 'الأسود' : 'الأبيض'})`;
-            } else if (chessGameInstance.in_draw()) {
-                status = "🏁 تعادل بالاتفاق أو خنق الملك!";
-            } else {
+            let status = ""; let turn = chessGameInstance.turn() === 'w' ? 'الأبيض' : 'الأسود';
+            if (chessGameInstance.in_checkmate()) status = `🏁 كش ملك! انتهت بفوز (${turn === 'الأبيض' ? 'الأسود' : 'الأبيض'})`;
+            else if (chessGameInstance.in_draw()) status = "🏁 انتهت المباراة بالتعادل!";
+            else {
                 status = `دور اللاعب: ${turn}`;
-                if(gameMode === 'bot' && chessGameInstance.turn() === 'b') {
-                    status = "🤖 البوت يفكر ويحلل الرقعة حالياً...";
-                }
+                if (chessGameInstance.in_check()) status += " ⚠️ [ شاك / كش ملك ]";
+                if (gameMode === 'bot' && chessGameInstance.turn() === 'b') status = "🤖 البوت يقوم بتحليل الخطوة التالية...";
             }
             document.getElementById('chessStatusWidget').innerText = status;
         }
@@ -375,9 +359,9 @@
         };
 
         function renderChessBoardUI() {
-            const boardDiv = document.getElementById('chessBoard');
-            boardDiv.innerHTML = "";
+            const boardDiv = document.getElementById('chessBoard'); boardDiv.innerHTML = "";
             const board = chessGameInstance.board();
+            const isCheckNow = chessGameInstance.in_check();
 
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
@@ -385,22 +369,23 @@
                     const squareName = String.fromCharCode(97 + c) + (8 - r);
                     
                     const tile = document.createElement('button');
-                    tile.className = `h-full w-full flex items-center justify-center text-2xl font-bold transition-all relative ${((r+c)%2===0)?'tile-light':'tile-dark'}`;
+                    tile.className = `h-full w-full flex items-center justify-center text-3xl sm:text-4xl font-bold transition-all relative ${((r+c)%2===0)?'tile-light':'tile-dark'}`;
                     tile.id = `sq-${squareName}`;
 
-                    if(selectedChessSquare === squareName) {
-                        tile.classList.add('tile-selected');
-                    }
-
-                    if(activeHints.includes(squareName)) {
-                        tile.classList.add('tile-hint');
-                    }
+                    if(selectedChessSquare === squareName) tile.classList.add('tile-selected');
+                    if(activeHints.includes(squareName)) tile.classList.add('tile-hint');
+                    if(currentSquarePossibilities.includes(squareName)) tile.classList.add('tile-possible-target');
 
                     if (square) {
                         let symbolKey = square.color === 'w' ? square.type.toUpperCase() : square.type.toLowerCase();
                         tile.innerText = chessPiecesSymbols[symbolKey] || "";
                         if(square.color === 'w') tile.style.color = '#38bdf8'; 
                         if(square.color === 'b') tile.style.color = '#f43f5e'; 
+
+                        // إذا كان كش ملك، قم بإضاءة الملك المهدد فوراً بلون نيون فلاشي أحمر
+                        if(isCheckNow && square.type === 'k' && square.color === chessGameInstance.turn()) {
+                            tile.className += " tile-check-alert";
+                        }
                     }
 
                     tile.onclick = () => handleChessSquareClick(squareName);
@@ -417,16 +402,18 @@
                 let piece = chessGameInstance.get(squareName);
                 if (piece && piece.color === myChessColor) {
                     selectedChessSquare = squareName;
+                    
+                    // حساب وإظهار الاحتمالات المتاحة لحركة هذه القطعة (مثل الحصان، القلعة، إلخ) فوراً عند الضغط عليها
+                    let moves = chessGameInstance.moves({ square: squareName, verbose: true });
+                    currentSquarePossibilities = moves.map(m => m.to);
+                    
                     renderChessBoardUI();
                 }
             } else {
-                let move = chessGameInstance.move({
-                    from: selectedChessSquare,
-                    to: squareName,
-                    promotion: 'q' 
-                });
+                let move = chessGameInstance.move({ from: selectedChessSquare, to: squareName, promotion: 'q' });
 
                 selectedChessSquare = null;
+                currentSquarePossibilities = []; 
                 renderChessBoardUI();
                 updateChessStatusText();
 
@@ -437,49 +424,44 @@
                         let delay = botDifficulty === 'easy' ? 400 : botDifficulty === 'medium' ? 1200 : 600;
                         setTimeout(triggerChessBotBrain, delay);
                     }
+                } else {
+                    // إذا ضغط اللاعب على قطعة أخرى من قطعه، يتم تحويل التحديد إليها وعرض احتمالاتها
+                    let piece = chessGameInstance.get(squareName);
+                    if (piece && piece.color === myChessColor) {
+                        selectedChessSquare = squareName;
+                        let moves = chessGameInstance.moves({ square: squareName, verbose: true });
+                        currentSquarePossibilities = moves.map(m => m.to);
+                        renderChessBoardUI();
+                    }
                 }
             }
         }
 
         function triggerChessBotBrain() {
             if (chessGameInstance.game_over()) return;
-            let moves = chessGameInstance.moves({ verbose: true });
-            if (moves.length === 0) return;
-
+            let moves = chessGameInstance.moves({ verbose: true }); if (moves.length === 0) return;
             let chosenMove = null;
 
-            if (botDifficulty === 'easy') {
-                chosenMove = moves[Math.floor(Math.random() * moves.length)];
-            } 
+            if (botDifficulty === 'easy') { chosenMove = moves[Math.floor(Math.random() * moves.length)]; } 
             else if (botDifficulty === 'medium') {
                 let captures = moves.filter(m => m.captured);
-                if (captures.length > 0) {
-                    chosenMove = captures[Math.floor(Math.random() * captures.length)];
-                } else {
-                    chosenMove = moves[Math.floor(Math.random() * moves.length)];
-                }
+                chosenMove = captures.length > 0 ? captures[Math.floor(Math.random() * captures.length)] : moves[Math.floor(Math.random() * moves.length)];
             } 
             else if (botDifficulty === 'expert') {
                 let checkmates = moves.filter(m => m.san.includes('#'));
                 let checks = moves.filter(m => m.san.includes('+'));
                 let captures = moves.filter(m => m.captured);
-
                 if (checkmates.length > 0) chosenMove = checkmates[0];
                 else if (checks.length > 0) chosenMove = checks[Math.floor(Math.random() * checks.length)];
                 else if (captures.length > 0) chosenMove = captures[Math.floor(Math.random() * captures.length)];
                 else chosenMove = moves[Math.floor(Math.random() * moves.length)];
             }
 
-            if (chosenMove) {
-                chessGameInstance.move(chosenMove);
-                renderChessBoardUI();
-                updateChessStatusText();
-            }
+            if (chosenMove) { chessGameInstance.move(chosenMove); renderChessBoardUI(); updateChessStatusText(); }
         }
 
         function sendChessLocalChatMessage() {
-            const input = document.getElementById('chessChatMsgInput');
-            if(!input.value.trim()) return;
+            const input = document.getElementById('chessChatMsgInput'); if(!input.value.trim()) return;
             socket.emit('sendChessChatMessage', { roomCode: currentRoom, sender: myUsername, message: input.value.trim() });
             input.value = "";
         }
@@ -545,8 +527,7 @@
         function renderXOFrontUI() { localXOBoard.forEach((v, i) => { const c = document.getElementById(`cell-${i}`); c.innerText = v; c.className = `bg-gray-950 text-4xl font-black rounded-xl h-full w-full border border-gray-800 ${v==='X'?'text-cyan-400':'text-rose-500'}`; }); }
         function clearXOFrontBoard() { for(let i=0;i<9;i++) document.getElementById(`cell-${i}`).innerText = ""; }
         function sendXOLocalChatMessage() {
-            const input = document.getElementById('xoChatMsgInput');
-            if(!input.value.trim()) return;
+            const input = document.getElementById('xoChatMsgInput'); if(!input.value.trim()) return;
             socket.emit('sendXOChatMessage', { roomCode: currentRoom, sender: myUsername, message: input.value.trim() });
             input.value = "";
         }
@@ -568,10 +549,7 @@
         function startSnakeOfflineMode() {
             isOfflineMode = true; resizeCanvas(); switchScreen('lobbyArea', 'snakeCanvasArea');
             offlineCandies = []; 
-            // تحديث: مضاعفة كمية الحلويات بالأوفلاين لـ 600 عنصر بالخريطة
-            for(let i=0; i<600; i++) { 
-                offlineCandies.push({ x: Math.floor(Math.random()*(MAP_SIZE/20))*20, y: Math.floor(Math.random()*(MAP_SIZE/20))*20 }); 
-            }
+            for(let i=0; i<600; i++) { offlineCandies.push({ x: Math.floor(Math.random()*(MAP_SIZE/20))*20, y: Math.floor(Math.random()*(MAP_SIZE/20))*20 }); }
             offlineBots = []; const botColors = ["#ec4899", "#f59e0b", "#10b981", "#ef4444"];
             for(let i=1; i<=4; i++) {
                 let rx = Math.floor(Math.random()*80 + 20)*20, ry = Math.floor(Math.random()*80 + 20)*20;

@@ -3,413 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The X O & Snake Game Platform</title>
+    <title>منصة الدودة والـ XO المطورة</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --container-bg: rgba(30, 41, 59, 0.75);
-            --text-color: #f8fafc;
-            --x-color: #3b82f6;
-            --o-color: #ef4444;
+            --bg-color: #0b0f19;
+            --container-bg: rgba(22, 32, 51, 0.85);
+            --text-color: #f1f5f9;
+            --x-color: #38bdf8;
+            --o-color: #f43f5e;
             --accent-color: #10b981;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
         .hidden { display: none !important; }
-
-        /* الواجهة الرئيسية */
-        .hub-container { background: var(--container-bg); padding: 35px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 550px; }
-        .hub-container h1 { margin-bottom: 10px; color: var(--accent-color); }
-        .input-field { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; text-align: center; margin-bottom: 15px; outline: none; font-size: 1.1rem; }
-        
-        .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
-        .game-card { background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); padding: 25px 15px; border-radius: 15px; cursor: pointer; transition: all 0.3s ease; }
-        .game-card:hover { transform: translateY(-5px); border-color: var(--accent-color); background: rgba(16, 185, 129, 0.1); }
-
-        /* متجر السكنات */
-        .skin-section { margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 12px; }
-        .skin-options { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
-        .skin-btn { width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; cursor: pointer; transition: 0.2s; }
-        .skin-btn.active { border-color: var(--accent-color); transform: scale(1.15); }
-
-        /* صالة الانتظار */
-        .lobby-container { background: var(--container-bg); padding: 35px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 450px; }
-        .btn { background: var(--accent-color); border: none; padding: 12px 20px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 10px; font-size: 1rem; transition: all 0.3s; }
-        .btn:hover { filter: brightness(1.1); }
-        .btn.secondary { background: var(--x-color); }
-        .btn.back { background: #64748b; }
-        .divider { margin: 15px 0; color: #64748b; font-size: 0.9rem; }
-        .select-style { width: 100%; padding: 12px; border-radius: 8px; background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 15px; }
-
-        /* واجهة اللعبة المشتركة */
-        .game-container { background: var(--container-bg); border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); gap: 20px; max-width: 1100px; width: 100%; border: 1px solid rgba(255,255,255,0.1); display: flex; }
-        .main-game { flex: 2; display: flex; flex-direction: column; align-items: center; }
-        
-        /* لوحة الترتيب المتصدرين */
-        .sidebar-panel { flex: 1; display: flex; flex-direction: column; gap: 20px; max-width: 300px; }
-        .leaderboard-box { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; border: 1px solid rgba(255,255,255,0.05); }
-        .leaderboard-title { font-weight: bold; margin-bottom: 10px; color: #f59e0b; text-align: center; font-size: 1.1rem; }
-        .leaderboard-item { display: flex; justify-content: space-between; padding: 6px 10px; background: rgba(255,255,255,0.05); margin-bottom: 5px; border-radius: 6px; font-size: 0.9rem; }
-
-        .header-info { text-align: center; margin-bottom: 15px; width: 100%; }
-        .score-board { display: flex; justify-content: center; gap: 20px; font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; }
-        
-        /* شبكة XO */
-        .board { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 10px; margin-top: 15px; }
-        .cell { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 2.5rem; font-weight: bold; cursor: pointer; }
-        .cell.X { color: var(--x-color); }
-        .cell.O { color: var(--o-color); }
-
-        /* ساحة الدودة */
-        #snakeCanvas { background: #020617; border: 4px solid rgba(255,255,255,0.1); border-radius: 10px; }
-
-        /* الشات */
-        .chat-container { background: rgba(0, 0, 0, 0.2); border-radius: 12px; display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.05); height: 220px; overflow: hidden; }
-        .chat-messages { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; font-size: 0.85rem; }
-        .message { padding: 6px 10px; border-radius: 8px; max-width: 85%; }
-        .message.me { background: var(--x-color); align-self: flex-start; }
-        .message.other { background: rgba(255,255,255,0.15); align-self: flex-end; }
-        .chat-input-area { display: flex; padding: 5px; background: rgba(0,0,0,0.2); }
-        .chat-input { flex: 1; background: transparent; border: none; padding: 6px; color: white; outline: none; }
-        
-        @media (max-width: 850px) { .game-container { flex-direction: column; } .sidebar-panel { max-width: 100%; } }
+        .hub-container, .lobby-container { 
+            background: var(--container-bg); padding: 40px; border-radius: 24px; text-align: center; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.08); width: 90%; max-width: 550px; backdrop-filter: blur(12px); 
+        }
+        .input-field { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.4); color: white; text-align: center; margin-bottom: 20px; outline: none; font-size: 1.1rem; }
+        .skin-section { margin-bottom: 25px; padding: 15px; background: rgba(0,0,0,0.25); border-radius: 16px; }
+        .skin-options { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        .skin-btn { width: 38px; height: 38px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); cursor: pointer; transition: 0.2s; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .skin-btn.active { border-color: #fff; transform: scale(1.2); box-shadow: 0 0 12px var(--accent-color); }
+        .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .game-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); padding: 30px 15px; border-radius: 18px; cursor: pointer; transition: 0.3s; }
+        .game-card:hover { transform: translateY(-5px); border-color: var(--x-color); background: rgba(56, 189, 248, 0.08); }
+        .btn { background: var(--x-color); border: none; padding: 14px 20px; border-radius: 12px; color: #000; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 12px; font-size: 1rem; }
+        .btn.secondary { background: var(--accent-color); color: #fff; }
+        .btn.back { background: #334155; color: #fff; margin-top: 10px; }
+        .full-screen-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #020617; display: flex; z-index: 9999; }
+        .game-layout { flex: 1; position: relative; height: 100%; display: flex; justify-content: center; align-items: center; }
+        #snakeCanvas { width: 100%; height: 100%; display: block; background: #070b14; }
+        .game-hud { position: absolute; top: 20px; right: 20px; left: 20px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 10; }
+        .hud-card { background: rgba(15, 23, 42, 0.85); padding: 12px 24px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); pointer-events: auto; }
+        .live-leaderboard { position: absolute; top: 90px; right: 20px; width: 260px; background: rgba(15, 23, 42, 0.85); border-radius: 16px; padding: 15px; border: 1px solid rgba(255,255,255,0.1); z-index: 10; }
+        .lead-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; padding: 6px; border-radius: 6px; background: rgba(255,255,255,0.03); }
+        .lead-row.me { background: rgba(56, 189, 248, 0.2); font-weight: bold; border: 1px solid var(--x-color); }
+        .xo-centered-box { background: var(--container-bg); padding: 40px; border-radius: 24px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .board { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 12px; margin-top: 20px; }
+        .cell { background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 2.5rem; font-weight: bold; cursor: pointer; }
+        .cell.X { color: var(--x-color); } .cell.O { color: var(--o-color); }
     </style>
 </head>
 <body>
 
 <div class="hub-container" id="gameHub">
-    <h1>The X O & Snake Platform</h1>
-    <p>اختر اللعبة المناسبة، عدّل مظهرك والعب فوراً فردي أو أونلاين</p>
-    <input type="text" class="input-field" id="globalNameInput" placeholder="أدخل اسمك الكريم">
+    <h1>منصة ألعاب التحدي 🎮</h1>
+    <p style="color: #64748b; margin-bottom: 20px;">اختر سكنك المفضّل والعب بملء الشاشة</p>
+    <input type="text" class="input-field" id="globalNameInput" placeholder="أدخل اسمك المستعار هنا">
     
     <div class="skin-section">
-        <h4>اختر سكن مظهرك المفضّل🎨</h4>
+        <h4>اختر لون دورتك</h4>
         <div class="skin-options">
-            <div class="skin-btn active" style="background: #22c55e;" onclick="pickSkin('#22c55e', this)"></div>
-            <div class="skin-btn" style="background: #eab308;" onclick="pickSkin('#eab308', this)"></div>
-            <div class="skin-btn" style="background: #a855f7;" onclick="pickSkin('#a855f7', this)"></div>
-            <div class="skin-btn" style="background: #ec4899;" onclick="pickSkin('#ec4899', this)"></div>
+            <div class="skin-btn active" style="background: #10b981;" onclick="selectSkin('#10b981', this)"></div>
+            <div class="skin-btn" style="background: #38bdf8;" onclick="selectSkin('#38bdf8', this)"></div>
+            <div class="skin-btn" style="background: #ec4899;" onclick="selectSkin('#ec4899', this)"></div>
+            <div class="skin-btn" style="background: #f59e0b;" onclick="selectSkin('#f59e0b', this)"></div>
         </div>
     </div>
 
     <div class="games-grid">
-        <div class="game-card" onclick="openLobby('xo')">
-            <h3>لعبة The X O ⭕❌</h3>
-            <span>نمط ذكي ضد الكمبيوتر أو أونلاين</span>
+        <div class="game-card" onclick="goToLobby('xo')">
+            <h3>لعبة XO ❌⭕</h3>
+            <span>ضد البوت أو أونلاين</span>
         </div>
-        <div class="game-card" onclick="openLobby('snake')">
-            <h3>لعبة الدودة 🐍🍬</h3>
-            <span>تحدي الحلوى الكبرى مع 12 بوت</span>
+        <div class="game-card" onclick="goToLobby('snake')">
+            <h3>لعبة الدودة 🍬🐍</h3>
+            <span>ضد 12 بوت والحلويات</span>
         </div>
     </div>
 </div>
 
 <div class="lobby-container hidden" id="lobbyArea">
-    <h2 id="lobbyTitle">خيارات اللعب</h2>
-    
-    <div id="aiOptionsMode">
-        <div class="divider">🤖 اللعب الفردي ضد البوت ذكاء اصطناعي</div>
-        <select class="select-style" id="difficultySelect">
-            <option value="easy">مستوى: سهل (ضعيف)</option>
-            <option value="medium">مستوى: عادي (متوسط)</option>
-            <option value="hard">مستوى: صعب (قوي جداً)</option>
-        </select>
-        <button class="btn" onclick="startSingleMode()">ابدأ اللعب الفردي الآن</button>
-    </div>
-
-    <div class="divider">🌐 النمط المشترك (أونلاين مع أصدقاء حقيقيين)</div>
-    <button class="btn secondary" id="createRoomBtn">إنشاء جولة أونلاين جديدة</button>
-    <input type="text" class="input-field" id="roomCodeInput" placeholder="ضع رمز الغرفة هنا للاستلام">
-    <button class="btn secondary" id="joinRoomBtn">انضمام لغرفة أونلاين</button>
-    
-    <button class="btn back" onclick="backToHub()">الرجوع للرئيسية</button>
+    <h2 id="lobbyTitle" style="margin-bottom: 20px;">خيارات بدء اللعبة</h2>
+    <button class="btn" onclick="startSingleGame()">ابدأ اللعب الآن (فردي / بوتات) 🤖</button>
+    <button class="btn back" onclick="exitToHub()">رجوع</button>
 </div>
 
-<div class="game-container hidden" id="gameArea">
-    <div class="main-game">
-        <div class="header-info">
-            <div class="round-counter" id="gameTitleDisplay">تحميل...</div>
-            <div class="score-board" id="scoreBoardZone">
-                <div id="scoreXDisplay">أنت: 0</div>
-                <div style="color: #64748b;">|</div>
-                <div id="scoreODisplay">الخصم: 0</div>
-            </div>
-            <div class="turn-indicator" id="statusDisplay">العب بذكاء!</div>
-            <br>
-            <div class="room-display hidden" id="copyRoomCode">رمز الغرفة الحالية: <span id="roomCodeText"></span> (اضغط للنسخ)</div>
-        </div>
-        
-        <div class="board hidden" id="xoBoard">
-            <div class="cell" data-index="0"></div>
-            <div class="cell" data-index="1"></div>
-            <div class="cell" data-index="2"></div>
-            <div class="cell" data-index="3"></div>
-            <div class="cell" data-index="4"></div>
-            <div class="cell" data-index="5"></div>
-            <div class="cell" data-index="6"></div>
-            <div class="cell" data-index="7"></div>
-            <div class="cell" data-index="8"></div>
-        </div>
-
-        <canvas id="snakeCanvas" width="500" height="500" class="hidden"></canvas>
+<div class="full-screen-container hidden" id="gameArea">
+    <div class="game-hud">
+        <div class="hud-card" style="color: white;" id="hudStatus">جاري اللعب المباشر...</div>
     </div>
-
-    <div class="sidebar-panel">
-        <div class="leaderboard-box">
-            <div class="leaderboard-title">🏆 قائمة المتصدرين والترتيب</div>
-            <div id="leaderboardContent">
-                <div class="leaderboard-item"><span>لا يوجد متسابقين</span><span>-</span></div>
-            </div>
-        </div>
-
-        <div class="chat-container" id="chatWrapper">
-            <div class="chat-messages" id="chatMessages"></div>
-            <div class="chat-input-area">
-                <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة سريعة...">
-            </div>
-        </div>
+    <div class="live-leaderboard hidden" id="snakeLeaderboard">
+        <h4 style="color: #f59e0b; text-align: center; margin-bottom: 10px;">🏆 قائمة المتصدرين</h4>
+        <div id="leaderboardRows"></div>
+    </div>
+    <div class="game-layout">
+        <canvas id="snakeCanvas" class="hidden"></canvas>
     </div>
 </div>
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
     const socket = io({ transports: ['websocket', 'polling'] });
-    
-    let selectedGame = "";
-    let playerName = "لاعب";
-    let selectedColor = "#22c55e"; 
-    let gameMode = "online"; 
-    let mySign = "X";
-    let isMyTurn = false;
-    let currentRoomCode = "";
+    let currentGame = "", nickname = "لاعب", playerColor = "#10b981", roomCode = "";
+    const canvas = document.getElementById('snakeCanvas');
+    const ctx = canvas.getContext('2d');
 
-    // للـ XO فردي الفني
-    let xoAiBoard = Array(9).fill(null);
-    let scoreX = 0, scoreO = 0;
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
 
-    const gameHub = document.getElementById('gameHub');
-    const lobbyArea = document.getElementById('lobbyArea');
-    const gameArea = document.getElementById('gameArea');
-    const xoBoard = document.getElementById('xoBoard');
-    const snakeCanvas = document.getElementById('snakeCanvas');
-    const ctx = snakeCanvas.getContext('2d');
-
-    const candiesIcons = { "🍬": "🍭", "🍩": "🍫", "🧁": "🎂" };
-
-    function pickSkin(color, element) {
-        selectedColor = color;
+    function selectSkin(color, el) {
+        playerColor = color;
         document.querySelectorAll('.skin-btn').forEach(b => b.classList.remove('active'));
-        element.classList.add('active');
+        el.classList.add('active');
     }
 
-    function openLobby(game) {
-        playerName = document.getElementById('globalNameInput').value.trim() || "لاعب";
-        selectedGame = game;
-        gameHub.classList.add('hidden');
-        lobbyArea.classList.remove('hidden');
-        document.getElementById('lobbyTitle').innerText = game === 'xo' ? "إعدادات لعبة The X O" : "إعدادات لعبة الدودة 🍬";
-        
-        if(game === 'snake') {
-            document.getElementById('aiOptionsMode').innerHTML = `<button class="btn" onclick="startSingleMode()">ابدأ اللعب الفردي ضد 12 بوت 🤖</button>`;
-        } else {
-            document.getElementById('aiOptionsMode').innerHTML = `
-                <div class="divider">🤖 اللعب الفردي ضد البوت ذكاء اصطناعي</div>
-                <select class="select-style" id="difficultySelect">
-                    <option value="easy">مستوى: سهل (ضعيف)</option>
-                    <option value="medium">مستوى: عادي (متوسط)</option>
-                    <option value="hard">مستوى: صعب (قوي جداً)</option>
-                </select>
-                <button class="btn" onclick="startSingleMode()">ابدأ اللعب الفردي الآن</button>`;
+    function goToLobby(game) {
+        nickname = document.getElementById('globalNameInput').value.trim() || "لاعب";
+        currentGame = game;
+        document.getElementById('gameHub').classList.add('hidden');
+        document.getElementById('lobbyArea').classList.remove('hidden');
+    }
+
+    function exitToHub() {
+        document.getElementById('lobbyArea').classList.add('hidden');
+        document.getElementById('gameHub').classList.remove('hidden');
+    }
+
+    function startSingleGame() {
+        document.getElementById('lobbyArea').classList.add('hidden');
+        document.getElementById('gameArea').classList.remove('hidden');
+
+        if (currentGame === 'snake') {
+            document.getElementById('snakeCanvas').classList.remove('hidden');
+            document.getElementById('snakeLeaderboard').classList.remove('hidden');
+            resizeCanvas();
+            socket.emit('startSingleSnake', { name: nickname, color: playerColor });
         }
     }
 
-    function backToHub() {
-        lobbyArea.classList.add('hidden');
-        gameHub.classList.remove('hidden');
-    }
-
-    function startSingleMode() {
-        gameMode = "single";
-        lobbyArea.classList.add('hidden');
-        gameArea.classList.remove('hidden');
-        document.getElementById('copyRoomCode').classList.add('hidden');
-        document.getElementById('chatWrapper').classList.add('hidden');
-
-        if(selectedGame === 'xo') {
-            xoBoard.classList.remove('hidden');
-            snakeCanvas.classList.add('hidden');
-            document.getElementById('gameTitleDisplay').innerText = "The X O - فردي";
-            initXOSingle();
-        } else {
-            snakeCanvas.classList.remove('hidden');
-            xoBoard.classList.add('hidden');
-            document.getElementById('gameTitleDisplay').innerText = "الدودة الفردية ضد 12 بوت";
-            socket.emit('startSingleSnake', { name: playerName, color: selectedColor });
-        }
-    }
-
-    // إدارة اتصالات الأونلاين المباشرة عبر السيرفر
-    document.getElementById('createRoomBtn').addEventListener('click', () => {
-        gameMode = "online";
-        socket.emit('createRoom', { game: selectedGame, name: playerName, color: selectedColor });
-    });
-
-    document.getElementById('joinRoomBtn').addEventListener('click', () => {
-        gameMode = "online";
-        const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
-        if (code) socket.emit('joinRoom', { roomCode: code, name: playerName, color: selectedColor });
-    });
-
-    socket.on('roomReady', (data) => {
-        currentRoomCode = data.roomCode;
-        document.getElementById('roomCodeText').innerText = currentRoomCode;
-        document.getElementById('copyRoomCode').classList.remove('hidden');
-        document.getElementById('chatWrapper').classList.remove('hidden');
-        lobbyArea.classList.add('hidden');
-        gameArea.classList.remove('hidden');
-
-        if (data.game === 'xo') {
-            xoBoard.classList.remove('hidden');
-            snakeCanvas.classList.add('hidden');
-            document.getElementById('gameTitleDisplay').innerText = "The X O - أونلاين";
-        } else {
-            snakeCanvas.classList.remove('hidden');
-            xoBoard.classList.add('hidden');
-            document.getElementById('gameTitleDisplay').innerText = "الدودة الأونلاين والحلويات";
-        }
-    });
-
-    // --- منطق وبرمجة XO الفردي العادل والمُحسّن ---
-    function initXOSingle() {
-        xoAiBoard = Array(9).fill(null);
-        isMyTurn = true;
-        scoreX = 0; scoreO = 0;
-        document.getElementById('scoreXDisplay').innerText = `${playerName}: 0`;
-        document.getElementById('scoreODisplay').innerText = `البوت الكمبيوتر: 0`;
-        resetXOVisuals();
-    }
-
-    function resetXOVisuals() {
-        document.querySelectorAll('.cell').forEach(c => { c.innerText = ''; c.className = 'cell'; });
-        document.getElementById('statusDisplay').innerText = isMyTurn ? "دورك أنت الآن!" : "البوت يفكّر...";
-    }
-
-    document.querySelectorAll('.cell').forEach(cell => {
-        cell.addEventListener('click', () => {
-            const index = parseInt(cell.getAttribute('data-index'));
-            if(gameMode === "single" && selectedGame === 'xo' && isMyTurn && xoAiBoard[index] === null) {
-                xoAiBoard[index] = 'X';
-                cell.innerText = 'X'; cell.classList.add('X');
-                isMyTurn = false;
-
-                if (checkWinXO(xoAiBoard, 'X')) {
-                    setTimeout(() => { scoreX++; alert("تهانينا الفوز ساحق!"); initNextRoundXOSingle(); }, 200);
-                } else if (!xoAiBoard.includes(null)) {
-                    setTimeout(() => { alert("تعادل رائع!"); initNextRoundXOSingle(); }, 200);
-                } else {
-                    document.getElementById('statusDisplay').innerText = "البوت يفكّر...";
-                    setTimeout(makeAiMoveXO, 600);
-                }
-            } else if (gameMode === "online" && selectedGame === 'xo' && isMyTurn && cell.innerText === '') {
-                socket.emit('makeMoveXO', { index: index, roomCode: currentRoomCode });
-            }
-        });
-    });
-
-    function makeAiMoveXO() {
-        const diff = document.getElementById('difficultySelect').value;
-        let move = null;
-        let available = xoAiBoard.map((v, i) => v === null ? i : null).filter(v => v !== null);
-
-        if (diff === 'easy') {
-            move = available[Math.floor(Math.random() * available.length)];
-        } else {
-            move = available[Math.floor(Math.random() * available.length)]; // تبسيط تجنباً للتأخير المتصفحي
-        }
-
-        if(move !== null) {
-            xoAiBoard[move] = 'O';
-            const cell = document.querySelectorAll('.cell')[move];
-            cell.innerText = 'O'; cell.classList.add('O');
-            
-            if (checkWinXO(xoAiBoard, 'O')) {
-                setTimeout(() => { scoreO++; alert("فاز البوت الذكي هذه المرة!"); initNextRoundXOSingle(); }, 200);
-            } else if (!xoAiBoard.includes(null)) {
-                setTimeout(() => { alert("تعادل!"); initNextRoundXOSingle(); }, 200);
-            } else {
-                isMyTurn = true;
-                document.getElementById('statusDisplay').innerText = "دورك أنت الآن!";
-            }
-        }
-    }
-
-    function checkWinXO(b, s) {
-        const cond = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-        return cond.some(c => b[c[0]] === s && b[c[1]] === s && b[c[2]] === s);
-    }
-
-    function initNextRoundXOSingle() {
-        xoAiBoard = Array(9).fill(null);
-        isMyTurn = true;
-        document.getElementById('scoreXDisplay').innerText = `${playerName}: ${scoreX}`;
-        document.getElementById('scoreODisplay').innerText = `البوت الكمبيوتر: ${scoreO}`;
-        resetXOVisuals();
-    }
-
-    // --- استقبال تحديثات الدودة المتقدمة مع الـ 12 بوت والحلويات ومتصدرين الغرف ---
     window.addEventListener('keydown', (e) => {
-        let dir = "";
-        if (e.key === 'ArrowUp') dir = "UP";
-        if (e.key === 'ArrowDown') dir = "DOWN";
-        if (e.key === 'ArrowLeft') dir = "LEFT";
-        if (e.key === 'ArrowRight') dir = "RIGHT";
-        if (dir) socket.emit('snakeDirection', { roomCode: currentRoomCode, direction: dir });
+        let direct = "";
+        if (e.key === 'ArrowUp' || e.key === 'w') direct = "UP";
+        if (e.key === 'ArrowDown' || e.key === 's') direct = "DOWN";
+        if (e.key === 'ArrowLeft' || e.key === 'a') direct = "LEFT";
+        if (e.key === 'ArrowRight' || e.key === 'd') direct = "RIGHT";
+        if (direct) socket.emit('moveSnakeDirect', { roomCode: roomCode, dir: direct });
     });
 
-    socket.on('snakeUpdate', (state) => {
-        if(selectedGame !== 'snake') return;
-        ctx.clearRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+    socket.on('roomConnected', (data) => {
+        roomCode = data.roomCode;
+    });
 
-        // رسم الحلويات التفاعلية
+    socket.on('renderSnakeFrame', (state) => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         state.candies.forEach(candy => {
-            ctx.font = "20px Arial";
-            ctx.fillText(candy.type, candy.x, candy.y + 16);
+            ctx.font = "24px Arial";
+            ctx.fillText(candy.type, candy.x, candy.y);
         });
-
-        // رسم جميع الدودات الحقيقية والبوتات الـ 12
-        state.snakes.forEach(sk => {
-            ctx.fillStyle = sk.color || "#3b82f6";
-            sk.body.forEach((p, idx) => {
-                if(idx === 0) ctx.fillStyle = "#ffffff"; // الرأس بلون مميز
-                ctx.fillRect(p.x, p.y, 18, 18);
-                ctx.fillStyle = sk.color || "#3b82f6";
+        state.snakes.forEach(s => {
+            s.body.forEach((dot, index) => {
+                ctx.beginPath();
+                ctx.arc(dot.x, dot.y, index === 0 ? 13 : 10, 0, Math.PI * 2);
+                ctx.fillStyle = index === 0 ? "#ffffff" : s.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = s.color;
+                ctx.fill();
+                ctx.shadowBlur = 0;
             });
         });
-
-        // بناء لوحة وقائمة المتصدرين العادلة والمنظمة
-        const leadBox = document.getElementById('leaderboardContent');
-        leadBox.innerHTML = "";
-        state.leaderboard.slice(0, 7).forEach((item, index) => {
-            const row = document.createElement('div');
-            row.className = 'leaderboard-item';
-            row.innerHTML = `<span>${index + 1}. ${item.name}</span><strong>${item.score}</strong>`;
-            leadBox.appendChild(row);
+        const lb = document.getElementById('leaderboardRows');
+        lb.innerHTML = "";
+        state.leaderboard.slice(0, 8).forEach((item, i) => {
+            const div = document.createElement('div');
+            div.className = `lead-row ${item.id === socket.id ? 'me' : ''}`;
+            div.innerHTML = `<span>${i+1}. ${item.name}</span><strong>${item.score} ن</strong>`;
+            lb.appendChild(div);
         });
-    });
-
-    // سياقات الأونلاين للـ XO الشاملة
-    socket.on('playerAssignment', (data) => { mySign = data.sign; });
-    socket.on('startRoundXO', (data) => {
-        isMyTurn = (data.currentTurn === mySign);
-        document.getElementById('statusDisplay').innerText = isMyTurn ? "دورك الآن المباشر!" : "انتظر الخصم الحقيقي...";
-        document.querySelectorAll('.cell').forEach(c => { c.innerText = ''; c.className = 'cell'; });
-    });
-    socket.on('updateBoardXO', (data) => {
-        const cell = document.querySelectorAll('.cell')[data.index];
-        cell.innerText = data.sign; cell.classList.add(data.sign);
-        isMyTurn = (data.nextTurn === mySign);
-        document.getElementById('statusDisplay').innerText = isMyTurn ? "دورك الآن!" : "دور الخصم الحقيقي...";
     });
 </script>
 </body>

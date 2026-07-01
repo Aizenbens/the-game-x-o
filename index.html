@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The X O</title>
+    <title>منصة ألعاب الأونلاين</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -12,46 +12,58 @@
             --x-color: #3b82f6;
             --o-color: #ef4444;
             --accent-color: #10b981;
+            --snake-color: #22c55e;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
         
+        .hidden { display: none !important; }
+
+        /* الواجهة الرئيسية لاختيار الألعاب */
+        .hub-container { background: var(--container-bg); padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 500px; }
+        .hub-container h1 { margin-bottom: 10px; color: var(--accent-color); }
+        .hub-container p { color: #94a3b8; margin-bottom: 25px; }
+        
+        .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .game-card { background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); padding: 25px 15px; border-radius: 15px; cursor: pointer; transition: all 0.3s ease; text-align: center; }
+        .game-card:hover { transform: translateY(-5px); border-color: var(--accent-color); background: rgba(16, 185, 129, 0.1); }
+        .game-card h3 { margin-bottom: 10px; }
+        .game-card span { font-size: 0.85rem; color: #94a3b8; }
+
+        /* صالة الانتظار المشتركة للألعاب */
         .lobby-container { background: var(--container-bg); padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 450px; }
         .lobby-container h2 { margin-bottom: 20px; color: var(--accent-color); }
         .btn { background: var(--accent-color); border: none; padding: 12px 20px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 10px; font-size: 1rem; transition: all 0.3s; }
         .btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
         .btn.secondary { background: var(--x-color); }
-        .btn.ai { background: #8b5cf6; }
+        .btn.back { background: #64748b; margin-top: 10px; }
         .input-field { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; text-align: center; margin-bottom: 15px; outline: none; font-size: 1.1rem; }
-        
-        .divider { margin: 15px 0; color: #64748b; font-size: 0.9rem; position: relative; }
-        .select-style { width: 100%; padding: 12px; border-radius: 8px; background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 15px; outline: none; cursor: pointer; }
+        .divider { margin: 15px 0; color: #64748b; font-size: 0.9rem; }
 
-        /* واجهة اللعبة الرئيسية */
-        .game-container { display: none; background: var(--container-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); gap: 30px; max-width: 900px; width: 100%; border: 1px solid rgba(255,255,255,0.1); }
+        /* واجهة اللعب العامة */
+        .game-container { background: var(--container-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); gap: 30px; max-width: 900px; width: 100%; border: 1px solid rgba(255,255,255,0.1); display: flex; }
         .main-game { flex: 1; display: flex; flex-direction: column; align-items: center; }
         
         .header-info { text-align: center; margin-bottom: 20px; width: 100%; }
         .round-counter { font-size: 1.5rem; font-weight: bold; color: var(--accent-color); margin-bottom: 5px; }
-        
-        /* عداد النقاط */
-        .score-board { display: flex; justify-content: center; gap: 20px; font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 8px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }
-        .score-x { color: var(--x-color); }
-        .score-o { color: var(--o-color); }
-
+        .score-board { display: flex; justify-content: center; gap: 20px; font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 8px 20px; border-radius: 10px; }
         .turn-indicator { font-size: 1.1rem; background: rgba(255,255,255,0.05); padding: 8px 20px; border-radius: 50px; display: inline-block; margin-bottom: 10px; }
         .room-display { font-size: 0.9rem; color: #94a3b8; cursor: pointer; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 5px; display: inline-block; }
 
+        /* شبكة لعبة XO */
         .board { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 10px; margin-top: 20px; }
         .cell { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 2.5rem; font-weight: bold; cursor: pointer; transition: all 0.3s ease; }
         .cell:hover { background: rgba(255,255,255,0.1); transform: scale(1.05); }
         .cell.X { color: var(--x-color); text-shadow: 0 0 10px var(--x-color); }
         .cell.O { color: var(--o-color); text-shadow: 0 0 10px var(--o-color); }
 
-        /* الشات */
+        /* ساحة لعبة الدودة */
+        #snakeCanvas { background: #020617; border: 4px solid rgba(255,255,255,0.1); border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+
+        /* نظام الشات */
         .chat-container { width: 300px; background: rgba(0, 0, 0, 0.2); border-radius: 15px; display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; }
-        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; height: 300px; }
+        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; height: 350px; }
         .message { padding: 8px 12px; border-radius: 10px; max-width: 80%; font-size: 0.9rem; word-break: break-word; }
         .message.system { background: rgba(255,255,255,0.1); align-self: center; text-align: center; color: #94a3b8; font-size: 0.8rem; }
         .message.me { background: var(--x-color); align-self: flex-start; }
@@ -68,41 +80,49 @@
 </head>
 <body>
 
-<div class="lobby-container" id="lobby">
-    <h2>The X O</h2>
-    <input type="text" class="input-field" id="playerNameInput" placeholder="أدخل اسم اللاعب">
+<div class="hub-container" id="gameHub">
+    <h1>منصة الألعاب الأونلاين</h1>
+    <p>اختر اللعبة المفضلة لديك وابدأ التحدي أونلاين مع أصدقائك</p>
+    <input type="text" class="input-field" id="globalNameInput" placeholder="أدخل اسمك أولاً">
     
-    <div class="divider">🕹️ نمط اللعب الفردي (ضد الذكاء الاصطناعي)</div>
-    <select class="select-style" id="difficultySelect">
-        <option value="easy">مستوى: سهل (ضعيف)</option>
-        <option value="medium">مستوى: عادي (متوسط)</option>
-        <option value="hard">مستوى: صعب (قوي جداً)</option>
-    </select>
-    <button class="btn ai" id="playAiBtn">ابدأ لعب فردي</button>
-
-    <div class="divider">🌐 نمط أونلاين (مع صديق)</div>
-    <button class="btn" id="createRoomBtn">إنشاء جولة خاصة</button>
-    <input type="text" class="input-field" id="roomCodeInput" placeholder="رمز الجولة للاستلام">
-    <button class="btn secondary" id="joinRoomBtn">انضمام للجولة</button>
+    <div class="games-grid">
+        <div class="game-card" onclick="selectGame('xo')">
+            <h3>The X O</h3>
+            <span>جولات تفاعلية وشات فوري</span>
+        </div>
+        <div class="game-card" onclick="selectGame('snake')">
+            <h3>لعبة الدودة 🐍</h3>
+            <span>تحدي أونلاين ثنائي السرعة</span>
+        </div>
+    </div>
 </div>
 
-<div class="game-container" id="gameArea">
+<div class="lobby-container hidden" id="lobbyArea">
+    <h2 id="lobbyTitle">إعدادات اللعبة</h2>
+    <div class="divider">انقر لإنشاء غرفة أو أدخل رمز صديقك</div>
+    <button class="btn" id="createRoomBtn">إنشاء جولة خاصة</button>
+    <input type="text" class="input-field" id="roomCodeInput" placeholder="أدخل رمز الجولة">
+    <button class="btn secondary" id="joinRoomBtn">انضمام للجولة</button>
+    <button class="btn back" onclick="backToHub()">العودة للرئيسية</button>
+</div>
+
+<div class="game-container hidden" id="gameArea">
     <div class="main-game">
         <div class="header-info">
-            <div class="round-counter" id="roundDisplay">الجولة: 1</div>
+            <div class="round-counter" id="gameTitleDisplay">The X O</div>
             
             <div class="score-board">
-                <div class="score-x" id="scoreXDisplay">X (أنت): 0</div>
+                <div id="scoreXDisplay">أنت: 0</div>
                 <div style="color: #64748b;">|</div>
-                <div class="score-o" id="scoreODisplay">O (الخصم): 0</div>
+                <div id="scoreODisplay">الخصم: 0</div>
             </div>
 
-            <div class="turn-indicator" id="statusDisplay">جاري التجهيز...</div>
+            <div class="turn-indicator" id="statusDisplay">بانتظار انضمام الخصم...</div>
             <br>
-            <div class="room-display" id="copyRoomCode" style="display:none;">رمز الغرفة: <span id="roomCodeText"></span> (نسخ)</div>
+            <div class="room-display" id="copyRoomCode">رمز الغرفة: <span id="roomCodeText"></span> (نسخ)</div>
         </div>
         
-        <div class="board" id="board">
+        <div class="board hidden" id="xoBoard">
             <div class="cell" data-index="0"></div>
             <div class="cell" data-index="1"></div>
             <div class="cell" data-index="2"></div>
@@ -113,15 +133,17 @@
             <div class="cell" data-index="7"></div>
             <div class="cell" data-index="8"></div>
         </div>
+
+        <canvas id="snakeCanvas" width="400" height="400" class="hidden"></canvas>
     </div>
 
-    <div class="chat-container" id="chatSection">
+    <div class="chat-container">
         <div class="chat-messages" id="chatMessages">
-            <div class="message system">شات الجولة</div>
+            <div class="message system">مرحباً بك في شات الجولة!</div>
         </div>
         <div class="chat-input-area">
-            <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة..." disabled>
-            <button class="chat-btn" id="sendBtn" disabled>إرسال</button>
+            <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة...">
+            <button class="chat-btn" id="sendBtn">إرسال</button>
         </div>
     </div>
 </div>
@@ -130,271 +152,164 @@
 <script>
     const socket = io({ transports: ['websocket', 'polling'] });
     
-    const lobby = document.getElementById('lobby');
-    const gameArea = document.getElementById('gameArea');
-    const cells = document.querySelectorAll('.cell');
-    const statusDisplay = document.getElementById('statusDisplay');
-    const roundDisplay = document.getElementById('roundDisplay');
-    const scoreXDisplay = document.getElementById('scoreXDisplay');
-    const scoreODisplay = document.getElementById('scoreODisplay');
-    const roomCodeText = document.getElementById('roomCodeText');
-    const copyRoomCode = document.getElementById('copyRoomCode');
-    const chatSection = document.getElementById('chatSection');
-    
-    const playerNameInput = document.getElementById('playerNameInput');
-    const difficultySelect = document.getElementById('difficultySelect');
-    const playAiBtn = document.getElementById('playAiBtn');
-    const createRoomBtn = document.getElementById('createRoomBtn');
-    const joinRoomBtn = document.getElementById('joinRoomBtn');
-    const roomCodeInput = document.getElementById('roomCodeInput');
-
-    const chatMessages = document.getElementById('chatMessages');
-    const chatInput = document.getElementById('chatInput');
-    const sendBtn = document.getElementById('sendBtn');
-
-    let mySign = 'X'; 
-    let isMyTurn = false;
+    let selectedGame = ""; 
+    let playerName = "لاعب";
+    let mySign = ""; 
     let currentRoomCode = "";
-    let gameMode = "online"; 
-    let pName = "لاعب";
+    let isMyTurn = false;
+    
+    // عناصر التحكم
+    const gameHub = document.getElementById('gameHub');
+    const lobbyArea = document.getElementById('lobbyArea');
+    const gameArea = document.getElementById('gameArea');
+    const xoBoard = document.getElementById('xoBoard');
+    const snakeCanvas = document.getElementById('snakeCanvas');
+    const ctx = snakeCanvas.getContext('2d');
 
-    let scoreX = 0;
-    let scoreO = 0;
-
-    let aiBoard = Array(9).fill(null);
-    let aiRound = 1;
-    let aiCurrentTurn = 'X';
-    let aiStartingPlayer = 'X';
-    let aiDrawStreak = 0;
-
-    function getPlayerName() {
-        return playerNameInput.value.trim() || "لاعب";
+    // الدخول واختيار الألعاب
+    function selectGame(game) {
+        playerName = document.getElementById('globalNameInput').value.trim() || "لاعب";
+        selectedGame = game;
+        gameHub.classList.add('hidden');
+        lobbyArea.classList.remove('hidden');
+        document.getElementById('lobbyTitle').innerText = game === 'xo' ? "إعدادات لعبة The X O" : "إعدادات لعبة الدودة 🐍";
     }
 
-    function updateScoreUI() {
-        if (gameMode === "single") {
-            scoreXDisplay.innerText = `${pName} (X): ${scoreX}`;
-            scoreODisplay.innerText = `الكمبيوتر (O): ${scoreO}`;
-        } else {
-            scoreXDisplay.innerText = `لاعب 1 (X): ${scoreX}`;
-            scoreODisplay.innerText = `لاعب 2 (O): ${scoreO}`;
-        }
+    function backToHub() {
+        lobbyArea.classList.add('hidden');
+        gameHub.classList.remove('hidden');
     }
 
-    createRoomBtn.addEventListener('click', () => {
-        pName = getPlayerName();
-        socket.emit('createPrivateRoom', { name: pName });
+    // إدارة الغرف الخاصة عبر السيرفر
+    document.getElementById('createRoomBtn').addEventListener('click', () => {
+        socket.emit('createRoom', { game: selectedGame, name: playerName });
     });
 
-    joinRoomBtn.addEventListener('click', () => {
-        const code = roomCodeInput.value.trim().toUpperCase();
-        pName = getPlayerName();
-        if (code !== "") socket.emit('joinPrivateRoom', { roomCode: code, name: pName });
+    document.getElementById('joinRoomBtn').addEventListener('click', () => {
+        const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+        if (code) socket.emit('joinRoom', { roomCode: code, name: playerName });
     });
 
-    copyRoomCode.addEventListener('click', () => {
+    document.getElementById('copyRoomCode').addEventListener('click', () => {
         navigator.clipboard.writeText(currentRoomCode);
-        alert('تم نسخ الرمز! أرسله لصديقك.');
+        alert('تم نسخ الرمز بنجاح!');
     });
 
-    socket.on('roomCreated', (roomCode) => {
-        currentRoomCode = roomCode;
-        roomCodeText.innerText = roomCode;
-        copyRoomCode.style.display = 'inline-block';
-        lobby.style.display = 'none';
-        gameArea.style.display = 'flex';
-        gameMode = "online";
-        updateScoreUI();
+    // استجابات السيرفر للغرف والربط
+    socket.on('roomReady', (data) => {
+        currentRoomCode = data.roomCode;
+        document.getElementById('roomCodeText').innerText = currentRoomCode;
+        lobbyArea.classList.add('hidden');
+        gameArea.classList.remove('hidden');
+        
+        document.getElementById('gameTitleDisplay').innerText = data.game === 'xo' ? "The X O" : "تحدي الدودة الأونلاين";
+        
+        if (data.game === 'xo') {
+            xoBoard.classList.remove('hidden');
+            snakeCanvas.classList.add('hidden');
+        } else {
+            snakeCanvas.classList.remove('hidden');
+            xoBoard.classList.add('hidden');
+            initSnakeGame();
+        }
     });
 
     socket.on('playerAssignment', (data) => {
         mySign = data.sign;
-        statusDisplay.innerText = `أنت: ${pName} (${mySign}). بانتظار الخصم...`;
+        document.getElementById('scoreXDisplay').innerText = `أنت (${mySign})`;
+        document.getElementById('scoreODisplay').innerText = `الخصم`;
     });
 
-    socket.on('startRound', (data) => {
-        roundDisplay.innerText = `الجولة: ${data.round}`;
+    // --- منطق وبرمجة لعبة XO ---
+    socket.on('startRoundXO', (data) => {
         isMyTurn = (data.currentTurn === mySign);
-        statusDisplay.innerText = isMyTurn ? "دورك الآن!" : `دور الخصم (${data.currentTurn})`;
-        chatInput.disabled = false; sendBtn.disabled = false;
-        
-        if(data.scores) {
-            scoreX = data.scores.X;
-            scoreO = data.scores.O;
-            updateScoreUI();
-        }
-        resetLocalBoard();
+        document.getElementById('statusDisplay').innerText = isMyTurn ? "دورك الآن!" : "دور الخصم...";
+        document.querySelectorAll('.cell').forEach(c => { c.innerText = ''; c.className = 'cell'; });
     });
 
-    socket.on('updateBoard', (data) => {
-        const cell = cells[data.index];
+    socket.on('updateBoardXO', (data) => {
+        const cell = document.querySelectorAll('.cell')[data.index];
         cell.innerText = data.sign; cell.classList.add(data.sign);
         isMyTurn = (data.nextTurn === mySign);
-        statusDisplay.innerText = isMyTurn ? "دورك الآن!" : `دور الخصم (${data.nextTurn})`;
+        document.getElementById('statusDisplay').innerText = isMyTurn ? "دورك الآن!" : "دور الخصم...";
     });
 
-    playAiBtn.addEventListener('click', () => {
-        pName = getPlayerName();
-        gameMode = "single";
-        scoreX = 0; scoreO = 0;
-        lobby.style.display = 'none';
-        gameArea.style.display = 'flex';
-        chatSection.style.display = 'none'; 
-        copyRoomCode.style.display = 'none';
-        updateScoreUI();
-        startAiRound();
-    });
-
-    function startAiRound() {
-        aiBoard = Array(9).fill(null);
-        aiCurrentTurn = aiStartingPlayer;
-        roundDisplay.innerText = `الجولة: ${aiRound}`;
-        resetLocalBoard();
-        
-        mySign = 'X'; 
-        isMyTurn = (aiCurrentTurn === 'X');
-        statusDisplay.innerText = isMyTurn ? "دورك الآن!" : "دور الكمبيوتر...";
-
-        if (!isMyTurn) {
-            setTimeout(makeAiMove, 500);
-        }
-    }
-
-    function makeAiMove() {
-        const diff = difficultySelect.value;
-        let move;
-        if (diff === 'easy') move = getRandomMove();
-        else if (diff === 'medium') move = Math.random() > 0.5 ? getBestMove() : getRandomMove();
-        else move = getBestMove();
-
-        if (move !== null) {
-            aiBoard[move] = 'O';
-            cells[move].innerText = 'O';
-            cells[move].classList.add('O');
-            
-            const roundResult = checkLocalWinner(aiBoard);
-            if (roundResult) {
-                setTimeout(() => { handleAiEnd(roundResult); }, 300);
-            } else {
-                aiCurrentTurn = 'X';
-                isMyTurn = true;
-                statusDisplay.innerText = "دورك الآن!";
-            }
-        }
-    }
-
-    function getRandomMove() {
-        let avail = aiBoard.map((v, i) => v === null ? i : null).filter(v => v !== null);
-        return avail.length > 0 ? avail[Math.floor(Math.random() * avail.length)] : null;
-    }
-
-    function getBestMove() {
-        let bestScore = -Infinity;
-        let move = null;
-        for (let i = 0; i < 9; i++) {
-            if (aiBoard[i] === null) {
-                aiBoard[i] = 'O';
-                let score = minimax(aiBoard, 0, false);
-                aiBoard[i] = null;
-                if (score > bestScore) {
-                    bestScore = score;
-                    move = i;
-                }
-            }
-        }
-        return move !== null ? move : getRandomMove();
-    }
-
-    function minimax(board, depth, isMaximizing) {
-        let result = checkLocalWinner(board);
-        if (result === 'O') return 10 - depth;
-        if (result === 'X') return depth - 10;
-        if (result === 'draw') return 0;
-
-        if (isMaximizing) {
-            let bestScore = -Infinity;
-            for (let i = 0; i < 9; i++) {
-                if (board[i] === null) {
-                    board[i] = 'O';
-                    let score = minimax(board, depth + 1, false);
-                    board[i] = null;
-                    bestScore = Math.max(score, bestScore);
-                }
-            }
-            return bestScore;
-        } else {
-            let bestScore = Infinity;
-            for (let i = 0; i < 9; i++) {
-                if (board[i] === null) {
-                    board[i] = 'X';
-                    let score = minimax(board, depth + 1, true);
-                    board[i] = null;
-                    bestScore = Math.min(score, bestScore);
-                }
-            }
-            return bestScore;
-        }
-    }
-
-    function checkLocalWinner(b) {
-        const cond = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-        for (let c of cond) {
-            if (b[c[0]] && b[c[0]] === b[c[1]] && b[c[0]] === b[c[2]]) return b[c[0]];
-        }
-        if (!b.includes(null)) return 'draw';
-        return null;
-    }
-
-    function handleAiEnd(result) {
-        if (result === 'draw') {
-            aiDrawStreak++;
-            aiStartingPlayer = (aiDrawStreak % 2 !== 0) ? 'O' : 'X';
-            alert(`تعادل! الجولة القادمة يبدأها: ${aiStartingPlayer}`);
-        } else {
-            aiStartingPlayer = result;
-            aiDrawStreak = 0;
-            if (result === 'X') {
-                scoreX++;
-                alert(`مبروك! الفائز هو: ${pName}`);
-            } else {
-                scoreO++;
-                alert("للأسف! فاز الكمبيوتر.");
-            }
-            updateScoreUI();
-        }
-        aiRound++;
-        startAiRound();
-    }
-
-    cells.forEach(cell => {
+    document.querySelectorAll('.cell').forEach(cell => {
         cell.addEventListener('click', () => {
             const index = cell.getAttribute('data-index');
-            if (gameMode === "online" && isMyTurn && cell.innerText === '') {
-                socket.emit('makeMove', { index: index, roomCode: currentRoomCode });
-            } 
-            else if (gameMode === "single" && isMyTurn && cell.innerText === '') {
-                aiBoard[index] = 'X';
-                cell.innerText = 'X';
-                cell.classList.add('X');
-                isMyTurn = false;
-                
-                const roundResult = checkLocalWinner(aiBoard);
-                if (roundResult) {
-                    setTimeout(() => { handleAiEnd(roundResult); }, 300);
-                } else {
-                    aiCurrentTurn = 'O';
-                    statusDisplay.innerText = "دور الكمبيوتر...";
-                    setTimeout(makeAiMove, 600);
-                }
+            if (selectedGame === 'xo' && isMyTurn && cell.innerText === '') {
+                socket.emit('makeMoveXO', { index: index, roomCode: currentRoomCode });
             }
         });
     });
 
-    function resetLocalBoard() {
-        cells.forEach(c => { c.innerText = ''; c.className = 'cell'; });
+    socket.on('scoreUpdateXO', (data) => {
+        document.getElementById('scoreXDisplay').innerText = `نقاطك: ${mySign === 'X' ? data.X : data.O}`;
+        document.getElementById('scoreODisplay').innerText = `الخصم: ${mySign === 'X' ? data.O : data.X}`;
+    });
+
+    // --- منطق وبرمجة لعبة الدودة الأونلاين 🐍 ---
+    const gridSize = 20;
+    let snakes = {};
+    let apple = { x: 0, y: 0 };
+
+    function initSnakeGame() {
+        document.getElementById('statusDisplay').innerText = "تحرك باستخدام الأسهم لتأكل التفاحة وتكبر!";
+        window.addEventListener('keydown', changeDirection);
     }
 
-    socket.on('receiveMessage', (data) => {
+    function changeDirection(event) {
+        let direction = "";
+        if (event.key === 'ArrowUp') direction = "UP";
+        if (event.key === 'ArrowDown') direction = "DOWN";
+        if (event.key === 'ArrowLeft') direction = "LEFT";
+        if (event.key === 'ArrowRight') direction = "RIGHT";
+        
+        if (direction) {
+            socket.emit('snakeDirection', { roomCode: currentRoomCode, direction: direction });
+        }
+    }
+
+    socket.on('snakeUpdate', (state) => {
+        ctx.clearRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+        
+        // رسم التفاحة
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(state.apple.x, state.apple.y, gridSize - 2, gridSize - 2);
+
+        // رسم الدودتين لكل من اللاعبين
+        Object.keys(state.players).forEach(id => {
+            const player = state.players[id];
+            ctx.fillStyle = id === socket.id ? '#22c55e' : '#3b82f6'; // دودتك خضراء والخصم زرقاء
+            
+            player.snake.forEach(part => {
+                ctx.fillRect(part.x, part.y, gridSize - 2, gridSize - 2);
+            });
+
+            // تحديث النتائج المباشرة في الأعلى
+            if (id === socket.id) {
+                document.getElementById('scoreXDisplay').innerText = `طولك الحالي: ${player.score}`;
+            } else {
+                document.getElementById('scoreODisplay').innerText = `طول الخصم: ${player.score}`;
+            }
+        });
+    });
+
+    // نظام الشات العام
+    document.getElementById('sendBtn').addEventListener('click', sendMessage);
+    document.getElementById('chatInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+    function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (text) {
+            socket.emit('sendMsg', { roomCode: currentRoomCode, text: text, name: playerName });
+            input.value = '';
+        }
+    }
+
+    socket.on('receiveMsg', (data) => {
+        const chatMessages = document.getElementById('chatMessages');
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message', data.sender === socket.id ? 'me' : 'other');
         msgDiv.innerText = `${data.name}: ${data.text}`;
@@ -403,24 +318,14 @@
     });
 
     socket.on('systemMessage', (text) => {
+        const chatMessages = document.getElementById('chatMessages');
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message', 'system');
         msgDiv.innerText = text;
         chatMessages.appendChild(msgDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
     });
 
     socket.on('errorEvent', (msg) => alert(msg));
-
-    function sendMessage() {
-        const text = chatInput.value.trim();
-        if (text !== '') {
-            socket.emit('sendMessage', { roomCode: currentRoomCode, text: text, name: pName });
-            chatInput.value = '';
-        }
-    }
-    sendBtn.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
 </script>
 </body>
 </html>

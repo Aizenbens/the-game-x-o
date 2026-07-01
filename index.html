@@ -47,7 +47,6 @@
         .btn.purple { background: #8b5cf6; color: #fff; }
         .btn.back { background: #334155; color: #fff; margin-top: 15px; }
 
-        /* أزرار صعوبة البوت */
         .difficulty-container { display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; width: 100%; }
         .diff-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: #1e293b; color: #fff; font-weight: bold; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
         .diff-btn.easy.active { background: #10b981; color: black; border-color: #10b981; }
@@ -127,7 +126,7 @@
     <div class="games-grid">
         <div class="game-card" onclick="goToLobby('xo')">
             <h3>لعبة XO ❌⭕</h3>
-            <span style="font-size:0.8rem;">بوت ذكي ذو مستويات + شات</span>
+            <span style="font-size:0.8rem;">مستويات ذكاء اصطناعي + شات مباشر</span>
         </div>
         <div class="game-card" onclick="goToLobby('snake')">
             <h3>لعبة الدودة 3D 🐍</h3>
@@ -146,7 +145,7 @@
     </div>
     
     <div id="xoOptions" class="hidden">
-        <h4 style="margin-bottom: 10px; font-size:0.9rem; text-align:right;">حدد صعوبة البوت للمود المحلي:</h4>
+        <h4 style="margin-bottom: 10px; font-size:0.9rem; text-align:right;">حدد مستوى صعوبة البوت:</h4>
         <div class="difficulty-container">
             <button class="diff-btn easy active" onclick="setDifficulty('easy', this)">سهل 🟢</button>
             <button class="diff-btn medium" onclick="setDifficulty('medium', this)">متوسط 🟡</button>
@@ -159,7 +158,7 @@
 </div>
 
 <div class="full-screen-container hidden" id="gameArea">
-    <div class="game-hud" id="snakeHud">
+    <div class="game-hud id-snake-hud" id="snakeHud">
         <div class="hud-row-container">
             <div class="hud-card" style="color: #38bdf8;" id="scoreDisplay">النقاط: 0</div>
             <div class="hud-card" id="magnetIndicator">🧲 مغناطيس 3D!</div>
@@ -190,7 +189,7 @@
         </div>
 
         <div class="chat-container hidden" id="xoChatBox">
-            <div class="chat-header" id="xoChatHeader">💬 شات الغرفة المباشر</div>
+            <div class="chat-header" id="xoChatHeader">💬 شات التحدي المباشر</div>
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input-area">
                 <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة هنا...">
@@ -219,7 +218,7 @@
     }
     window.addEventListener('resize', resizeCanvas);
 
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", function() {
         if (targetRoom) {
             document.getElementById('lobbyArea').classList.add('hidden');
             goToLobby('snake');
@@ -281,7 +280,6 @@
         document.getElementById('gameArea').classList.remove('hidden');
     }
 
-    // --- مودات الدودة ---
     function joinMode(mode) {
         enterGameArea();
         document.getElementById('snakeCanvas').classList.remove('hidden');
@@ -325,14 +323,13 @@
         alert("تم نسخ رابط الغرفة بنجاح! أرسله لصديقك ليدخل معك مباشرة 🌐");
     }
 
-    // --- مودات XO المحدثة بالشات والصعوبات ---
     function startXO(type) {
         xoMode = "local";
         enterGameArea();
         document.getElementById('xoBox').classList.remove('hidden');
         document.getElementById('xoChatBox').classList.remove('hidden');
-        document.getElementById('xoChatHeader').innerText = "🤖 تعليقات ومحادثات البوت الذكي";
-        document.getElementById('snakeHud').add('hidden');
+        document.getElementById('xoChatHeader').innerText = "🤖 محادثات وتعليقات البوت الذكي";
+        document.getElementById('snakeHud').classList.add('hidden');
         initLocalXO();
     }
 
@@ -364,7 +361,6 @@
         socket.emit('joinXOGame', { roomCode: roomCode, name: nickname });
     }
 
-    // --- الشات والرسائل المباشرة والمحلية ---
     function sendChatMessage() {
         const inp = document.getElementById('chatInput');
         const txt = inp.value.trim();
@@ -373,18 +369,22 @@
         if (xoMode === 'local') {
             appendMessage(nickname, txt);
             inp.value = "";
-            // رد فعل سريع من البوت على رسالتك بشكل تلقائي ممتع
-            setTimeout(() => {
-                const botResponses = ["سأهزمك بكل تأكيد! 😎", "تفكيرك مكشوف وجيد.. لكن ليس أمامي! 🔥", "ركز في خلايا اللوحة بدلاً من الشات 🤫", "هل أنت مستعد للخسارة؟ 😏"];
+            setTimeout(function() {
+                const botResponses = [
+                    "خطوة جيدة.. ولكن هل تستطيع الفوز؟ 😏",
+                    "أنا مبرمج لأكتشف ثغراتك بالكامل! 🤖🔥",
+                    "ركز في اللعب بدلاً من تشتيت انتباهي بالشات! 🤫",
+                    "حساباتي تؤكد أن فوزك مستحيل في هذا المستوى 🔴"
+                ];
                 appendMessage(`🤖 البوت (${botDifficulty})`, botResponses[Math.floor(Math.random() * botResponses.length)]);
-            }, 800);
+            }, 700);
         } else {
             socket.emit('sendXOMessage', { roomCode: roomCode, name: nickname, msg: txt });
             inp.value = "";
         }
     }
 
-    function appendMessage(sender, text, isSystem = false) {
+    function appendMessage(sender, text, isSystem) {
         const container = document.getElementById('chatMessages');
         const div = document.createElement('div');
         if (isSystem) {
@@ -398,13 +398,13 @@
         container.scrollTop = container.scrollHeight;
     }
 
-    socket.on('receiveXOMessage', (data) => {
+    socket.on('receiveXOMessage', function(data) {
         appendMessage(data.name, data.msg, data.system);
     });
 
-    socket.on('updateXOBoard', (data) => {
+    socket.on('updateXOBoard', function(data) {
         const cells = document.querySelectorAll('#xoBoard .cell');
-        data.board.forEach((val, idx) => {
+        data.board.forEach(function(val, idx) {
             cells[idx].innerText = val || "";
             cells[idx].className = `cell ${val || ''}`;
         });
@@ -427,15 +427,21 @@
         }
     });
 
-    document.querySelectorAll('#xoBoard .cell').forEach(cell => {
-        cell.addEventListener('click', (e) => {
+    document.querySelectorAll('#xoBoard .cell').forEach(function(cell) {
+        cell.addEventListener('click', function(e) {
             const idx = parseInt(e.target.dataset.index);
             if (xoMode === 'local') {
                 if (!localTurn || localBoard[idx]) return;
                 makeLocalMove(idx, 'X');
-                if (checkLocalWin('X')) { document.getElementById('xoStatusText').innerText = "🏆 تهانينا! لقد فزت!"; appendMessage("🎉 نظام", "لقد تغلبت على البوت بنجاح!", true); localTurn = false; return; }
+                if (checkLocalWin('X')) { 
+                    document.getElementById('xoStatusText').innerText = "🏆 تهانينا! لقد فزت!"; 
+                    appendMessage("🎉 نظام", "لقد تغلبت على البوت بنجاح!", true); 
+                    localTurn = false; 
+                    return; 
+                }
                 if (localBoard.every(b => b !== null)) { document.getElementById('xoStatusText').innerText = "🤝 تعادل!"; return; }
-                localTurn = false; document.getElementById('xoStatusText').innerText = "🤖 البوت يفكر...";
+                localTurn = false; 
+                document.getElementById('xoStatusText').innerText = "🤖 البوت يفكر...";
                 setTimeout(botLocalMove, 600);
             } else {
                 if (!myXOTurn) return;
@@ -444,18 +450,23 @@
         });
     });
 
-    // --- محرك ذكاء البوت المحلي (3 مستويات صعوبة) ---
     let localBoard = Array(9).fill(null);
     let localTurn = true;
 
     function initLocalXO() {
-        localBoard = Array(9).fill(null); localTurn = true;
+        localBoard = Array(9).fill(null); 
+        localTurn = true;
         document.getElementById('xoStatusText').innerText = "دورك الآن (X)";
-        document.querySelectorAll('#xoBoard .cell').forEach(c => { c.innerText = ''; c.className = 'cell'; });
-        appendMessage("🤖 البوت", `تم بدء التحدي بمستوى صعوبة: [${botDifficulty.toUpperCase()}] حظاً موفقاً! 🎯`);
+        document.querySelectorAll('#xoBoard .cell').forEach(function(c) { c.innerText = ''; c.className = 'cell'; });
+        appendMessage("🤖 البوت", `تم بدء التحدي، مستوى الصعوبة الحالي: [ ${botDifficulty.toUpperCase()} ] حظاً موفقاً! 🔥`);
     }
 
-    function makeLocalMove(idx, sign) { localBoard[idx] = sign; const cell = document.querySelector(`#xoBoard [data-index="${idx}"]`); cell.innerText = sign; cell.className = `cell ${sign}`; }
+    function makeLocalMove(idx, sign) { 
+        localBoard[idx] = sign; 
+        const cell = document.querySelector(`#xoBoard [data-index="${idx}"]`); 
+        cell.innerText = sign; 
+        cell.className = `cell ${sign}`; 
+    }
     
     function botLocalMove() {
         let choice = -1;
@@ -463,29 +474,31 @@
         if (empty.length === 0) return;
 
         if (botDifficulty === 'easy') {
-            // عشوائي تماماً
             choice = empty[Math.floor(Math.random() * empty.length)];
         } 
         else if (botDifficulty === 'medium') {
-            // يهاجم أو يدافع بنسبة 50% وإلا يلعب عشوائي
             choice = findWinningMove('O') || findWinningMove('X');
             if (choice === null || choice === -1) {
                 choice = empty[Math.floor(Math.random() * empty.length)];
             }
         } 
         else if (botDifficulty === 'hard') {
-            // مستحيل الهزيمة (خوارزمية حسابية ذكية)
-            choice = findWinningMove('O') || findWinningMove('X'); // فوز أو منع خسارة
+            choice = findWinningMove('O') || findWinningMove('X');
             if (choice === null || choice === -1) {
-                if (localBoard[4] === null) choice = 4; // السيطرة على المنتصف
+                if (localBoard[4] === null) choice = 4;
                 else choice = empty[Math.floor(Math.random() * empty.length)];
             }
         }
 
         makeLocalMove(choice, 'O');
-        if (checkLocalWin('O')) { document.getElementById('xoStatusText').innerText = "😢 خسرت! البوت فاز!"; appendMessage("🤖 البوت", "كما كان متوقعاً، انتصرت عليك! حظاً أوفر المرة القادمة حليفي.", true); return; }
+        if (checkLocalWin('O')) { 
+            document.getElementById('xoStatusText').innerText = "😢 خسرت! البوت فاز!"; 
+            appendMessage("🤖 البوت", "انتصرت عليك بسهولة، جرب مرة أخرى لتطوير مهاراتك!", true); 
+            return; 
+        }
         if (localBoard.every(b => b !== null)) { document.getElementById('xoStatusText').innerText = "🤝 تعادل!"; return; }
-        localTurn = true; document.getElementById('xoStatusText').innerText = "دورك الآن (X)";
+        localTurn = true; 
+        document.getElementById('xoStatusText').innerText = "دورك الآن (X)";
     }
 
     function findWinningMove(sign) {
@@ -501,16 +514,18 @@
         return null;
     }
 
-    function checkLocalWin(sign) { const wins = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]]; return wins.some(w => w.every(i => localBoard[i] === sign)); }
+    function checkLocalWin(sign) { 
+        const wins = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]]; 
+        return wins.some(w => w.every(i => localBoard[i] === sign)); 
+    }
 
-    // --- محرك اللمس للدودة وسيرفر الرسم ---
     let touchStartX = 0, touchStartY = 0;
-    window.addEventListener('touchstart', (e) => {
+    window.addEventListener('touchstart', function(e) {
         if (currentGame !== 'snake') return;
         touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
     }, { passive: true });
 
-    window.addEventListener('touchmove', (e) => {
+    window.addEventListener('touchmove', function(e) {
         if (currentGame !== 'snake') return;
         let touchEndX = e.touches[0].clientX; let touchEndY = e.touches[0].clientY;
         let diffX = touchEndX - touchStartX; let diffY = touchEndY - touchStartY;
@@ -522,7 +537,9 @@
     }, { passive: true });
 
     const keys = { w: 'UP', s: 'DOWN', a: 'LEFT', d: 'RIGHT', ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT' };
-    window.addEventListener('keydown', (e) => { if (keys[e.key] && currentGame === 'snake') socket.emit('moveSnake', { roomCode: roomCode, dir: keys[e.key] }); });
+    window.addEventListener('keydown', function(e) { 
+        if (keys[e.key] && currentGame === 'snake') socket.emit('moveSnake', { roomCode: roomCode, dir: keys[e.key] }); 
+    });
 
     function draw3DSnake(s) {
         for (let i = s.body.length - 1; i > 0; i--) {
@@ -548,6 +565,23 @@
 
     function draw3DItem(x, y, type) { ctx.save(); ctx.font = "32px Arial"; ctx.shadowBlur = 15; ctx.shadowColor = type === "🧲" ? "#eab308" : "#ff477e"; ctx.fillText(type, x - 10, y + 10); ctx.restore(); }
 
-    socket.on('renderSnakeFrame', (state) => {
+    socket.on('renderSnakeFrame', function(state) {
         if (currentGame !== 'snake') return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (state.magnet && !state.magnet.taken) draw3DItem(state.magnet.x, state.magnet.y, "🧲");
+        state.candies.forEach(function(candy) { draw3DItem(candy.x, candy.y, candy.type); });
+        state.snakes.forEach(function(s) { draw3DSnake(s); });
+        const myData = state.snakes.find(s => s.id === socket.id);
+        if (myData) { 
+            document.getElementById('scoreDisplay').innerText = `النقاط: ${myData.score}`; 
+            document.getElementById('magnetIndicator').style.display = myData.magnetActive ? "block" : "none"; 
+        }
+        const lb = document.getElementById('leaderboardRows'); lb.innerHTML = "";
+        state.leaderboard.slice(0, 5).forEach(function(item, i) {
+            const div = document.createElement('div'); div.className = `lead-row ${item.id === socket.id ? 'me' : ''}`;
+            div.innerHTML = `<span>${i+1}. ${item.name}</span><strong>${item.score}</strong>`; lb.appendChild(div);
+        });
+    });
+</script>
+</body>
+</html>

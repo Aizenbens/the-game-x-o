@@ -14,127 +14,218 @@ app.get('/', (req, res) => {
 });
 
 const rooms = {};
+const canvasSize = 500;
+const step = 20;
+const candyTypes = ["🍬", "🍭", "🍩", "🍫", "🧁"];
 
-const winningConditions = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8],
-    [0, 3, 6], [1, 4, 7], [2, 5, 8],
-    [0, 4, 8], [2, 4, 6]
-];
-
-function generateRoomCode() {
+function generateCode() {
     return Math.random().toString(36).substring(2, 7).toUpperCase();
-}
-
-function checkWinner(board) {
-    for (let condition of winningConditions) {
-        const [a, b, c] = condition;
-        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-            return board[a];
-        }
-    }
-    if (!board.includes(null)) return 'draw';
-    return null;
 }
 
 io.on('connection', (socket) => {
 
-    socket.on('createPrivateRoom', (data) => {
-        const roomCode = generateRoomCode();
+    // تفعيل لعبة الدودة الفردية والمحلية بـ 12 بوت عالي الأداء فوراً
+    socket.on('startSingleSnake', (data) => {
+        const roomCode = "SINGLE_" + socket.id;
         rooms[roomCode] = {
-            players: [{ id: socket.id, sign: 'X', name: data.name }],
-            board: Array(9).fill(null),
-            round: 1,
-            currentTurn: 'X',
-            drawStreak: 0,
-            startingPlayerOfRound: 'X'
+            game: 'snake',
+            isSingle: true,
+            players: {},
+            candies: [],
+            loop: null
         };
-        socket.join(roomCode);
-        socket.emit('roomCreated', roomCode);
-        socket.emit('playerAssignment', { sign: 'X' });
+
+        // إضافة دودة اللاعب البشري الأساسي
+        rooms[roomCode].players[socket.id] = {
+            name: data.name || "أنت",
+            body: [{ x: 200, y: 200 }],
+            dir: 'RIGHT',
+            score: 0,
+            color: data.color || '#22c55e',
+            isBot: false
+        };
+
+        // حقن وضخ 12 بوت متفاعل ومنظم داخل بيئة اللعب الفردية
+        for (let i = 1; i <= 12; i++) {
+            rooms[roomCode].players["BOT_" + i] = {
+                name: "البوت الخصم " + i,
+                body: [{ x: Math.floor(Math.random() * 20) * step, y: Math.floor(Math.random() * 20) * step }],
+                dir: ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random() * 4)],
+                score: 0,
+                color: '#64748b',
+                isBot: true
+            };
+        }
+
+        // نشر وتوزيع الحلويات والسكاكر العشوائية
+        for (let j = 0; j < 15; j++) {
+            rooms[roomCode].candies.push({
+                x: Math.floor(Math.random() * 24) * step,
+                y: Math.floor(Math.random() * 24) * step,
+                type: candyTypes[Math.floor(Math.random() * candyTypes.length)]
+            });
+        }
+
+        socket.emit('roomReady', { roomCode, game: 'snake' });
+        runSnakeEngine(roomCode);
     });
 
-    socket.on('joinPrivateRoom', (data) => {
-        const { roomCode, name } = data;
-        const room = rooms[roomCode];
-        if (!room) {
-            socket.emit('errorEvent', 'رمز الجولة غير صحيح!');
-            return;
-        }
-        if (room.players.length >= 2) {
-            socket.emit('errorEvent', 'الجولة ممتلئة!');
-            return;
-        }
+    socket.on('createRoom', (data) => {
+        const roomCode = generateCode();
+        rooms[roomCode] = {
+            game: data.game,
+            isSingle: false,
+            players: {},
+            candies: [],
+            xoBoard: Array(9).fill(null),
+            xoTurn: 'X'
+        };
 
-        room.players.push({ id: socket.id, sign: 'O', name: name });
+        rooms[roomCode].players[socket.id] = {
+            name: data.name,
+            body: [{ x: 60, y: 60 }],
+            dir: 'RIGHT',
+            score: 0,
+            color: data.color,
+            sign: 'X',
+            isBot: false
+        };
+
         socket.join(roomCode);
-        
-        socket.emit('roomCreated', roomCode);
-        socket.emit('playerAssignment', { sign: 'O' });
-
-        io.to(roomCode).emit('systemMessage', `انضم اللاعب ${name} إلى الجولة!`);
-        startNewRound(roomCode);
+        socket.emit('roomReady', { roomCode, game: data.game });
     });
 
-    socket.on('makeMove', (data) => {
-        const { roomCode, index } = data;
-        const room = rooms[roomCode];
-        if (!room) return;
+    socket.on('joinRoom', (data) => {
+        const room = rooms[data.roomCode];
+        if(!room) return;
 
-        const player = room.players.find(p => p.id === socket.id);
-        if (player && player.sign === room.currentTurn && room.board[index] === null) {
-            room.board[index] = room.currentTurn;
-            
-            const result = checkWinner(room.board);
-            
-            if (result) {
-                if (result === 'draw') {
-                    room.drawStreak++;
-                    room.startingPlayerOfRound = (room.drawStreak % 2 !== 0) ? 'O' : 'X';
-                    io.to(roomCode).emit('systemMessage', `تعادل! الجولة التالية تبدأ بواسطة: ${room.startingPlayerOfRound}`);
-                    room.round++;
-                    startNewRound(roomCode);
-                } else {
-                    room.startingPlayerOfRound = result;
-                    room.drawStreak = 0;
-                    const winnerName = room.players.find(p => p.sign === result)?.name || result;
-                    io.to(roomCode).emit('systemMessage', `الفائز في الجولة هو: ${winnerName}`);
-                    room.round++;
-                    startNewRound(roomCode);
-                }
-            } else {
-                room.currentTurn = room.currentTurn === 'X' ? 'O' : 'X';
-                io.to(roomCode).emit('updateBoard', { index: index, sign: player.sign, nextTurn: room.currentTurn });
+        room.players[socket.id] = {
+            name: data.name,
+            body: [{ x: 300, y: 300 }],
+            dir: 'LEFT',
+            score: 0,
+            color: data.color,
+            sign: 'O',
+            isBot: false
+        };
+
+        socket.join(data.roomCode);
+        io.to(data.roomCode).emit('roomReady', { roomCode: data.roomCode, game: room.game });
+
+        if(room.game === 'snake') {
+            for (let j = 0; j < 12; j++) {
+                room.candies.push({
+                    x: Math.floor(Math.random() * 24) * step,
+                    y: Math.floor(Math.random() * 24) * step,
+                    type: candyTypes[Math.floor(Math.random() * candyTypes.length)]
+                });
             }
+            runSnakeEngine(data.roomCode);
+        } else {
+            io.to(data.roomCode).emit('startRoundXO', { currentTurn: 'X' });
         }
     });
 
-    socket.on('sendMessage', (data) => {
-        const { roomCode, text, name } = data;
-        io.to(roomCode).emit('receiveMessage', { sender: socket.id, text: text, name: name });
+    socket.on('snakeDirection', (data) => {
+        const room = rooms[data.roomCode];
+        if(room && room.players[socket.id]) {
+            const p = room.players[socket.id];
+            if(data.direction === 'UP' && p.dir !== 'DOWN') p.dir = 'UP';
+            if(data.direction === 'DOWN' && p.dir !== 'UP') p.dir = 'DOWN';
+            if(data.direction === 'LEFT' && p.dir !== 'RIGHT') p.dir = 'LEFT';
+            if(data.direction === 'RIGHT' && p.dir !== 'LEFT') p.dir = 'RIGHT';
+        }
     });
 
     socket.on('disconnect', () => {
-        for (const roomCode in rooms) {
-            const room = rooms[roomCode];
-            const playerIndex = room.players.findIndex(p => p.id === socket.id);
-            if (playerIndex !== -1) {
-                io.to(roomCode).emit('systemMessage', 'غادر أحد اللاعبين الجولة.');
-                delete rooms[roomCode];
-                break;
+        for(let code in rooms) {
+            if(rooms[code].players[socket.id]) {
+                clearInterval(rooms[code].loop);
+                delete rooms[code];
             }
         }
     });
 });
 
-function startNewRound(roomCode) {
-    const room = rooms[roomCode];
-    if (!room) return;
-    room.board = Array(9).fill(null);
-    room.currentTurn = room.startingPlayerOfRound;
-    io.to(roomCode).emit('startRound', { round: room.round, currentTurn: room.currentTurn });
+// محرك الدورة الشامل لحساب حركات الـ 12 بوت والموت والتجدد المباشر
+function runSnakeEngine(code) {
+    const room = rooms[code];
+    if(!room) return;
+
+    room.loop = setInterval(() => {
+        const playersList = Object.keys(room.players);
+
+        playersList.forEach(id => {
+            const p = room.players[id];
+            
+            // ذكاء اصطناعي بسيط ومبهر لحركة الـ 12 بوت نحو أقرب حلوى
+            if(p.isBot && room.candies.length > 0) {
+                const target = room.candies[0];
+                const head = p.body[0];
+                if(target.x > head.x && p.dir !== 'LEFT') p.dir = 'RIGHT';
+                else if(target.x < head.x && p.dir !== 'RIGHT') p.dir = 'LEFT';
+                else if(target.y > head.y && p.dir !== 'UP') p.dir = 'DOWN';
+                else if(target.y < head.y && p.dir !== 'DOWN') p.dir = 'UP';
+            }
+
+            let head = { ...p.body[0] };
+            if (p.dir === 'UP') head.y -= step;
+            if (p.dir === 'DOWN') head.y += step;
+            if (p.dir === 'LEFT') head.x -= step;
+            if (p.dir === 'RIGHT') head.x += step;
+
+            // حماية حدود جدران الساحة
+            if(head.x < 0) head.x = canvasSize - step;
+            if(head.x >= canvasSize) head.x = 0;
+            if(head.y < 0) head.y = canvasSize - step;
+            if(head.y >= canvasSize) head.y = 0;
+
+            p.body.unshift(head);
+
+            // التحقق من التهام الحلويات الملونة
+            let ate = false;
+            room.candies.forEach((candy, cIdx) => {
+                if(head.x === candy.x && head.y === candy.y) {
+                    p.score += 10; // زيادة الرصيد بمقدار 10 نقاط لكل قطة حلوى
+                    ate = true;
+                    room.candies[cIdx] = {
+                        x: Math.floor(Math.random() * 24) * step,
+                        y: Math.floor(Math.random() * 24) * step,
+                        type: candyTypes[Math.floor(Math.random() * candyTypes.length)]
+                    };
+                }
+            });
+
+            if(!ate) p.body.pop();
+
+            // تحقق من شروط الموت والاصطدام (التجدد الفوري للبوتات من الصفر)
+            playersList.forEach(otherId => {
+                if(id !== otherId) {
+                    const other = room.players[otherId];
+                    other.body.forEach(part => {
+                        if(head.x === part.x && head.y === part.y) {
+                            // إذا مات البوت أو اللاعب يعود من الأول بصفر نقاط
+                            p.body = [{ x: Math.floor(Math.random() * 20) * step, y: Math.floor(Math.random() * 20) * step }];
+                            p.score = 0;
+                        }
+                    });
+                }
+            });
+        });
+
+        // إنشاء وتحديث قائمة الترتيب المباشر (Leaderboard) على السيرفر
+        const leaderboard = Object.values(room.players)
+            .map(p => ({ name: p.name, score: p.score }))
+            .sort((a, b) => b.score - a.score);
+
+        io.to(code).emit('snakeUpdate', {
+            snakes: Object.values(room.players),
+            candies: room.candies,
+            leaderboard: leaderboard
+        });
+
+    }, 130);
 }
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`السيرفر يعمل على منفذ ${PORT}`);
-});
+server.listen(PORT, () => console.log('Platform live on port ' + PORT));

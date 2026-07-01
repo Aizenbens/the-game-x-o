@@ -1,7 +1,7 @@
 {
-  "name": "the-game-hub-online",
+  "name": "independent-game-hub-online",
   "version": "1.0.0",
-  "description": "مجمع الألعاب أونلاين المشترك",
+  "description": "مجمع ألعاب أونلاين",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

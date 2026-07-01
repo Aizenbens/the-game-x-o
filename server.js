@@ -6,7 +6,7 @@ const admin = require("firebase-admin");
 const app = express();
 const server = http.createServer(app);
 
-// 🔥 تحديث الـ CORS هنا للسماح بالاتصال من أي رابط فرعي تمنحه لك منصة Render
+// 🔥 إعداد CORS المرن لقبول الواجهات بجميع ميزاتها
 const io = new Server(server, { 
     cors: { 
         origin: "*",
@@ -14,10 +14,8 @@ const io = new Server(server, {
     } 
 });
 
-// تخديم ملفات الواجهة (مثل index.html) من المجلد الحالي تلقائياً
 app.use(express.static(__dirname));
 
-// ربط Firebase بالسيرفر عبر متغيرات البيئة بـ Render أو عبر ملف محلي في بيئة التطوير
 const firebaseConfig = process.env.FIREBASE_SERVICE_ACCOUNT 
     ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) 
     : require("./firebase-key.json"); 
@@ -34,20 +32,16 @@ io.on('connection', (socket) => {
     let currentLoggedUser = null;
     console.log(`📡 جهاز جديد متصل: ${socket.id}`);
 
-    // استقبال طلبات التسجيل ودخول الحسابات
     socket.on('authRequest', async (data) => {
         const { type, username, password } = data;
-        
         if (!username || !password) {
             socket.emit('authResponse', { success: false, message: "الرجاء ملء جميع الحقول!" });
             return;
         }
 
         const userRef = db.ref('users/' + username);
-
         try {
             const snapshot = await userRef.once('value');
-
             if (type === 'register') {
                 if (snapshot.exists()) {
                     socket.emit('authResponse', { success: false, message: "⚠️ اسم المستخدم مسجل بالفعل!" });
@@ -58,21 +52,17 @@ io.on('connection', (socket) => {
                         winsXO: 0,
                         createdAt: new Date().toISOString()
                     });
-                    
                     currentLoggedUser = username;
                     if (!onlineUsersList.includes(username)) onlineUsersList.push(username);
-                    
                     socket.emit('authResponse', { success: true, username: username });
                     io.emit('updateOnlineUsers', onlineUsersList);
                 }
-            } 
-            else if (type === 'login') {
+            } else if (type === 'login') {
                 if (snapshot.exists()) {
                     const userData = snapshot.val();
                     if (userData.password === password) {
                         currentLoggedUser = username;
                         if (!onlineUsersList.includes(username)) onlineUsersList.push(username);
-                        
                         socket.emit('authResponse', { success: true, username: username });
                         io.emit('updateOnlineUsers', onlineUsersList);
                     } else {
@@ -83,17 +73,14 @@ io.on('connection', (socket) => {
                 }
             }
         } catch (error) {
-            console.error("خطأ قاعدة البيانات:", error);
             socket.emit('authResponse', { success: false, message: "حدث خطأ أثناء الاتصال بقاعدة البيانات." });
         }
     });
 
-    // تمرير رسائل الشات العام
     socket.on('sendGlobalCommunityMessage', (data) => {
         io.emit('receiveGlobalCommunityMessage', { name: data.name, msg: data.msg });
     });
 
-    // منطق غرف الـ XO
     socket.on('joinXOGame', (data) => {
         socket.join(data.roomCode);
     });
@@ -106,7 +93,6 @@ io.on('connection', (socket) => {
     });
 });
 
-// المنفذ الديناميكي الخاص بـ Render
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على بورت: ${PORT}`);

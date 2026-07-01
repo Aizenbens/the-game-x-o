@@ -2,8 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة التحدي 3D وسكنات الرأس 🎮</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>منصة التحدي المتكاملة للهواتف والكمبيوتر 🎮</title>
     <style>
         :root {
             --bg-color: #05070f;
@@ -13,13 +13,14 @@
             --o-color: #f43f5e;
             --accent-color: #10b981;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; touch-action: manipulation; }
         body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
         .hidden { display: none !important; }
         
         .hub-container, .lobby-container { 
-            background: var(--container-bg); padding: 35px; border-radius: 24px; text-align: center; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.05); width: 90%; max-width: 530px; backdrop-filter: blur(15px); 
+            background: var(--container-bg); padding: 25px; border-radius: 24px; text-align: center; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.05); width: 92%; max-width: 530px; backdrop-filter: blur(15px); 
+            max-height: 95vh; overflow-y: auto;
         }
         .input-field { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); color: white; text-align: center; margin-bottom: 15px; outline: none; font-size: 1.1rem; }
         
@@ -28,8 +29,8 @@
         .skin-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); cursor: pointer; transition: 0.2s; }
         .skin-btn.active { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 15px var(--x-color); }
         
-        .head-skin-options { display: flex; justify-content: center; gap: 12px; margin-bottom: 10px; }
-        .head-skin-btn { background: #1e293b; border: 2px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 12px; cursor: pointer; color: white; font-size: 1.1rem; transition: 0.2s; }
+        .head-skin-options { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .head-skin-btn { background: #1e293b; border: 2px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 12px; cursor: pointer; color: white; font-size: 1rem; transition: 0.2s; }
         .head-skin-btn.active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.2); transform: scale(1.05); }
 
         .color-picker-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; font-size: 0.95rem; }
@@ -39,43 +40,66 @@
         .game-card { background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.08); padding: 20px 10px; border-radius: 16px; cursor: pointer; transition: 0.3s; }
         .game-card:hover { transform: translateY(-4px); border-color: var(--x-color); background: rgba(56, 189, 248, 0.06); }
         
-        .btn { background: var(--x-color); border: none; padding: 14px 20px; border-radius: 12px; color: #000; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.1rem; transition: 0.2s; margin-bottom: 10px; }
+        .btn { background: var(--x-color); border: none; padding: 14px 20px; border-radius: 12px; color: #000; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.1rem; transition: 0.2s; margin-bottom: 10px; -webkit-tap-highlight-color: transparent; }
         .btn:hover { opacity: 0.9; transform: scale(1.01); }
         .btn.secondary { background: var(--accent-color); color: #fff; }
         .btn.orange { background: #f59e0b; color: #fff; }
         .btn.purple { background: #8b5cf6; color: #fff; }
         .btn.back { background: #334155; color: #fff; margin-top: 15px; }
 
-        .full-screen-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; z-index: 9999; }
-        #snakeCanvas { width: 100%; height: 100%; display: block; background: radial-gradient(circle, #0e172e 0%, #03050d 100%); }
+        .full-screen-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; z-index: 9999; flex-direction: column; }
+        #snakeCanvas { width: 100%; height: 100%; display: block; background: radial-gradient(circle, #0e172e 0%, #03050d 100%); position: absolute; top: 0; left: 0; z-index: 1; }
         
-        .game-hud { position: absolute; top: 20px; left: 20px; display: flex; gap: 15px; pointer-events: none; z-index: 10; }
-        .hud-card { background: rgba(15, 23, 42, 0.9); padding: 12px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); font-weight: bold; pointer-events: auto; }
+        .game-hud { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; z-index: 10; width: calc(100% - 20px); }
+        .hud-row-container { display: flex; gap: 10px; width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+        .hud-card { background: rgba(15, 23, 42, 0.9); padding: 8px 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); font-weight: bold; pointer-events: auto; font-size: 0.9rem; }
         
-        .live-leaderboard { position: absolute; top: 20px; right: 20px; width: 280px; background: rgba(15, 23, 42, 0.9); border-radius: 16px; padding: 15px; border: 1px solid rgba(255,255,255,0.1); z-index: 10; }
-        .lead-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; padding: 6px; border-radius: 6px; background: rgba(255,255,255,0.02); }
+        .live-leaderboard { position: absolute; top: 120px; right: 10px; width: 200px; background: rgba(15, 23, 42, 0.9); border-radius: 16px; padding: 10px; border: 1px solid rgba(255,255,255,0.1); z-index: 10; max-height: 200px; overflow: hidden; }
+        .lead-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.8rem; padding: 4px 6px; border-radius: 6px; background: rgba(255,255,255,0.02); }
         .lead-row.me { background: rgba(56, 189, 248, 0.2); border: 1px solid var(--x-color); font-weight: bold; }
         
         #magnetIndicator { color: #eab308; display: none; animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0.5; } }
 
-        .xo-centered-box { background: var(--container-bg); padding: 40px; border-radius: 24px; text-align: center; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .board { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 12px; margin-top: 20px; }
-        .cell { background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 2.5rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        /* تعديلات التصميم المتجاوب للهواتف للـ XO والشات */
+        .game-layout { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; gap: 15px; position: relative; z-index: 5; flex-wrap: wrap; padding: 15px; overflow-y: auto; }
+        .xo-centered-box { background: var(--container-bg); padding: 20px; border-radius: 24px; text-align: center; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px); box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; max-width: 100%; }
+        
+        /* جعل لوحة الـ XO مرنة على مقاس شاشة الهاتف */
+        .board { display: grid; grid-template-columns: repeat(3, min(28vw, 90px)); grid-template-rows: repeat(3, min(28vw, 90px)); gap: 10px; margin-top: 15px; }
+        .cell { background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; display: flex; justify-content: center; align-items: center; font-size: calc(1.5rem + 2vw); font-weight: bold; cursor: pointer; transition: 0.2s; user-select: none; -webkit-tap-highlight-color: transparent; }
         .cell:hover { background: rgba(255,255,255,0.05); }
         .cell.X { color: var(--x-color); } .cell.O { color: var(--o-color); }
+
+        .chat-container { width: min(100%, 320px); height: min(35vh, 320px); background: var(--container-bg); border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; backdrop-filter: blur(12px); overflow: hidden; }
+        .chat-header { background: rgba(0,0,0,0.2); padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 0.95rem; text-align: center; color: var(--x-color); }
+        .chat-messages { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; text-align: right; }
+        .msg { background: rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 12px; font-size: 0.85rem; max-width: 85%; word-break: break-word; }
+        .msg.system { background: rgba(245, 158, 11, 0.1); color: #f59e0b; align-self: center; text-align: center; font-size: 0.75rem; }
+        .chat-input-area { display: flex; padding: 8px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05); }
+        .chat-input { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; color: white; outline: none; font-size: 0.85rem; }
+        .chat-send-btn { background: var(--x-color); border: none; padding: 0 12px; border-radius: 8px; color: black; font-weight: bold; margin-right: 6px; cursor: pointer; font-size: 0.85rem; }
+
+        /* رسالة توجيهية للهواتف للتحكم بالدودة */
+        .phone-tip { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; pointer-events: none; text-align: center; width: max-content; color: #94a3b8; z-index: 10; }
+
+        @media (max-width: 600px) {
+            .game-layout { flex-direction: column; justify-content: flex-start; padding-top: 110px; }
+            .live-leaderboard { top: auto; bottom: 60px; right: 10px; width: 140px; max-height: 120px; }
+            .chat-container { width: 100%; height: 180px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="hub-container" id="gameHub">
-    <h1 style="margin-bottom: 5px;">عالم التحديات وسكنات الرأس 🌐</h1>
-    <p style="color: #64748b; margin-bottom: 15px;">غرف مخصصة، إظهار الأسماء، سكنات مجسمة للرأس، ولعبة XO ثابتة</p>
+    <h1 style="margin-bottom: 5px; font-size: 1.6rem;">عالم التحديات المتكامل 📱🎮</h1>
+    <p style="color: #64748b; margin-bottom: 15px; font-size: 0.9rem;">يدعم اللمس للهواتف، غرف خاصة وسكنات رأس مجسمة</p>
     
     <input type="text" class="input-field" id="globalNameInput" placeholder="أدخل اسمك المستعار">
     
     <div class="skin-section">
-        <h4 style="margin-bottom: 10px;">اختر سكن الرأس المحسن (3D)</h4>
+        <h4 style="margin-bottom: 10px; font-size: 0.95rem;">اختر سكن رأس الدودة (3D)</h4>
         <div class="head-skin-options">
             <button class="head-skin-btn active" onclick="selectHeadSkin('default', this)">🐍 كلاسيك</button>
             <button class="head-skin-btn" onclick="selectHeadSkin('crown', this)">👑 التاج</button>
@@ -83,7 +107,7 @@
             <button class="head-skin-btn" onclick="selectHeadSkin('ninja', this)">🥷 نينجا</button>
         </div>
 
-        <h4 style="margin-bottom: 10px; margin-top: 15px;">استايل الألوان والمظهر</h4>
+        <h4 style="margin-bottom: 10px; margin-top: 15px; font-size: 0.95rem;">استايل الألوان والمظهر</h4>
         <div class="skin-options">
             <div class="skin-btn active" style="background: #10b981;" onclick="selectSkin('#10b981', this)"></div>
             <div class="skin-btn" style="background: #38bdf8;" onclick="selectSkin('#38bdf8', this)"></div>
@@ -91,7 +115,7 @@
             <div class="skin-btn" style="background: #f59e0b;" onclick="selectSkin('#f59e0b', this)"></div>
         </div>
         <div class="color-picker-container">
-            <span>🎨 ابتكار لون مخصص بالكامل:</span>
+            <span>🎨 لون مخصص:</span>
             <input type="color" id="customColorPicker" class="custom-picker" value="#a855f7" onchange="applyCustomColor(this.value)">
         </div>
     </div>
@@ -99,56 +123,69 @@
     <div class="games-grid">
         <div class="game-card" onclick="goToLobby('xo')">
             <h3>لعبة XO ❌⭕</h3>
-            <span>تحدي ذكاء محلي ثابت</span>
+            <span style="font-size:0.8rem;">بوت ذكي أو غرف أونلاين + شات</span>
         </div>
         <div class="game-card" onclick="goToLobby('snake')">
             <h3>لعبة الدودة 3D 🐍</h3>
-            <span>سيرفر أونلاين، غرف خاصة وسكنات</span>
+            <span style="font-size:0.8rem;">تحكم باللمس، سيرفر وبوتات</span>
         </div>
     </div>
 </div>
 
 <div class="lobby-container hidden" id="lobbyArea">
-    <h2 id="lobbyTitle" style="margin-bottom: 15px;">اختر مود اللعب المناسب</h2>
+    <h2 id="lobbyTitle" style="margin-bottom: 15px; font-size: 1.3rem;">اختر مود اللعب المناسب</h2>
     
     <div id="snakeOnlineOptions" class="hidden">
         <button class="btn secondary" onclick="joinMode('global')">السيرفر الرئيسي (أونلاين + 14 بوت) 🌐</button>
-        <button class="btn orange" onclick="joinMode('bots')">غرفة البوتات (أنت ضد 14 بوت فقط) 🤖</button>
-        <button class="btn purple" onclick="createPrivateRoom()">إنشاء غرفة خاصة بالأصدقاء (بدون بوتات) 🔗</button>
+        <button class="btn orange" onclick="joinMode('bots')">غرفة البوتات (ضد 14 بوت فقط) 🤖</button>
+        <button class="btn purple" onclick="createPrivateRoom()">إنشاء غرفة خاصة للأصدقاء 🔗</button>
     </div>
     
     <div id="xoOptions" class="hidden">
-        <button class="btn" onclick="startXO()">ابدأ اللعب ضد البوت 🤖</button>
+        <button class="btn" onclick="startXO('local')">اللعب ضد البوت محلياً 🤖</button>
+        <button class="btn purple" onclick="createXOPrivateRoom()">إنشاء غرفة XO أونلاين + شات 🔗</button>
     </div>
     <button class="btn back" onclick="exitToHub()">رجوع</button>
 </div>
 
 <div class="full-screen-container hidden" id="gameArea">
     <div class="game-hud" id="snakeHud">
-        <div class="hud-card" style="color: #38bdf8;" id="scoreDisplay">النقاط: 0</div>
-        <div class="hud-card" id="magnetIndicator">🧲 المغناطيس ثلاثي الأبعاد نشط!</div>
-        <div class="hud-card hidden" id="roomLinkCard" style="background: #1e293b; color: #fff;">
-            <span>كود الغرفة: <strong id="roomCodeText"></strong></span>
-            <button onclick="copyRoomLink()" style="margin-right:10px; background:#38bdf8; border:none; padding:3px 8px; border-radius:5px; cursor:pointer; color:#000; font-weight:bold;">نسخ الرابط 🔗</button>
+        <div class="hud-row-container">
+            <div class="hud-card" style="color: #38bdf8;" id="scoreDisplay">النقاط: 0</div>
+            <div class="hud-card" id="magnetIndicator">🧲 مغناطيس 3D!</div>
+        </div>
+        <div class="hud-card hidden" id="roomLinkCard" style="background: #1e293b; color: #fff; pointer-events: auto;">
+            <span style="font-size:0.8rem;">الرابط: <strong id="roomCodeText"></strong></span>
+            <button onclick="copyRoomLink()" style="margin-right:8px; background:#38bdf8; border:none; padding:3px 6px; border-radius:5px; cursor:pointer; color:#000; font-weight:bold; font-size:0.75rem;">نسخ 🔗</button>
         </div>
     </div>
     
     <div class="live-leaderboard hidden" id="snakeLeaderboard">
-        <h4 style="color: #f59e0b; text-align: center; margin-bottom: 10px;">🏆 متصدرو السيرفر</h4>
+        <h4 style="color: #f59e0b; text-align: center; margin-bottom: 5px; font-size:0.85rem;">🏆 المتصدرون</h4>
         <div id="leaderboardRows"></div>
     </div>
     
     <div class="game-layout">
         <canvas id="snakeCanvas" class="hidden"></canvas>
+        <div class="phone-tip hidden" id="snakePhoneTip">💡 المس واسحب في أي مكان على الشاشة لتوجيه الدودة!</div>
 
         <div class="xo-centered-box hidden" id="xoBox">
-            <h2 id="xoStatusText" style="margin-bottom: 15px; color: var(--x-color);">دورك الآن (X)</h2>
-            <div class="board">
+            <h2 id="xoStatusText" style="margin-bottom: 10px; color: var(--x-color); font-size:1.2rem;">دورك الآن (X)</h2>
+            <div class="board" id="xoBoard">
                 <div class="cell" data-index="0"></div><div class="cell" data-index="1"></div><div class="cell" data-index="2"></div>
                 <div class="cell" data-index="3"></div><div class="cell" data-index="4"></div><div class="cell" data-index="5"></div>
                 <div class="cell" data-index="6"></div><div class="cell" data-index="7"></div><div class="cell" data-index="8"></div>
             </div>
-            <button class="btn back" onclick="location.reload()">انسحاب للقائمة</button>
+            <button class="btn back" onclick="location.reload()" style="padding:10px; font-size:1rem;">انسحاب للقائمة</button>
+        </div>
+
+        <div class="chat-container hidden" id="xoChatBox">
+            <div class="chat-header">💬 شات الغرفة المباشر</div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة هنا...">
+                <button class="chat-send-btn" onclick="sendChatMessage()">إرسال</button>
+            </div>
         </div>
     </div>
 </div>
@@ -156,12 +193,15 @@
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
     const socket = io({ transports: ['websocket', 'polling'] });
-    let currentGame = "", nickname = "لاعب", playerColor = "#10b981", headSkin = "default", roomCode = "GLOBAL_SERVER";
+    let currentGame = "", nickname = "لاعب", playerColor = "#10b981", headSkin = "default", roomCode = "";
+    let xoMode = "local", myXOSign = "X", myXOTurn = true;
+    
     const canvas = document.getElementById('snakeCanvas');
     const ctx = canvas.getContext('2d');
 
     const urlParams = new URLSearchParams(window.location.search);
     const targetRoom = urlParams.get('room');
+    const targetXORoom = urlParams.get('xoroom');
 
     function resizeCanvas() {
         canvas.width = window.innerWidth;
@@ -169,14 +209,19 @@
     }
     window.addEventListener('resize', resizeCanvas);
 
-    if (targetRoom) {
-        document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", () => {
+        if (targetRoom) {
             document.getElementById('lobbyArea').classList.add('hidden');
             goToLobby('snake');
-            document.getElementById('lobbyTitle').innerText = "أنت مدعو لغرفة خاصة! أدخل اسمك واضغط بالأسفل";
-            document.getElementById('snakeOnlineOptions').innerHTML = `<button class="btn purple" onclick="joinPrivateRoom('${targetRoom}')">دخول الغرفة الخاصة مباشرة 🚀</button>`;
-        });
-    }
+            document.getElementById('lobbyTitle').innerText = "أنت مدعو لغرفة دودة خاصة!";
+            document.getElementById('snakeOnlineOptions').innerHTML = `<button class="btn purple" onclick="joinPrivateRoom('${targetRoom}')">دخول غرفة الدودة 🚀</button>`;
+        } else if (targetXORoom) {
+            document.getElementById('lobbyArea').classList.add('hidden');
+            goToLobby('xo');
+            document.getElementById('lobbyTitle').innerText = "أنت مدعو لتحدي XO أونلاين!";
+            document.getElementById('xoOptions').innerHTML = `<button class="btn purple" onclick="joinXOPrivateRoom('${targetXORoom}')">دخول تحدي XO والشات ❌⭕</button>`;
+        }
+    });
 
     function selectSkin(color, el) {
         playerColor = color;
@@ -200,7 +245,6 @@
         currentGame = game;
         document.getElementById('gameHub').classList.add('hidden');
         document.getElementById('lobbyArea').classList.remove('hidden');
-        
         document.getElementById('snakeOnlineOptions').classList.add('hidden');
         document.getElementById('xoOptions').classList.add('hidden');
 
@@ -216,23 +260,30 @@
         document.getElementById('gameHub').classList.remove('hidden');
     }
 
-    function enterSnakeLayout() {
+    function enterGameArea() {
         document.getElementById('lobbyArea').classList.add('hidden');
         document.getElementById('gameArea').classList.remove('hidden');
+    }
+
+    // --- مودات الدودة ثلاثية الأبعاد ---
+    function joinMode(mode) {
+        enterGameArea();
         document.getElementById('snakeCanvas').classList.remove('hidden');
         document.getElementById('snakeLeaderboard').classList.remove('hidden');
         document.getElementById('snakeHud').classList.remove('hidden');
+        document.getElementById('snakePhoneTip').classList.remove('hidden');
         resizeCanvas();
-    }
-
-    function joinMode(mode) {
-        enterSnakeLayout();
         roomCode = mode === 'global' ? 'GLOBAL_SERVER' : 'BOTS_' + Math.random().toString(36).substring(5);
         socket.emit('joinSnakeGame', { mode: mode, roomCode: roomCode, name: nickname, color: playerColor, headSkin: headSkin });
     }
 
     function createPrivateRoom() {
-        enterSnakeLayout();
+        enterGameArea();
+        document.getElementById('snakeCanvas').classList.remove('hidden');
+        document.getElementById('snakeLeaderboard').classList.remove('hidden');
+        document.getElementById('snakeHud').classList.remove('hidden');
+        document.getElementById('snakePhoneTip').classList.remove('hidden');
+        resizeCanvas();
         roomCode = 'PRV_' + Math.random().toString(36).substring(2, 7).toUpperCase();
         document.getElementById('roomLinkCard').classList.remove('hidden');
         document.getElementById('roomCodeText').innerText = roomCode;
@@ -240,189 +291,57 @@
     }
 
     function joinPrivateRoom(rCode) {
-        nickname = document.getElementById('globalNameInput').value.trim() || "ضيف الغرفة";
-        enterSnakeLayout();
+        nickname = document.getElementById('globalNameInput').value.trim() || "ضيف";
+        enterGameArea();
+        document.getElementById('snakeCanvas').classList.remove('hidden');
+        document.getElementById('snakeLeaderboard').classList.remove('hidden');
+        document.getElementById('snakeHud').classList.remove('hidden');
+        document.getElementById('snakePhoneTip').classList.remove('hidden');
+        resizeCanvas();
         roomCode = rCode;
         socket.emit('joinSnakeGame', { mode: 'private', roomCode: roomCode, name: nickname, color: playerColor, headSkin: headSkin });
     }
 
     function copyRoomLink() {
-        const link = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+        const param = xoMode === 'online' ? `xoroom=${roomCode}` : `room=${roomCode}`;
+        const link = `${window.location.origin}${window.location.pathname}?${param}`;
         navigator.clipboard.writeText(link);
-        alert("تم نسخ رابط الغرفة بنجاح! أرسله لأصدقائك ليدخلوا معك مباشرة بدون بوتات 🌐");
+        alert("تم نسخ رابط الغرفة بنجاح! أرسله لصديقك ليدخل معك مباشرة 🌐");
     }
 
-    function startXO() {
-        document.getElementById('lobbyArea').classList.add('hidden');
-        document.getElementById('gameArea').classList.remove('hidden');
+    // --- مودات الـ XO المطور (البوت والأونلاين مع الشات) ---
+    function startXO(type) {
+        xoMode = "local";
+        enterGameArea();
         document.getElementById('xoBox').classList.remove('hidden');
         document.getElementById('snakeHud').classList.add('hidden');
-        initXO();
+        initLocalXO();
     }
 
-    const keys = { w: 'UP', s: 'DOWN', a: 'LEFT', d: 'RIGHT', ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT' };
-    window.addEventListener('keydown', (e) => {
-        if (keys[e.key] && currentGame === 'snake') {
-            socket.emit('moveSnake', { roomCode: roomCode, dir: keys[e.key] });
-        }
-    });
-
-    // تحسين رسم العقد والسكنات المضافة للرأس لتصبح مجسمة بالكامل
-    function draw3DSnake(s) {
-        // 1. رسم عُقد الجسم
-        for (let i = s.body.length - 1; i > 0; i--) {
-            const dot = s.body[i];
-            let radius = 11;
-            
-            ctx.save();
-            ctx.beginPath();
-            ctx.ellipse(dot.x, dot.y + radius * 0.4, radius, radius * 0.5, 0, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
-            ctx.fill();
-
-            let gradient = ctx.createRadialGradient(
-                dot.x - radius * 0.3, dot.y - radius * 0.3, radius * 0.1, 
-                dot.x, dot.y, radius
-            );
-            gradient.addColorStop(0, '#ffffff');
-            gradient.addColorStop(0.2, s.color);
-            gradient.addColorStop(0.8, s.color);
-            gradient.addColorStop(1, 'rgba(0,0,0,0.8)');
-
-            ctx.beginPath();
-            ctx.arc(dot.x, dot.y, radius, 0, Math.PI * 2);
-            ctx.fillStyle = gradient;
-            ctx.fill();
-            ctx.restore();
-        }
-
-        // 2. رسم الرأس المحسن بناءً على السكن المختار
-        const head = s.body[0];
-        let hRadius = 16;
-        ctx.save();
+    function createXOPrivateRoom() {
+        xoMode = "online";
+        enterGameArea();
+        document.getElementById('xoBox').classList.remove('hidden');
+        document.getElementById('xoChatBox').classList.remove('hidden');
+        document.getElementById('snakeHud').classList.remove('hidden');
+        document.getElementById('roomLinkCard').classList.remove('hidden');
         
-        // ظل رأس الدودة الأساسي
-        ctx.beginPath();
-        ctx.ellipse(head.x, head.y + hRadius * 0.4, hRadius, hRadius * 0.5, 0, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-        ctx.fill();
-
-        let headGrad = ctx.createRadialGradient(
-            head.x - hRadius * 0.3, head.y - hRadius * 0.3, hRadius * 0.1, 
-            head.x, head.y, hRadius
-        );
-        headGrad.addColorStop(0, '#ffffff');
-        headGrad.addColorStop(0.4, s.color);
-        headGrad.addColorStop(1, '#000000');
-
-        ctx.beginPath();
-        ctx.arc(head.x, head.y, hRadius, 0, Math.PI * 2);
-        ctx.fillStyle = headGrad;
-        ctx.fill();
-
-        // إضافة تفاصيل العيون المجسمة المضنية
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.arc(head.x - 5, head.y - 4, 3, 0, Math.PI*2);
-        ctx.arc(head.x + 5, head.y - 4, 3, 0, Math.PI*2);
-        ctx.fill();
-
-        // رسم سكن الرأس الإضافي (الأكسسوار ثلاثي الأبعاد) فوق الرأس
-        const currentSkin = s.headSkin || 'default';
-        if (currentSkin === 'crown') {
-            ctx.font = "20px Arial";
-            ctx.fillText("👑", head.x - 10, head.y - 12);
-        } else if (currentSkin === 'dragon') {
-            ctx.font = "20px Arial";
-            ctx.fillText("🐲", head.x - 10, head.y - 12);
-        } else if (currentSkin === 'ninja') {
-            // رسم قناع النينجا المظلل حول العينين
-            ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
-            ctx.fillRect(head.x - 10, head.y - 8, 20, 6);
-            ctx.fillStyle = "#fff";
-            ctx.fillRect(head.x - 4, head.y - 7, 2, 2);
-            ctx.fillRect(head.x + 2, head.y - 7, 2, 2);
-        }
-        ctx.restore();
-
-        // 3. عرض الاسم والسكور بوضوح فوق الرأس
-        ctx.save();
-        ctx.font = "bold 13px 'Segoe UI', sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillStyle = "rgba(15, 23, 42, 0.75)";
-        ctx.lineJoin = "round";
-        ctx.lineWidth = 4;
-        ctx.strokeText(`${s.name} (${s.score})`, head.x, head.y - 28);
-        ctx.fillStyle = s.id === socket.id ? "#38bdf8" : "#f8fafc";
-        ctx.fillText(`${s.name} (${s.score})`, head.x, head.y - 28);
-        ctx.restore();
+        roomCode = 'XO_' + Math.random().toString(36).substring(2, 7).toUpperCase();
+        document.getElementById('roomCodeText').innerText = roomCode;
+        
+        socket.emit('joinXOGame', { roomCode: roomCode, name: nickname });
     }
 
-    function draw3DItem(x, y, type) {
-        ctx.save();
-        ctx.font = "32px Arial";
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = type === "🧲" ? "#eab308" : "#ff477e";
-        ctx.fillText(type, x - 10, y + 10);
-        ctx.restore();
+    function joinXOPrivateRoom(rCode) {
+        xoMode = "online";
+        nickname = document.getElementById('globalNameInput').value.trim() || "تحدي XO";
+        enterGameArea();
+        document.getElementById('xoBox').classList.remove('hidden');
+        document.getElementById('xoChatBox').classList.remove('hidden');
+        document.getElementById('snakeHud').classList.remove('hidden');
+        
+        roomCode = rCode;
+        socket.emit('joinXOGame', { roomCode: roomCode, name: nickname });
     }
 
-    socket.on('renderSnakeFrame', (state) => {
-        if (currentGame !== 'snake') return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        ctx.strokeStyle = "rgba(255,255,255,0.015)";
-        ctx.lineWidth = 1;
-        for(let i=0; i<canvas.width; i+=50) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke(); }
-        for(let j=0; j<canvas.height; j+=50) { ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke(); }
-
-        if (state.magnet && !state.magnet.taken) draw3DItem(state.magnet.x, state.magnet.y, "🧲");
-        state.candies.forEach(candy => draw3DItem(candy.x, candy.y, candy.type));
-
-        state.snakes.forEach(s => draw3DSnake(s));
-
-        const myData = state.snakes.find(s => s.id === socket.id);
-        if (myData) {
-            document.getElementById('scoreDisplay').innerText = `النقاط: ${myData.score}`;
-            document.getElementById('magnetIndicator').style.display = myData.magnetActive ? "block" : "none";
-        }
-
-        const lb = document.getElementById('leaderboardRows');
-        lb.innerHTML = "";
-        state.leaderboard.slice(0, 6).forEach((item, i) => {
-            const div = document.createElement('div');
-            div.className = `lead-row ${item.id === socket.id ? 'me' : ''}`;
-            div.innerHTML = `<span>${i+1}. ${item.name}</span><strong>${item.score} ن</strong>`;
-            lb.appendChild(div);
-        });
-    });
-
-    // نظام الـ XO الثابت والمحمي بالكامل
-    let board = Array(9).fill(null);
-    let playerTurn = true;
-    function initXO() {
-        board = Array(9).fill(null); playerTurn = true;
-        document.getElementById('xoStatusText').innerText = "دورك الآن (X)";
-        document.querySelectorAll('.cell').forEach(c => { c.innerText = ''; c.className = 'cell'; });
-    }
-    document.querySelectorAll('.cell').forEach(cell => {
-        cell.addEventListener('click', (e) => {
-            const idx = e.target.dataset.index; if (!playerTurn || board[idx]) return;
-            makeMove(idx, 'X');
-            if (checkWin('X')) { document.getElementById('xoStatusText').innerText = "🏆 تهانينا! لقد فزت!"; playerTurn = false; return; }
-            if (board.every(b => b !== null)) { document.getElementById('xoStatusText').innerText = "🤝 تعادل!"; return; }
-            playerTurn = false; document.getElementById('xoStatusText').innerText = "🤖 البوت يفكر...";
-            setTimeout(botMove, 500);
-        });
-    });
-    function makeMove(idx, sign) { board[idx] = sign; const cell = document.querySelector(`[data-index="${idx}"]`); cell.innerText = sign; cell.classList.add(sign); }
-    function botMove() {
-        let empty = board.map((val, i) => val === null ? i : null).filter(v => v !== null); if (empty.length === 0) return;
-        let choice = empty[Math.floor(Math.random() * empty.length)]; makeMove(choice, 'O');
-        if (checkWin('O')) { document.getElementById('xoStatusText').innerText = "😢 خسرت! البوت فاز!"; return; }
-        playerTurn = true; document.getElementById('xoStatusText').innerText = "دورك الآن (X)";
-    }
-    function checkWin(sign) { const wins = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]]; return wins.some(w => w.every(i => board[i] === sign)); }
-</script>
-</body>
-</html>
+    // --- شات غ

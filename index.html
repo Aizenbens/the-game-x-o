@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HE IT</title>
+    <title>مجمع الألعاب أونلاين</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -11,7 +11,7 @@
 
     <div id="loginScreen" class="flex-1 flex flex-col items-center justify-center p-4">
         <div class="bg-gray-800 p-8 rounded-2xl border border-gray-700 w-full max-w-sm text-center space-y-4">
-            <h2 class="text-2xl font-bold">ENTER YOU NAME</h2>
+            <h2 class="text-2xl font-bold">🎮 ادخل اسمك لبدء الأونلاين</h2>
             <input type="text" id="usernameInput" class="w-full p-3 rounded bg-gray-700 border border-gray-600 text-center text-white" placeholder="اسمك المستعار...">
             <button onclick="connectToOnline()" class="w-full bg-blue-600 hover:bg-blue-700 font-bold p-3 rounded-xl transition">دخول صالة الألعاب</button>
         </div>
@@ -19,7 +19,7 @@
 
     <div id="gameHub" class="hidden flex-1 flex flex-col md:flex-row p-4 gap-4 h-full overflow-hidden">
         <div class="flex-1 bg-gray-800 rounded-2xl p-6 border border-gray-700 flex flex-col justify-center items-center gap-6">
-            <h1 class="text-3xl font-black text-blue-400">THE IT  🌐</h1>
+            <h1 class="text-3xl font-black text-blue-400">مجمع الألعاب أونلاين 🌐</h1>
             <div class="flex flex-wrap gap-4 justify-center">
                 <button onclick="goToLobby('xo')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 text-xl font-bold px-8 py-4 rounded-xl transition shadow-md">❌ XO تحدي الغرف أونلاين</button>
                 <button onclick="goToLobby('snake')" class="bg-lime-500 hover:bg-lime-600 text-slate-900 text-xl font-bold px-8 py-4 rounded-xl transition shadow-md">🐍 لعبة الدودة (فردي)</button>
@@ -28,11 +28,11 @@
 
         <div class="w-full md:w-80 bg-gray-800 rounded-2xl p-4 border border-gray-700 flex flex-col justify-between h-96 md:h-full">
             <div>
-                <h4 class="font-bold border-b border-gray-700 pb-2 mb-2 text-emerald-400">🟢 PLAYERES IS HERE:</h4>
+                <h4 class="font-bold border-b border-gray-700 pb-2 mb-2 text-emerald-400">🟢 اللاعبون المتصلون:</h4>
                 <div id="onlineUsersContainer" class="space-y-1 max-h-24 overflow-y-auto text-sm text-gray-300"></div>
             </div>
             <div class="flex flex-col flex-1 mt-4 overflow-hidden">
-                <h4 class="font-bold text-blue-400 mb-1">💬 JST TALKING:</h4>
+                <h4 class="font-bold text-blue-400 mb-1">💬 شات الصالة العام:</h4>
                 <div id="chatMessagesBox" class="flex-1 bg-gray-950 p-2 rounded-xl overflow-y-auto text-sm space-y-2 mb-2 border border-gray-700"></div>
                 <div class="flex gap-2">
                     <input type="text" id="chatInput" class="flex-1 p-2 rounded-lg bg-gray-700 text-white text-sm" placeholder="اكتب شيئاً...">
@@ -46,18 +46,18 @@
         <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-700 text-center space-y-4">
             <h2 id="lobbyTitle" class="text-2xl font-bold">اللوبي</h2>
             <div id="xoOptions" class="hidden space-y-4">
-                <input type="text" id="xoRoomCode" class="w-full p-3 rounded bg-gray-700 text-center tracking-widest font-bold" placeholder="THE CODE">
-                <button onclick="joinXORoom()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold p-3 rounded-xl transition">START </button>
+                <input type="text" id="xoRoomCode" class="w-full p-3 rounded bg-gray-700 text-center tracking-widest font-bold" placeholder="أدخل رقم أو كود الغرفة">
+                <button onclick="joinXORoom()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold p-3 rounded-xl transition">دخول الغرفة وبدء التحدي</button>
             </div>
             <div id="snakeOptions" class="hidden">
-                <button onclick="startSnakeGame()" class="w-full bg-lime-500 hover:bg-lime-600 text-slate-900 font-bold p-3 rounded-xl transition">PLAY ALONE</button>
+                <button onclick="startSnakeGame()" class="w-full bg-lime-500 hover:bg-lime-600 text-slate-900 font-bold p-3 rounded-xl transition">ابدأ اللعب الفردي</button>
             </div>
             <button onclick="exitToHub()" class="text-sm text-gray-400 hover:text-white underline block w-full">العودة للرئيسية</button>
         </div>
     </div>
 
     <div id="xoPlayArea" class="hidden flex-1 flex flex-col items-center justify-center p-4">
-        <h3 id="xoTurnStatus" class="text-xl font-bold mb-4 text-amber-400 bg-gray-800 px-6 py-2 rounded-full">JST WAIT...</h3>
+        <h3 id="xoTurnStatus" class="text-xl font-bold mb-4 text-amber-400 bg-gray-800 px-6 py-2 rounded-full">في انتظار اللاعب الآخر...</h3>
         <div class="grid grid-cols-3 gap-3 w-80 h-80 bg-gray-800 p-3 rounded-2xl border border-gray-700">
             <button onclick="triggerXOMove(0)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full" id="cell-0"></button>
             <button onclick="triggerXOMove(1)" class="bg-gray-900 text-4xl font-black rounded-xl h-full w-full" id="cell-1"></button>
@@ -73,16 +73,27 @@
     </div>
 
     <div id="snakeCanvasArea" class="hidden flex-1 flex flex-col items-center justify-center p-4">
-        <canvas id="snakeCanvas" width="400" height="400" class="bg-gray-950 border-4 border-gray-800 rounded-2xl"></canvas>
-        <button onclick="exitToHub()" class="mt-4 bg-gray-800 px-6 py-2 rounded-xl font-bold">GET OUT</button>
+        <div class="text-center space-y-4">
+            <div class="flex justify-between items-center bg-gray-800 px-6 py-2 rounded-xl border border-gray-700 w-full max-w-[400px]">
+                <span class="text-lime-400 font-bold">النتيجة الحالية: <span id="snakeScore">0</span></span>
+            </div>
+            <canvas id="snakeCanvas" width="400" height="400" class="bg-gray-950 border-4 border-gray-800 rounded-2xl shadow-2xl"></canvas>
+            <button onclick="exitToHub()" class="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-xl font-bold transition border border-gray-700">خروج للرئيسية</button>
+        </div>
     </div>
 
     <script>
-        const socket = io(); // اتصال فوري تلقائي ديناميكي
+        const socket = io(); // تشغيل الـ Socket للاتصال الفوري تلقائياً بالموقع
         let myName = "";
         let mySymbol = "";
         let currentRoom = "";
         let currentTurn = "";
+
+        // محرك الدودة
+        const canvas = document.getElementById("snakeCanvas");
+        const ctx = canvas.getContext("2d");
+        const boxSize = 20;
+        let snake, snakeDirection, apple, snakeGameInterval, snakeScore = 0;
 
         function switchScreen(oldId, newId) {
             document.getElementById(oldId).classList.add('hidden');
@@ -91,7 +102,7 @@
 
         function connectToOnline() {
             myName = document.getElementById('usernameInput').value.trim();
-            if(!myName) return alert("اWHO ARE YOU ?!");
+            if(!myName) return alert("اكتب اسمك أولاً!");
             socket.emit('joinHub', myName);
             switchScreen('loginScreen', 'gameHub');
         }
@@ -119,17 +130,17 @@
             document.getElementById('xoOptions').classList.add('hidden');
             document.getElementById('snakeOptions').classList.add('hidden');
             if(game === 'xo') {
-                document.getElementById('lobbyTitle').innerText = "WITH WHO X-O";
+                document.getElementById('lobbyTitle').innerText = "تحدي XO أونلاين";
                 document.getElementById('xoOptions').classList.remove('hidden');
             } else {
-                document.getElementById('lobbyTitle').innerText = "ALONE";
+                document.getElementById('lobbyTitle').innerText = "لعبة الدودة فردي";
                 document.getElementById('snakeOptions').classList.remove('hidden');
             }
         }
 
         function joinXORoom() {
             currentRoom = document.getElementById('xoRoomCode').value.trim();
-            if(!currentRoom) return alert("ENTER CODE!");
+            if(!currentRoom) return alert("أدخل كود الغرفة!");
             socket.emit('joinXOGame', { roomCode: currentRoom, username: myName });
             switchScreen('lobbyArea', 'xoPlayArea');
         }
@@ -139,7 +150,7 @@
         
         socket.on('xoStart', (data) => {
             currentTurn = data.turn;
-            document.getElementById('xoTurnStatus').innerText = currentTurn === mySymbol ? "YOUR TURN!" : "WAIT...";
+            document.getElementById('xoTurnStatus').innerText = currentTurn === mySymbol ? "دورك الآن للعب!" : "انتظر حركة الخصم...";
         });
 
         function triggerXOMove(index) {
@@ -150,7 +161,6 @@
 
         socket.on('xoUpdate', (data) => {
             currentTurn = data.turn;
-            // تحديث واجهة المربعات
             data.board.forEach((val, idx) => {
                 const cell = document.getElementById(`cell-${idx}`);
                 cell.innerText = val;
@@ -166,17 +176,78 @@
             const wins = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
             wins.forEach(p => {
                 if(board[p[0]] && board[p[0]] === board[p[1]] && board[p[0]] === board[p[2]]) {
-                    alert(`🎉 THE WINNER IS: ${board[p[0]]}`);
+                    alert(`🎉 انتهاء المباراة! الفائز هو: ${board[p[0]]}`);
                     exitToHub();
                 }
             });
         }
 
-        function exitToHub() {
-            window.location.reload(); // أسهل طريقة لتنظيف الذاكرة والخروج من الغرف أونلاين
+        // تشغيل لعبة السنيك الفردية كلياً
+        function startSnakeGame() {
+            switchScreen('lobbyArea', 'snakeCanvasArea');
+            snakeScore = 0;
+            document.getElementById('snakeScore').innerText = snakeScore;
+            snake = [{ x: 10 * boxSize, y: 10 * boxSize }];
+            snakeDirection = "RIGHT";
+            generateApple();
+            if (snakeGameInterval) clearInterval(snakeGameInterval);
+            snakeGameInterval = setInterval(drawSnakeGame, 100);
         }
-        
-        // (يمكن وضع كود تحريك السنيك هنا كالمعتاد عند الضغط على بدء اللعبة)
+
+        function generateApple() {
+            apple = {
+                x: Math.floor(Math.random() * (canvas.width / boxSize)) * boxSize,
+                y: Math.floor(Math.random() * (canvas.height / boxSize)) * boxSize
+            };
+        }
+
+        window.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowUp" && snakeDirection !== "DOWN") snakeDirection = "UP";
+            else if (e.key === "ArrowDown" && snakeDirection !== "UP") snakeDirection = "DOWN";
+            else if (e.key === "ArrowLeft" && snakeDirection !== "RIGHT") snakeDirection = "LEFT";
+            else if (e.key === "ArrowRight" && snakeDirection !== "LEFT") snakeDirection = "RIGHT";
+        });
+
+        function drawSnakeGame() {
+            ctx.fillStyle = "#0f172a";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#ef4444";
+            ctx.beginPath();
+            ctx.arc(apple.x + boxSize/2, apple.y + boxSize/2, boxSize/2 - 2, 0, 2 * Math.PI);
+            ctx.fill();
+
+            for (let i = 0; i < snake.length; i++) {
+                ctx.fillStyle = i === 0 ? "#22c55e" : "#4ade80";
+                ctx.fillRect(snake[i].x, snake[i].y, boxSize - 2, boxSize - 2);
+            }
+
+            let headX = snake[0].x;
+            let headY = snake[0].y;
+            if (snakeDirection === "UP") headY -= boxSize;
+            if (snakeDirection === "DOWN") headY += boxSize;
+            if (snakeDirection === "LEFT") headX -= boxSize;
+            if (snakeDirection === "RIGHT") headX += boxSize;
+
+            if (headX < 0 || headX >= canvas.width || headY < 0 || headY >= canvas.height || snake.some(s => s.x === headX && s.y === headY)) {
+                clearInterval(snakeGameInterval);
+                alert(`🚨 انتهت اللعبة! نتيجتك: ${snakeScore}`);
+                exitToHub();
+                return;
+            }
+
+            if (headX === apple.x && headY === apple.y) {
+                snakeScore++;
+                document.getElementById('snakeScore').innerText = snakeScore;
+                generateApple();
+            } else {
+                snake.pop();
+            }
+            snake.unshift({ x: headX, y: headY });
+        }
+
+        function exitToHub() {
+            window.location.reload();
+        }
     </script>
 </body>
 </html>

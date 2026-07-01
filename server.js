@@ -109,7 +109,6 @@ setInterval(() => {
             p.body.unshift(head);
         }
 
-        // حساب انتقال النقاط أوتوماتيكياً عند القتل أونلاين
         let killedScores = {};
         for (let id1 in allActive) {
             let p1 = allActive[id1];
@@ -123,7 +122,6 @@ setInterval(() => {
                 if (id1 !== id2) {
                     if (p2.body.some(seg => seg.x === h1.x && seg.y === h1.y)) {
                         p1.isDead = true;
-                        // إضافة نقاط الضحية إلى حساب القاتل
                         killedScores[id2] = (killedScores[id2] || 0) + p1.score;
                     }
                 } else {
@@ -136,7 +134,7 @@ setInterval(() => {
 
         for (let id in allActive) {
             let p = allActive[id];
-            if (killedScores[id]) p.score += killedScores[id]; // تحويل النقاط للقاتل
+            if (killedScores[id]) p.score += killedScores[id];
 
             if (p.isDead) {
                 p.score = 0;
@@ -160,13 +158,20 @@ io.on('connection', (socket) => {
         io.emit('updateOnlineUsers', Object.values(onlineUsers));
     });
 
-    // شات غرفة الانتظار العامة
     socket.on('sendHubChatMessage', (data) => {
         io.emit('receiveHubChatMessage', data);
     });
 
     socket.on('sendXOChatMessage', (data) => {
         io.to(data.roomCode).emit('receiveXOChatMessage', data);
+    });
+
+    socket.on('leaveSnakeRoom', (data) => {
+        const { roomCode } = data;
+        if (snakeRooms[roomCode] && snakeRooms[roomCode].players[socket.id]) {
+            delete snakeRooms[roomCode].players[socket.id];
+        }
+        socket.leave(roomCode);
     });
 
     socket.on('joinSnakeRoom', (data) => {
@@ -210,7 +215,15 @@ io.on('connection', (socket) => {
         const { roomCode, username } = data;
         socket.join(roomCode);
         if (!xoRooms[roomCode]) {
-            xoRooms[roomCode] = { players: [], board: Array(9).fill(""), turn: "X", scores: {}, usernames: {}, round: 1 };
+            xoRooms[roomCode] = { 
+                players: [], 
+                board: Array(9).fill(""), 
+                turn: "X", 
+                scores: {}, 
+                usernames: {}, 
+                round: 1,
+                startingPlayerIdx: 0
+            };
         }
         let room = xoRooms[roomCode];
         if (room.players.length < 2 && !room.players.includes(socket.id)) {
@@ -218,8 +231,10 @@ io.on('connection', (socket) => {
             room.scores[socket.id] = 0;
             room.usernames[socket.id] = username;
         }
+        
         const symbol = room.players.indexOf(socket.id) === 0 ? "X" : "O";
         socket.emit('xoInit', { symbol });
+        
         if (room.players.length === 2) {
             io.to(roomCode).emit('xoStart', { turn: "X", round: room.round, scores: room.scores });
         } else {
@@ -232,17 +247,27 @@ io.on('connection', (socket) => {
         let room = xoRooms[roomCode];
         if (room && room.turn === symbol && room.board[index] === "") {
             room.board[index] = symbol;
+            
             if (checkServerWin(room.board, symbol)) {
                 room.scores[socket.id] += 1;
                 room.round += 1;
                 room.board.fill("");
                 room.turn = "X";
-                io.to(roomCode).emit('xoRoundEnd', { winnerSymbol: symbol, scores: room.scores, round: room.round, board: room.board });
+                io.to(roomCode).emit('xoRoundEnd', { winnerSymbol: symbol, scores: room.scores, round: room.round, board: room.board, isDraw: false });
             } else if (!room.board.includes("")) {
                 room.round += 1;
                 room.board.fill("");
-                room.turn = "X";
-                io.to(roomCode).emit('xoRoundEnd', { winnerSymbol: "تعادل", scores: room.scores, round: room.round, board: room.board });
+                room.startingPlayerIdx = room.startingPlayerIdx === 0 ? 1 : 0; 
+                room.turn = "X"; 
+                
+                io.to(roomCode).emit('xoRoundEnd', { 
+                    winnerSymbol: "تعادل (انقلاب الكفة!)", 
+                    scores: room.scores, 
+                    round: room.round, 
+                    board: room.board,
+                    isDraw: true,
+                    startingPlayer: room.startingPlayerIdx
+                });
             } else {
                 room.turn = symbol === "X" ? "O" : "X";
                 io.to(roomCode).emit('xoUpdate', { board: room.board, turn: room.turn });

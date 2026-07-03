@@ -143,5 +143,6 @@ io.on('connection', (socket) => {
     });
 });
 
+// تعيين البورت بشكل ديناميكي ليتوافق مع منصة الاستضافة Render
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`🚀 السيرفر المطور يعمل بكفاءة على: http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`🚀 السيرفر المطور يعمل بكفاءة على البورت ${PORT}`));

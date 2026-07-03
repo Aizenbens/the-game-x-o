@@ -9,7 +9,9 @@ const io = new Server(server, {
     cors: { origin: "*", methods: ["GET", "POST"] }
 });
 
+// دعم قراءة ملف index.html سواء كان في المجلد الرئيسي أو داخل مجلد public
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 const rooms = {};
 const MAP_SIZE = 2500;
@@ -31,7 +33,6 @@ function generateCandies() {
 }
 
 io.on('connection', (socket) => {
-    // عند دخول لاعب للغرفة
     socket.on('joinRoom', ({ roomCode, username, color, isSnakeMode }) => {
         if (!roomCode || !username) return;
         
@@ -56,21 +57,18 @@ io.on('connection', (socket) => {
             direction: 'RIGHT'
         };
 
-        // بث تحديث الغرفة واللاعبين
         const currentPlayers = Object.values(rooms[roomCode].players);
         io.to(roomCode).emit('roomUpdate', { 
             players: currentPlayers,
             candies: rooms[roomCode].candies
         });
 
-        // إشعار شات بدخول اللاعب
         io.to(roomCode).emit('chatMessageReceived', {
             system: true,
-            text: `📢 دخل العميل [${username}] إلى الساحة التكتيكية.`
+            text: `📢 دخل اللاعب [${username}] إلى الغرفة.`
         });
     });
 
-    // استقبال رسائل الشات وإعادة توجيهها للغرفة
     socket.on('sendChatMessage', (msgText) => {
         const roomCode = socket.roomCode;
         if (roomCode && rooms[roomCode] && socket.username) {
@@ -122,7 +120,6 @@ io.on('connection', (socket) => {
         if (socket.roomCode) socket.to(socket.roomCode).emit('chessMoveReceived', data);
     });
 
-    // عند انقطاع الاتصال أو الخروج
     socket.on('disconnect', () => {
         const roomCode = socket.roomCode;
         if (roomCode && rooms[roomCode]) {
@@ -138,10 +135,9 @@ io.on('connection', (socket) => {
                 });
                 io.to(roomCode).emit('snakePositions', Object.values(rooms[roomCode].players));
                 
-                // إشعار شات بخروج اللاعب
                 io.to(roomCode).emit('chatMessageReceived', {
                     system: true,
-                    text: `❌ غادر العميل [${leftUsername}] الساحة.`
+                    text: `❌ غادر اللاعب [${leftUsername}] الساحة.`
                 });
             }
         }
@@ -149,4 +145,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`🚀 السيرفر المطور يعمل بكفاءة على البورت ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 السيرفر يعمل على البورت ${PORT}`));

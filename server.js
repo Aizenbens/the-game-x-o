@@ -9,14 +9,12 @@ const io = new Server(server, {
     cors: { origin: "*", methods: ["GET", "POST"] }
 });
 
-// تقديم الملفات الثابتة من مجلد public
 app.use(express.static(path.join(__dirname, 'public')));
 
 const rooms = {};
 const MAP_SIZE = 2500;
 const GRID_SIZE = 14;
 
-// دالة توليد الحلويات الافتراضية للغرفة عند إنشائها
 function generateCandies() {
     const types = [{ val: 10, size: 4, col: "#ec4899" }, { val: 25, size: 6, col: "#06b6d4" }, { val: 50, size: 8, col: "#eab308" }];
     let arr = [];
@@ -33,9 +31,7 @@ function generateCandies() {
 }
 
 io.on('connection', (socket) => {
-    console.log(`👤 اتصال جديد: ${socket.id}`);
-
-    // انضمام لاعب لغرفة معينة
+    // عند دخول لاعب للغرفة
     socket.on('joinRoom', ({ roomCode, username, color, isSnakeMode }) => {
         if (!roomCode || !username) return;
         
@@ -43,7 +39,6 @@ io.on('connection', (socket) => {
         socket.roomCode = roomCode;
         socket.username = username;
         
-        // إنشاء الغرفة في الذاكرة إذا لم تكن موجودة
         if (!rooms[roomCode]) {
             rooms[roomCode] = {
                 code: roomCode,
@@ -52,7 +47,6 @@ io.on('connection', (socket) => {
             };
         }
 
-        // إضافة أو تحديث بيانات اللاعب داخل الغرفة
         rooms[roomCode].players[socket.id] = {
             id: socket.id,
             username: username,
@@ -62,37 +56,50 @@ io.on('connection', (socket) => {
             direction: 'RIGHT'
         };
 
-        // إرسال البيانات المحدثة لجميع اللاعبين في الغرفة
+        // بث تحديث الغرفة واللاعبين
+        const currentPlayers = Object.values(rooms[roomCode].players);
         io.to(roomCode).emit('roomUpdate', { 
-            players: Object.values(rooms[roomCode].players),
+            players: currentPlayers,
             candies: rooms[roomCode].candies
+        });
+
+        // إشعار شات بدخول اللاعب
+        io.to(roomCode).emit('chatMessageReceived', {
+            system: true,
+            text: `📢 دخل العميل [${username}] إلى الساحة التكتيكية.`
         });
     });
 
-    // استقبال تحديثات الدودة وإعادة بثها للبقية
+    // استقبال رسائل الشات وإعادة توجيهها للغرفة
+    socket.on('sendChatMessage', (msgText) => {
+        const roomCode = socket.roomCode;
+        if (roomCode && rooms[roomCode] && socket.username) {
+            io.to(roomCode).emit('chatMessageReceived', {
+                system: false,
+                username: socket.username,
+                text: msgText
+            });
+        }
+    });
+
     socket.on('snakeUpdate', (snakeData) => {
         const roomCode = socket.roomCode;
         if (roomCode && rooms[roomCode] && rooms[roomCode].players[socket.id]) {
             rooms[roomCode].players[socket.id].body = snakeData.body;
             rooms[roomCode].players[socket.id].score = snakeData.score;
             rooms[roomCode].players[socket.id].direction = snakeData.direction;
-            
-            // بث الإحداثيات لكل اللاعبين في الغرفة ما عدا الراسل لتجنب الارتداد (Lag)
             socket.to(roomCode).emit('snakePositions', Object.values(rooms[roomCode].players));
         }
     });
 
-    // إدارة أكل الحلويات المتزامنة
     socket.on('candyEaten', (candyId) => {
         const roomCode = socket.roomCode;
         if (roomCode && rooms[roomCode]) {
-            // التحقق من وجود الحلوى قبل حذفها لمنع تكرار الأكل من لاعبين في نفس الوقت
             const exists = rooms[roomCode].candies.some(c => c.id === candyId);
             if (exists) {
                 rooms[roomCode].candies = rooms[roomCode].candies.filter(c => c.id !== candyId);
                 io.to(roomCode).emit('candyRemoved', candyId);
                 
-                // تعويض الحلوى المأكولة فوراً بحلوى جديدة في إحداثيات عشوائية
                 const types = [{ val: 10, size: 4, col: "#ec4899" }, { val: 25, size: 6, col: "#06b6d4" }, { val: 50, size: 8, col: "#eab308" }];
                 let select = types[Math.floor(Math.random() * types.length)];
                 let newCandy = {
@@ -107,42 +114,39 @@ io.on('connection', (socket) => {
         }
     });
 
-    // بث حركات الـ XO للخصم
     socket.on('xoMove', (data) => {
-        if (socket.roomCode) {
-            socket.to(socket.roomCode).emit('xoMoveReceived', data);
-        }
+        if (socket.roomCode) socket.to(socket.roomCode).emit('xoMoveReceived', data);
     });
 
-    // بث حركات الشطرنج للخصم
     socket.on('chessMove', (data) => {
-        if (socket.roomCode) {
-            socket.to(socket.roomCode).emit('chessMoveReceived', data);
-        }
+        if (socket.roomCode) socket.to(socket.roomCode).emit('chessMoveReceived', data);
     });
 
-    // عند مغادرة اللاعب أو انقطاع الاتصال
+    // عند انقطاع الاتصال أو الخروج
     socket.on('disconnect', () => {
         const roomCode = socket.roomCode;
         if (roomCode && rooms[roomCode]) {
+            const leftUsername = socket.username || "لاعب";
             delete rooms[roomCode].players[socket.id];
             
-            // إذا فرغت الغرفة تماماً يتم مسحها لتوفير ذاكرة السيرفر
             if (Object.keys(rooms[roomCode].players).length === 0) {
                 delete rooms[roomCode];
             } else {
-                // إرسال القائمة المحدثة للاعب المتبقي
                 io.to(roomCode).emit('roomUpdate', { 
                     players: Object.values(rooms[roomCode].players),
                     candies: rooms[roomCode].candies
                 });
                 io.to(roomCode).emit('snakePositions', Object.values(rooms[roomCode].players));
+                
+                // إشعار شات بخروج اللاعب
+                io.to(roomCode).emit('chatMessageReceived', {
+                    system: true,
+                    text: `❌ غادر العميل [${leftUsername}] الساحة.`
+                });
             }
         }
-        console.log(`❌ انقطع اتصال: ${socket.id}`);
     });
 });
 
-// تعيين البورت بشكل ديناميكي ليتوافق مع منصة الاستضافة Render
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`🚀 السيرفر المطور يعمل بكفاءة على البورت ${PORT}`));

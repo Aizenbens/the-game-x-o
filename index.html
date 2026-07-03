@@ -2,65 +2,58 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
     <title>منصة الألعاب الاحترافية الشاملة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #0b111e; font-family: 'Tajawal', sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #0b111e; font-family: 'Tajawal', sans-serif; touch-action: none; }
         canvas { display: block; width: 100vw; height: 100vh; }
         .glass-panel { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.08); }
         .neon-btn { transition: all 0.3s ease; }
         .neon-btn:hover { transform: translateY(-2px); box-shadow: 0 0 25px currentColor; }
         
-        /* بلاطات الرقعة مع حركات انتقالية سلسة */
         .tile-light { background-color: #e2e8f0; color: #1e293b; transition: all 0.25s ease-in-out; }
         .tile-dark { background-color: #475569; color: #f8fafc; transition: all 0.25s ease-in-out; }
         .tile-selected { background-color: #a855f7 !important; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); transform: scale(1.02); z-index: 10; }
         
-        /* القطع الشطرنجية مع تأثير أنيميشن خفيف */
         .chess-piece { display: inline-block; transition: transform 0.2s ease, opacity 0.2s ease; cursor: pointer; user-select: none; }
         .chess-piece:hover { transform: scale(1.15); }
         
-        /* تأثيرات الشطرنج ثلاثي الأبعاد والاشعاعات النيون */
         .chess-container-3d { perspective: 1200px; padding: 20px; }
         .board-3d { transform: rotateX(28deg) rotateZ(0deg); transform-style: preserve-3d; transition: transform 0.5s ease; box-shadow: 0 30px 70px rgba(0,0,0,0.9), 0 0 40px rgba(139, 92, 246, 0.25); }
         
-        /* تلميحات المساعدة العادية (أصفر نيون) */
         .tile-hint { background-color: #f59e0b !important; box-shadow: inset 0 0 15px rgba(255, 255, 0, 0.8); color: #000 !important; }
         
-        /* تلميحات الاحتمالات عند الضغط على قطعة (أزرق نيون شعاعي ممتد) */
         .tile-possible-target { position: relative; transition: background-color 0.2s; }
         .tile-possible-target:hover { background-color: rgba(56, 189, 248, 0.3) !important; }
         .tile-possible-target::after { content: ''; position: absolute; width: 14px; height: 14px; background-color: #38bdf8; border-radius: 50%; box-shadow: 0 0 14px #0ea5e9; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; animation: pulseTarget 1.5s infinite; }
         @keyframes pulseTarget { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.7; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.7; } }
         
-        /* إضاءة الملك باللون الأحمر النيوني الفلاشي عند وجود كش ملك (شاك) */
         .tile-check-alert { background-color: #ef4444 !important; box-shadow: 0 0 35px #dc2626, inset 0 0 20px #7f1d1d !important; animation: checkPulse 0.6s infinite alternate; }
         @keyframes checkPulse { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.03); opacity: 1; } }
 
-        .toast-alert { animation: slideIn 0.3s ease forwards; }
-        @keyframes slideIn { from { transform: translate(-50%, 100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        * { -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body class="text-white h-full flex flex-col justify-between bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-gray-950 to-black">
 
-    <div id="globalLeftToast" class="hidden fixed bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] bg-rose-600/95 border border-rose-400 px-6 py-3 rounded-2xl font-black text-center shadow-2xl backdrop-blur-md text-sm tracking-wide">
+    <div id="globalLeftToast" class="hidden fixed bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] bg-rose-600/95 border border-rose-400 px-6 py-3 rounded-2xl font-black text-center shadow-2xl backdrop-blur-md text-sm">
         ⚠️ انتباه: غادر اللاعب <span id="toastLeftUser" class="text-yellow-300">...</span> من مباراة <span id="toastLeftGame" class="text-cyan-300">...</span> الحالية!
     </div>
 
     <div id="loginScreen" class="flex-1 flex flex-col items-center justify-center p-4">
         <div class="glass-panel p-10 rounded-3xl w-full max-w-sm text-center space-y-6 shadow-2xl border border-indigo-500/20">
-            <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 tracking-wide">🎮 منصة الألعاب</h2>
-            <p class="text-gray-400 text-xs">أهلاً بك! اختر اسمك ولون دودتك لبدء التحديات الفورية</p>
+            <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500">🎮 منصة الألعاب</h2>
+            <p class="text-gray-400 text-xs">اختر اسمك ولون دودتك لبدء التحديات الفورية</p>
             <input type="text" id="usernameInput" class="w-full p-3.5 rounded-xl bg-gray-900/90 border border-gray-700 text-center text-white font-bold placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition" placeholder="اكتب اسمك المستعار...">
             <div class="text-right bg-gray-900/40 p-3 rounded-xl border border-gray-800">
-                <label class="text-xs text-gray-400 block mb-2 font-bold">🎨 اختر لون دودتك المفضل:</label>
+                <label class="text-xs text-gray-400 block mb-2 font-bold">🎨 لون الدودة المفضل:</label>
                 <input type="color" id="snakeColorInput" class="w-full h-11 p-1 rounded-lg bg-gray-800 border border-gray-700 cursor-pointer" value="#06b6d4">
             </div>
-            <button onclick="connectToHub()" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 font-black p-3.5 rounded-xl transition transform hover:scale-[102%]" style="box-shadow: 0 4px 20px rgba(79, 70, 229, 0.4);">تسجيل الدخول</button>
+            <button onclick="connectToHub()" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 font-black p-3.5 rounded-xl transition transform hover:scale-[102%]">تسجيل الدخول</button>
         </div>
         <div id="whoAreYouBanner" class="hidden absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-red-600 border border-red-400 px-8 py-3 rounded-xl font-black text-white text-lg shadow-2xl animate-bounce">
             🛑 الرجاء كتابة الاسم أولاً!
@@ -74,10 +67,10 @@
                 <div id="lobbyOnlineUsersList" class="h-24 overflow-y-auto space-y-1.5 mt-2 pr-1"></div>
             </div>
             <div class="flex-1 flex flex-col min-h-0">
-                <h4 class="text-xs font-black text-amber-400 mb-2 flex items-center gap-1">💬 شات صالة الانتظار العام:</h4>
+                <h4 class="text-xs font-black text-amber-400 mb-2">💬 شات صالة الانتظار العام:</h4>
                 <div id="hubChatMessagesWrapper" class="flex-1 overflow-y-auto space-y-2 bg-black/40 p-3 rounded-xl border border-gray-900/60 mb-2"></div>
                 <div class="flex gap-1.5">
-                    <input type="text" id="hubChatMsgInput" class="flex-1 bg-gray-900 rounded-xl px-3 py-2 text-xs text-white border border-gray-700 focus:outline-none focus:border-indigo-500" placeholder="تحدث مع الجميع هنا...">
+                    <input type="text" id="hubChatMsgInput" class="flex-1 bg-gray-900 rounded-xl px-3 py-2 text-xs text-white border border-gray-700 focus:outline-none" placeholder="تحدث مع الجميع هنا...">
                     <button onclick="sendHubChatMessageFromServer()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 rounded-xl text-xs transition">إرسال</button>
                 </div>
             </div>
@@ -86,20 +79,16 @@
         <div class="flex-1 glass-panel rounded-3xl p-8 flex flex-col justify-center items-center gap-8 text-center shadow-2xl">
             <div class="space-y-2">
                 <h1 class="text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">بوابة الألعاب والمواجهات 🔥</h1>
-                <p class="text-gray-400 text-sm max-w-sm mx-auto">اختر لعبتك المفضلة الآن، تحدى الأصدقاء أونلاين أو واجه البوت الذكي.</p>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-3xl">
                 <button onclick="openGameMenu('xo')" class="neon-btn text-amber-400 bg-gradient-to-br from-gray-900 to-amber-950 border border-amber-500/30 text-lg font-black p-6 rounded-2xl flex flex-col items-center justify-center gap-2">
-                    <span class="text-3xl">❌⭕</span>
-                    <span>تحدي XO</span>
+                    <span class="text-3xl">❌⭕</span><span>تحدي XO</span>
                 </button>
                 <button onclick="openGameMenu('chess')" class="neon-btn text-purple-400 bg-gradient-to-br from-gray-900 to-purple-950 border border-purple-500/30 text-lg font-black p-6 rounded-2xl flex flex-col items-center justify-center gap-2">
-                    <span class="text-3xl">👑 3D</span>
-                    <span>شطرنج ثلاثي الأبعاد</span>
+                    <span class="text-3xl">👑 3D</span><span>شطرنج</span>
                 </button>
                 <button onclick="openGameMenu('snake')" class="neon-btn text-cyan-400 bg-gradient-to-br from-gray-900 to-cyan-950 border border-cyan-500/30 text-lg font-black p-6 rounded-2xl flex flex-col items-center justify-center gap-2">
-                    <span class="text-3xl">🐍🧲</span>
-                    <span>ساحة الدودة</span>
+                    <span class="text-3xl">🐍🧲</span><span>ساحة الدودة المحدثة</span>
                 </button>
             </div>
         </div>
@@ -108,575 +97,313 @@
     <div id="lobbyArea" class="hidden flex-1 flex flex-col items-center justify-center p-4">
         <div class="glass-panel p-8 rounded-3xl shadow-2xl w-full max-w-md text-center space-y-6">
             <h2 id="lobbyTitle" class="text-3xl font-black text-blue-400">إعداد الغرفة</h2>
-            
-            <div id="xoMenuOptions" class="hidden space-y-4">
-                <div class="bg-black/30 p-4 rounded-xl space-y-3 border border-gray-800">
-                    <h4 class="text-xs text-amber-400 font-bold text-right">🤖 مواجهة البوت الفردي:</h4>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button onclick="startXOBotMode('easy')" class="bg-emerald-600 hover:bg-emerald-500 p-2.5 rounded-xl font-bold text-xs transition">سهل</button>
-                        <button onclick="startXOBotMode('medium')" class="bg-amber-600 hover:bg-amber-500 p-2.5 rounded-xl font-bold text-xs transition">عادي</button>
-                        <button onclick="startXOBotMode('expert')" class="bg-rose-600 hover:bg-rose-500 p-2.5 rounded-xl font-bold text-xs transition">خبير العبقري</button>
-                    </div>
-                </div>
+            <div id="xoMenuOptions" class="hidden"><button onclick="startXOBotMode('easy')" class="bg-emerald-600 p-2.5 rounded-xl font-bold text-xs w-full">بدء مواجهة البوت (سهل)</button></div>
+            <div id="chessMenuOptions" class="hidden"><button onclick="startChessBotMode('easy')" class="bg-purple-600 p-2.5 rounded-xl font-bold text-xs w-full">بدء شطرنج ضد البوت</button></div>
+            <div id="snakeMenuOptions" class="hidden">
+                <button onclick="startSnakeOfflineMode()" class="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 font-black p-3.5 rounded-xl text-sm">📴 تشغيل الدودة المطورة (أوفلاين للهواتف والكمبيوتر)</button>
             </div>
-
-            <div id="chessMenuOptions" class="hidden space-y-4">
-                <div class="bg-black/30 p-4 rounded-xl space-y-3 border border-gray-800">
-                    <h4 class="text-xs text-purple-400 font-bold text-right">🤖 مواجهة بوت الشطرنج الذكي:</h4>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button onclick="startChessBotMode('easy')" class="bg-emerald-600 hover:bg-emerald-500 p-2.5 rounded-xl font-bold text-xs transition">سهل ضعيف</button>
-                        <button onclick="startChessBotMode('medium')" class="bg-amber-600 hover:bg-amber-500 p-2.5 rounded-xl font-bold text-xs transition">عادي ذكي</button>
-                        <button onclick="startChessBotMode('expert')" class="bg-rose-600 hover:bg-rose-500 p-2.5 rounded-xl font-bold text-xs transition">الخبير العبقري</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="snakeMenuOptions" class="hidden space-y-2">
-                <button onclick="startSnakeOfflineMode()" class="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 font-black p-3.5 rounded-xl transition text-sm">📴 اللعب أوفلاين (600 حلوى + بوتات عملاقة)</button>
-            </div>
-
-            <div class="border-t border-gray-800 pt-5 space-y-3">
-                <h4 class="text-xs text-gray-400 text-right font-bold">🔑 أو أدخل رمز غرفة خاصة للعب مع صديق أونلاين:</h4>
-                <input type="text" id="customRoomCode" class="w-full p-3 rounded-xl bg-gray-900 text-center font-bold tracking-widest text-white border border-gray-700 focus:outline-none focus:border-indigo-500" placeholder="اكتب الرمز هنا...">
-                <button id="lobbyActionBtn" class="w-full font-black p-3.5 rounded-xl transition text-slate-950 shadow-lg"></button>
-            </div>
-            <button onclick="exitToHubFromMenu()" class="text-xs text-gray-500 hover:text-white underline block w-full text-center transition">العودة لصالة الانتظار</button>
+            <button onclick="exitToHubFromMenu()" class="text-xs text-gray-500 underline block w-full text-center">العودة للصالة</button>
         </div>
     </div>
 
-    <div id="xoPlayArea" class="hidden flex-1 flex flex-col lg:flex-row p-6 h-full items-center justify-center gap-6">
-        <div id="xoChatBoxContainer" class="hidden w-full lg:w-80 glass-panel rounded-2xl flex flex-col h-80 lg:h-[420px] shadow-2xl">
-            <div class="p-3 bg-gray-900/80 rounded-t-2xl border-b border-gray-800 text-xs font-black text-amber-400">💬 دردشة المباراة الخاصة</div>
-            <div id="xoChatMessagesWrapper" class="flex-1 p-3 overflow-y-auto space-y-2 text-xs"></div>
-            <div class="p-2.5 border-t border-gray-800 flex gap-1.5">
-                <input type="text" id="xoChatMsgInput" class="flex-1 bg-gray-900 rounded-xl px-3 py-1.5 text-xs text-white border border-gray-700 focus:outline-none" placeholder="اكتب رسالتك لخصمك...">
-                <button onclick="sendXOLocalChatMessage()" class="bg-amber-500 text-slate-950 font-black px-4 rounded-xl text-xs transition hover:bg-amber-600">إرسال</button>
-            </div>
+    <div id="xoPlayArea" class="hidden flex-1 flex flex-col p-6 items-center justify-center">
+        <h3 id="xoTurnStatus" class="text-sm font-black mb-4 text-amber-400">جاري التحميل...</h3>
+        <div class="grid grid-cols-3 gap-3 w-72 h-72 bg-gray-900 p-3 rounded-2xl">
+            <button onclick="handleXOCellClick(0)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-0"></button>
+            <button onclick="handleXOCellClick(1)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-1"></button>
+            <button onclick="handleXOCellClick(2)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-2"></button>
+            <button onclick="handleXOCellClick(3)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-3"></button>
+            <button onclick="handleXOCellClick(4)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-4"></button>
+            <button onclick="handleXOCellClick(5)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-5"></button>
+            <button onclick="handleXOCellClick(6)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-6"></button>
+            <button onclick="handleXOCellClick(7)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-7"></button>
+            <button onclick="handleXOCellClick(8)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-8"></button>
         </div>
-        <div class="flex flex-col items-center">
-            <div class="flex gap-4 mb-3 bg-gray-900/90 px-6 py-2 rounded-full border border-gray-800 text-xs font-bold">
-                <span class="text-blue-400 font-bold" id="xoRoundWidget">الجولة: 1</span>
-            </div>
-            <h3 id="xoTurnStatus" class="text-sm font-black mb-4 text-amber-400 bg-gray-900/90 px-6 py-2 rounded-full border border-gray-800">جاري التحميل...</h3>
-            <div class="grid grid-cols-3 gap-3 w-80 h-80 bg-gray-900/60 p-3 rounded-2xl border border-gray-800 shadow-2xl">
-                <button onclick="handleXOCellClick(0)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-0"></button>
-                <button onclick="handleXOCellClick(1)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-1"></button>
-                <button onclick="handleXOCellClick(2)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-2"></button>
-                <button onclick="handleXOCellClick(3)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-3"></button>
-                <button onclick="handleXOCellClick(4)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-4"></button>
-                <button onclick="handleXOCellClick(5)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-5"></button>
-                <button onclick="handleXOCellClick(6)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-6"></button>
-                <button onclick="handleXOCellClick(7)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-7"></button>
-                <button onclick="handleXOCellClick(8)" class="bg-gray-950 text-4xl font-black rounded-xl" id="cell-8"></button>
-            </div>
-            <button onclick="exitToHubDirectly('xoPlayArea')" class="mt-5 bg-gradient-to-r from-red-600 to-rose-700 text-white px-8 py-2.5 rounded-xl font-bold text-sm transition">خروج للرئيسية</button>
-        </div>
+        <button onclick="exitToHubDirectly('xoPlayArea')" class="mt-4 bg-red-600 px-6 py-2 rounded-xl text-sm font-bold">خروج</button>
     </div>
 
-    <div id="chessPlayArea" class="hidden flex-1 flex flex-col lg:flex-row p-6 h-full items-center justify-center gap-6">
-        <div id="chessChatBoxContainer" class="hidden w-full lg:w-80 glass-panel rounded-2xl flex flex-col h-80 lg:h-[450px] shadow-2xl">
-            <div class="p-3 bg-gray-900/80 rounded-t-2xl border-b border-gray-800 text-xs font-black text-purple-400">💬 دردشة الشطرنج الخاصة</div>
-            <div id="chessChatMessagesWrapper" class="flex-1 p-3 overflow-y-auto space-y-2 text-xs"></div>
-            <div class="p-2.5 border-t border-gray-800 flex gap-1.5">
-                <input type="text" id="chessChatMsgInput" class="flex-1 bg-gray-900 rounded-xl px-3 py-1.5 text-xs text-white border border-gray-700 focus:outline-none" placeholder="اكتب رسالتك للخصم هنا...">
-                <button onclick="sendChessLocalChatMessage()" class="bg-purple-600 text-white font-black px-4 rounded-xl text-xs transition hover:bg-purple-700">إرسال</button>
-            </div>
-        </div>
-
-        <div class="flex flex-col items-center">
-            <div class="flex gap-2 mb-3">
-                <h3 id="chessStatusWidget" class="text-xs font-black text-purple-400 bg-gray-900/90 px-6 py-2 rounded-full border border-gray-800 shadow-md">جاري إعداد الرقعة...</h3>
-                <button id="chessHintButton" onclick="getChessHint()" class="text-xs font-black text-amber-400 bg-amber-950/80 hover:bg-amber-900 px-4 py-2 rounded-full border border-amber-500/40 shadow-md transition">
-                    💡 طلب تلميح (المتبقي: 2)
-                </button>
-            </div>
-            
-            <div id="blackPlayerNameTag" class="text-xs font-black px-4 py-1.5 rounded-t-xl bg-rose-950/60 border-t border-x border-rose-500/30 text-rose-400 min-w-[200px] text-center shadow-md">
-                👤 الخصم (أسود): جاري الانتظار...
-            </div>
-
-            <div class="chess-container-3d">
-                <div id="chessBoard" class="board-3d grid grid-cols-8 grid-rows-8 w-80 h-80 sm:w-[440px] sm:h-[440px] border-[12px] border-amber-900/90 rounded-2xl overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.9)]"></div>
-            </div>
-            
-            <div id="whitePlayerNameTag" class="text-xs font-black px-4 py-1.5 rounded-b-xl bg-cyan-950/60 border-b border-x border-cyan-500/30 text-cyan-400 min-w-[200px] text-center shadow-md -mt-2">
-                👤 أنت (أبيض): ${myUsername}
-            </div>
-            
-            <button onclick="exitToHubDirectly('chessPlayArea')" class="mt-8 bg-gradient-to-r from-red-600 to-rose-700 text-white px-8 py-2.5 rounded-xl font-bold text-sm transition">خروج للرئيسية</button>
-        </div>
+    <div id="chessPlayArea" class="hidden flex-1 flex flex-col p-6 items-center justify-center">
+        <div id="chessBoard" class="grid grid-cols-8 grid-rows-8 w-80 h-80 bg-gray-900 rounded-xl overflow-hidden border-4 border-amber-900"></div>
+        <button onclick="exitToHubDirectly('chessPlayArea')" class="mt-4 bg-red-600 px-6 py-2 rounded-xl text-sm font-bold">خروج</button>
     </div>
 
-    <div id="snakeCanvasArea" class="hidden fixed inset-0 z-50 bg-slate-950 flex flex-col">
-        <div class="absolute top-4 left-4 z-50 glass-panel px-5 py-2.5 rounded-2xl flex items-center gap-6 text-xs font-bold shadow-2xl">
-            <span class="text-cyan-400" id="snakeModeTitle">غرفة الدودة 🐍</span>
-            <span class="text-yellow-400" id="snakeLiveScore">عداد نقاطك: 0</span>
-            <span class="text-pink-400 hidden animate-pulse" id="magnetStatusWidget">🧲 مغناطيس فعال!</span>
-            <button onclick="exitToHubDirectly('snakeCanvasArea')" class="bg-red-600 text-white px-4 py-1.5 rounded-xl hover:bg-red-700 transition">خروج</button>
+    <div id="snakeCanvasArea" class="hidden fixed inset-0 z-50 bg-slate-950 flex flex-col select-none">
+        <div class="absolute top-4 left-4 z-50 glass-panel px-4 py-2 rounded-2xl flex items-center gap-4 text-xs font-bold shadow-2xl">
+            <span class="text-cyan-400">🐍 ساحة الدودة</span>
+            <span class="text-yellow-400" id="snakeLiveScore">النقاط: 0</span>
+            <span class="text-pink-400 hidden animate-pulse" id="magnetStatusWidget">🧲 مغناطيس نشط (<span id="magnetSecondsLeft">6</span>ث)</span>
+            <button onclick="exitToHubDirectly('snakeCanvasArea')" class="bg-red-600 text-white px-3 py-1 rounded-xl">خروج</button>
         </div>
-        <div class="absolute top-4 right-4 z-50 glass-panel p-4 rounded-2xl w-60 text-xs shadow-2xl max-h-[80vh] flex flex-col">
-            <h4 class="font-black text-amber-400 border-b border-gray-850 pb-1.5 mb-2">🏆 الصدارة ولوحة المتصدرين:</h4>
-            <div id="snakeLiveLeaderboard" class="space-y-1.5 flex-1 overflow-y-auto pr-1"><div>جاري تحميل النتائج...</div></div>
+        <div class="absolute top-4 right-4 z-50 glass-panel p-3 rounded-2xl w-44 text-[10px] shadow-2xl max-h-[25vh] flex flex-col">
+            <h4 class="font-black text-amber-400 border-b border-gray-800 pb-1 mb-1">🏆 الصدارة:</h4>
+            <div id="snakeLiveLeaderboard" class="space-y-1 overflow-y-auto"></div>
         </div>
+
+        <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-50 grid grid-cols-3 gap-2 w-32 h-32 md:hidden opacity-50 hover:opacity-80 transition-opacity">
+            <div></div>
+            <button onclick="changeDirectionTouch('UP')" class="bg-gray-800/90 border border-gray-600 rounded-xl flex items-center justify-center text-xl active:bg-cyan-600">▲</button>
+            <div></div>
+            <button onclick="changeDirectionTouch('LEFT')" class="bg-gray-800/90 border border-gray-600 rounded-xl flex items-center justify-center text-xl active:bg-cyan-600">◀</button>
+            <div class="bg-gray-900/40 rounded-xl"></div>
+            <button onclick="changeDirectionTouch('RIGHT')" class="bg-gray-800/90 border border-gray-600 rounded-xl flex items-center justify-center text-xl active:bg-cyan-600">▶</button>
+            <div></div>
+            <button onclick="changeDirectionTouch('DOWN')" class="bg-gray-800/90 border border-gray-600 rounded-xl flex items-center justify-center text-xl active:bg-cyan-600">▼</button>
+            <div></div>
+        </div>
+
         <canvas id="snakeFullScreenCanvas"></canvas>
     </div>
 
     <script>
         const socket = io();
-        let myUsername = "", myColor = "", mySymbol = "X", currentRoom = "", currentTurn = "X", activeMenu = "";
-        let gameMode = "bot"; 
-        let botDifficulty = "easy"; 
-        let localXOBoard = Array(9).fill("");
-        let currentRound = 1;
-        let localStartingSymbol = "X";
-
-        // متغيرات الشطرنج والتلميحات المحدودة (تلميحين فقط لكل لون)
-        let chessGameInstance = new Chess();
-        let myChessColor = "w"; 
-        let selectedChessSquare = null;
-        let activeHints = []; 
-        let currentSquarePossibilities = [];
-        
-        let whiteHintsLeft = 2;
-        let blackHintsLeft = 2;
-
+        let myUsername = "", myColor = "", activeMenu = "";
         const canvas = document.getElementById("snakeFullScreenCanvas");
         const ctx = canvas.getContext("2d");
         const MAP_SIZE = 3000; 
-        let currentCandies = [], currentPlayers = {}, currentBots = {}, currentMagnets = [];
-        let isOfflineMode = false;
-        let offlinePlayer = { body: [{x: 1000, y: 1000}], direction: "RIGHT", score: 0, magnetTimer: 0, isDead: false };
-        let offlineBots = [], offlineCandies = [], offlineMagnets = [], offlineLoopInterval;
+        const GRID_SIZE = 20;
 
-        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.addEventListener('resize', resizeCanvas);
+        let player = { username: "أنت", color: "#06b6d4", body: [], direction: "RIGHT", nextDirection: "RIGHT", score: 0, magnetTimer: 0 };
+        let candies = [], bots = [], magnets = [], snakeGameInterval = null, magnetIntervalId = null;
 
         function switchScreen(oldId, newId) {
             document.getElementById(oldId).classList.add('hidden');
             document.getElementById(newId).classList.remove('hidden');
         }
 
-        socket.on('playerLeftAlert', (data) => {
-            const toast = document.getElementById('globalLeftToast');
-            document.getElementById('toastLeftUser').innerText = data.username;
-            document.getElementById('toastLeftGame').innerText = data.game;
-            toast.classList.remove('hidden');
-            setTimeout(() => { toast.classList.add('hidden'); }, 5000);
-        });
-
         function connectToHub() {
             myUsername = document.getElementById('usernameInput').value.trim();
             myColor = document.getElementById('snakeColorInput').value;
-            if(!myUsername) {
-                document.getElementById('whoAreYouBanner').classList.remove('hidden');
-                setTimeout(() => { document.getElementById('whoAreYouBanner').classList.add('hidden'); }, 3000);
-                return;
-            }
-            socket.emit('joinHub', { username: myUsername, color: myColor });
+            if(!myUsername) { document.getElementById('whoAreYouBanner').classList.remove('hidden'); return; }
+            player.username = myUsername; player.color = myColor;
             switchScreen('loginScreen', 'gameHub');
         }
 
-        function sendHubChatMessageFromServer() {
-            const input = document.getElementById('hubChatMsgInput');
-            if(!input.value.trim()) return;
-            socket.emit('sendHubChatMessage', { sender: myUsername, message: input.value.trim(), color: myColor });
-            input.value = "";
-        }
-
-        socket.on('receiveHubChatMessage', (data) => {
-            const wrapper = document.getElementById('hubChatMessagesWrapper');
-            wrapper.innerHTML += `<div class="p-2 rounded-xl bg-gray-900/60 border border-gray-800 text-right"><span class="font-black text-xs" style="color: ${data.color}">${data.sender}:</span> <span class="text-gray-200 text-xs ml-1">${data.message}</span></div>`;
-            wrapper.scrollTop = wrapper.scrollHeight;
-        });
-
-        socket.on('updateOnlineUsers', (usersList) => {
-            document.getElementById('lobbyOnlineUsersList').innerHTML = usersList.map(u => `<div class="flex items-center gap-2 bg-gray-900/40 p-2 rounded-xl border border-gray-800/60"><span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span><span class="font-bold truncate text-xs" style="color: ${u.color || '#fff'}">${u.username}</span></div>`).join('');
-        });
-
         function openGameMenu(game) {
-            activeMenu = game;
-            switchScreen('gameHub', 'lobbyArea');
+            activeMenu = game; switchScreen('gameHub', 'lobbyArea');
             document.getElementById('xoMenuOptions').classList.add('hidden');
             document.getElementById('chessMenuOptions').classList.add('hidden');
             document.getElementById('snakeMenuOptions').classList.add('hidden');
-            const btn = document.getElementById('lobbyActionBtn');
-
-            if(game === 'xo') {
-                document.getElementById('lobbyTitle').innerText = "غرفة جولات XO الخاصة";
-                document.getElementById('xoMenuOptions').classList.remove('hidden');
-                btn.innerText = "دخول برمز الغرفة أونلاين";
-                btn.className = "w-full bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black p-3.5 rounded-xl transition shadow-lg";
-                btn.onclick = startXORoomOnline;
-            } else if(game === 'chess') {
-                document.getElementById('lobbyTitle').innerText = "غرفة الشطرنج والخطط الاستراتيجية";
-                document.getElementById('chessMenuOptions').classList.remove('hidden');
-                btn.innerText = "دخول برمز الغرفة أونلاين";
-                btn.className = "w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-black p-3.5 rounded-xl transition shadow-lg";
-                btn.onclick = startChessRoomOnline;
-            } else {
-                document.getElementById('lobbyTitle').innerText = "غرفة الدودة والحلويات";
-                document.getElementById('snakeMenuOptions').classList.remove('hidden');
-                btn.innerText = "دخول برمز الغرفة أونلاين";
-                btn.className = "w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black p-3.5 rounded-xl transition shadow-lg";
-                btn.onclick = startSnakeRoomOnline;
-            }
+            if(game === 'snake') document.getElementById('snakeMenuOptions').classList.remove('hidden');
         }
 
-        // ================= [ نظام الشطرنج الاحترافي المطور 3D ] =================
-        function startChessBotMode(diff) {
-            gameMode = "bot"; botDifficulty = diff; chessGameInstance = new Chess(); myChessColor = "w"; activeHints = []; currentSquarePossibilities = [];
-            whiteHintsLeft = 2; blackHintsLeft = 2; updateHintButtonUI();
-            
-            // تحديث يافطات الأسماء للبوت
-            let diffText = diff === 'easy' ? 'سهل' : diff === 'medium' ? 'ذكي' : 'عبقري';
-            document.getElementById('whitePlayerNameTag').innerText = `👤 أنت (أبيض): ${myUsername || 'لاعب 1'}`;
-            document.getElementById('blackPlayerNameTag').innerText = `🤖 البوت (${diffText}): الذكاء الاصطناعي`;
-            
-            document.getElementById('chessChatBoxContainer').classList.add('hidden');
-            switchScreen('lobbyArea', 'chessPlayArea'); renderChessBoardUI(); updateChessStatusText();
-        }
-
-        function startChessRoomOnline() {
-            gameMode = "online"; activeHints = []; currentSquarePossibilities = [];
-            whiteHintsLeft = 2; blackHintsLeft = 2; updateHintButtonUI();
-            currentRoom = document.getElementById('customRoomCode').value.trim(); if(!currentRoom) return alert("أدخل رمز الغرفة الخاصة أولاً!");
-            document.getElementById('chessChatBoxContainer').classList.remove('hidden');
-            
-            document.getElementById('whitePlayerNameTag').innerText = `👤 أنت: ${myUsername}`;
-            document.getElementById('blackPlayerNameTag').innerText = `👤 الخصم أونلاين: في انتظار دخوله...`;
-            
-            socket.emit('joinChessGame', { roomCode: currentRoom, username: myUsername });
-            switchScreen('lobbyArea', 'chessPlayArea');
-        }
-
-        function updateHintButtonUI() {
-            let left = myChessColor === 'w' ? whiteHintsLeft : blackHintsLeft;
-            document.getElementById('chessHintButton').innerText = `💡 طلب تلميح (المتبقي: ${left})`;
-        }
-
-        function getChessHint() {
-            if (chessGameInstance.game_over()) return;
-            if (chessGameInstance.turn() !== myChessColor) { alert("انتظر دورك لطلب تلميح مساعد!"); return; }
-
-            if (myChessColor === 'w' && whiteHintsLeft <= 0) { alert("لقد استنفدت التلميحين المتاحين لك كلاعب أبيض!"); return; }
-            if (myChessColor === 'b' && blackHintsLeft <= 0) { alert("لقد استنفدت التلميحين المتاحين لك كلاعب أسود!"); return; }
-
-            let moves = chessGameInstance.moves({ verbose: true }); if (moves.length === 0) return;
-
-            if (myChessColor === 'w') whiteHintsLeft--; else blackHintsLeft--;
-            updateHintButtonUI();
-
-            activeHints = [];
-            let uniqueMovesCount = Math.min(2, moves.length);
-            let shuffledMoves = moves.sort(() => 0.5 - Math.random());
-            
-            for(let i = 0; i < uniqueMovesCount; i++) {
-                activeHints.push(shuffledMoves[i].from);
-                activeHints.push(shuffledMoves[i].to);
-            }
-            renderChessBoardUI();
-            setTimeout(() => { activeHints = []; renderChessBoardUI(); }, 3000);
-        }
-
-        socket.on('chessInit', (data) => { 
-            myChessColor = data.color; 
-            if(myChessColor === 'w') {
-                document.getElementById('whitePlayerNameTag').innerText = `👤 أنت (أبيض): ${myUsername}`;
-            } else {
-                document.getElementById('blackPlayerNameTag').innerText = `👤 أنت (أسود): ${myUsername}`;
-                document.getElementById('whitePlayerNameTag').innerText = `👤 الخصم (أبيض): جاري اللعب...`;
-            }
-            updateHintButtonUI(); 
-        });
-        
-        socket.on('chessStart', () => { 
-            chessGameInstance = new Chess(); 
-            if(myChessColor === 'w') {
-                document.getElementById('blackPlayerNameTag').innerText = `👤 الخصم (أسود): متصل الآن`;
-            } else {
-                document.getElementById('whitePlayerNameTag').innerText = `👤 الخصم (أبيض): متصل الآن`;
-            }
-            renderChessBoardUI(); 
-            updateChessStatusText(); 
-            alert("🎮 بدأ التحدي أونلاين بالكامل!"); 
-        });
-        
-        socket.on('chessMoveUpdate', (data) => { chessGameInstance.move(data.move); renderChessBoardUI(); updateChessStatusText(); });
-
-        function updateChessStatusText() {
-            let status = ""; let turn = chessGameInstance.turn() === 'w' ? 'الأبيض' : 'الأسود';
-            if (chessGameInstance.in_checkmate()) status = `🏁 كش ملك! انتهت بفوز (${turn === 'الأبيض' ? 'الأسود' : 'الأبيض'})`;
-            else if (chessGameInstance.in_draw()) status = "🏁 انتهت المباراة بالتعادل!";
-            else {
-                status = `دور اللاعب: ${turn}`;
-                if (chessGameInstance.in_check()) status += " ⚠️ [ كش ملك / شاك ]";
-                if (gameMode === 'bot' && chessGameInstance.turn() === 'b') status = "🤖 البوت يقوم بتحليل الخطوة التالية...";
-            }
-            document.getElementById('chessStatusWidget').innerText = status;
-        }
-
-        const chessPiecesSymbols = {
-            'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
-            'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
-        };
-
-        function renderChessBoardUI() {
-            const boardDiv = document.getElementById('chessBoard'); boardDiv.innerHTML = "";
-            const board = chessGameInstance.board();
-            const isCheckNow = chessGameInstance.in_check();
-
-            // إذا كان اللاعب يلعب باللون الأسود، نقوم بقلب الرقعة ليراها من منظوره الخاص بشكل صحيح وثلاثي الأبعاد
-            const loopRange = myChessColor === 'b' ? [7, -1, -1] : [0, 8, 1];
-            const startR = loopRange[0], endR = loopRange[1], stepR = loopRange[2];
-            const startC = myChessColor === 'b' ? 7 : 0, endC = myChessColor === 'b' ? -1 : 8, stepC = myChessColor === 'b' ? -1 : 1;
-
-            for (let r = startR; r !== endR; r += stepR) {
-                for (let c = startC; c !== endC; c += stepC) {
-                    const square = board[r][c];
-                    const squareName = String.fromCharCode(97 + c) + (8 - r);
-                    
-                    const tile = document.createElement('button');
-                    tile.className = `h-full w-full flex items-center justify-center transition-all duration-300 relative ${((r+c)%2===0)?'tile-light':'tile-dark'}`;
-                    tile.id = `sq-${squareName}`;
-
-                    if(selectedChessSquare === squareName) tile.classList.add('tile-selected');
-                    if(activeHints.includes(squareName)) tile.classList.add('tile-hint');
-                    if(currentSquarePossibilities.includes(squareName)) tile.classList.add('tile-possible-target');
-
-                    if (square) {
-                        const pieceSpan = document.createElement('span');
-                        pieceSpan.className = "chess-piece text-3xl sm:text-4xl";
-                        
-                        let symbolKey = square.color === 'w' ? square.type.toUpperCase() : square.type.toLowerCase();
-                        pieceSpan.innerText = chessPiecesSymbols[symbolKey] || "";
-                        
-                        if(square.color === 'w') pieceSpan.style.color = '#38bdf8'; 
-                        if(square.color === 'b') pieceSpan.style.color = '#f43f5e'; 
-
-                        tile.appendChild(pieceSpan);
-
-                        if(isCheckNow && square.type === 'k' && square.color === chessGameInstance.turn()) {
-                            tile.className += " tile-check-alert";
-                        }
-                    }
-
-                    tile.onclick = () => handleChessSquareClick(squareName);
-                    boardDiv.appendChild(tile);
-                }
-            }
-        }
-
-        function handleChessSquareClick(squareName) {
-            if (chessGameInstance.game_over()) return;
-            if (chessGameInstance.turn() !== myChessColor) return;
-
-            if (selectedChessSquare === null) {
-                let piece = chessGameInstance.get(squareName);
-                if (piece && piece.color === myChessColor) {
-                    selectedChessSquare = squareName;
-                    
-                    let moves = chessGameInstance.moves({ square: squareName, verbose: true });
-                    currentSquarePossibilities = moves.map(m => m.to);
-                    
-                    renderChessBoardUI();
-                }
-            } else {
-                let move = chessGameInstance.move({ from: selectedChessSquare, to: squareName, promotion: 'q' });
-
-                selectedChessSquare = null;
-                currentSquarePossibilities = []; 
-                renderChessBoardUI();
-                updateChessStatusText();
-
-                if (move) {
-                    if (gameMode === 'online') {
-                        socket.emit('makeChessMove', { roomCode: currentRoom, move: move });
-                    } else if (gameMode === 'bot' && !chessGameInstance.game_over()) {
-                        let delay = botDifficulty === 'easy' ? 400 : botDifficulty === 'medium' ? 1200 : 600;
-                        setTimeout(triggerChessBotBrain, delay);
-                    }
-                } else {
-                    let piece = chessGameInstance.get(squareName);
-                    if (piece && piece.color === myChessColor) {
-                        selectedChessSquare = squareName;
-                        let moves = chessGameInstance.moves({ square: squareName, verbose: true });
-                        currentSquarePossibilities = moves.map(m => m.to);
-                        renderChessBoardUI();
-                    }
-                }
-            }
-        }
-
-        function triggerChessBotBrain() {
-            if (chessGameInstance.game_over()) return;
-            let moves = chessGameInstance.moves({ verbose: true }); if (moves.length === 0) return;
-            let chosenMove = null;
-
-            if (botDifficulty === 'easy') { chosenMove = moves[Math.floor(Math.random() * moves.length)]; } 
-            else if (botDifficulty === 'medium') {
-                let captures = moves.filter(m => m.captured);
-                chosenMove = captures.length > 0 ? captures[Math.floor(Math.random() * captures.length)] : moves[Math.floor(Math.random() * moves.length)];
-            } 
-            else if (botDifficulty === 'expert') {
-                let checkmates = moves.filter(m => m.san.includes('#'));
-                let checks = moves.filter(m => m.san.includes('+'));
-                let captures = moves.filter(m => m.captured);
-                if (checkmates.length > 0) chosenMove = checkmates[0];
-                else if (checks.length > 0) chosenMove = checks[Math.floor(Math.random() * checks.length)];
-                else if (captures.length > 0) chosenMove = captures[Math.floor(Math.random() * captures.length)];
-                else chosenMove = moves[Math.floor(Math.random() * moves.length)];
-            }
-
-            if (chosenMove) { chessGameInstance.move(chosenMove); renderChessBoardUI(); updateChessStatusText(); }
-        }
-
-        function sendChessLocalChatMessage() {
-            const input = document.getElementById('chessChatMsgInput'); if(!input.value.trim()) return;
-            socket.emit('sendChessChatMessage', { roomCode: currentRoom, sender: myUsername, message: input.value.trim() });
-            input.value = "";
-        }
-
-        socket.on('receiveChessChatMessage', (data) => {
-            const container = document.getElementById('chessChatMessagesWrapper');
-            container.innerHTML += `<div class="bg-gray-900/80 p-2 rounded-xl border border-gray-800 text-right"><span class="text-purple-400 font-bold">${data.sender}:</span> <span class="text-white ml-1">${data.message}</span></div>`;
-            container.scrollTop = container.scrollHeight;
-        });
-
-        // ================= [ نظام XO ] =================
-        function startXOBotMode(diff) {
-            gameMode = "bot"; botDifficulty = diff; localXOBoard.fill(""); currentRound = 1; mySymbol = "X"; localStartingSymbol = "X"; currentTurn = "X";
-            document.getElementById('xoChatBoxContainer').classList.add('hidden');
-            switchScreen('lobbyArea', 'xoPlayArea'); updateBotUIState(); clearXOFrontBoard();
-        }
-        function updateBotUIState() {
-            let diffText = botDifficulty === 'easy' ? 'سهل' : botDifficulty === 'medium' ? 'عادي' : 'الخبير';
-            document.getElementById('xoRoundWidget').innerText = `الجولة: ${currentRound} (${diffText})`;
-            document.getElementById('xoTurnStatus').innerText = currentTurn === mySymbol ? `دورك الآن (${mySymbol})` : `دور البوت (${currentTurn})`;
-        }
-        function handleXOCellClick(idx) {
-            if (gameMode === "bot") {
-                if (localXOBoard[idx] !== "" || currentTurn !== mySymbol) return;
-                localXOBoard[idx] = mySymbol; renderXOFrontUI();
-                if (checkClientWin(localXOBoard, mySymbol)) return endBotRound("🎉 انتصرت على البوت!");
-                if (!localXOBoard.includes("")) return endBotRound("تعادل");
-                currentTurn = mySymbol === "X" ? "O" : "X"; updateBotUIState();
-                setTimeout(triggerXOBotBrain, botDifficulty === 'medium' ? 1000 : 400);
-            } else {
-                if(currentTurn === mySymbol) socket.emit('makeXOMove', { roomCode: currentRoom, index: idx, symbol: mySymbol });
-            }
-        }
-        function triggerXOBotBrain() {
-            let botSymbol = mySymbol === "X" ? "O" : "X"; let move = null;
-            if (botDifficulty === "easy") {
-                let av = localXOBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-                move = av[Math.floor(Math.random() * av.length)];
-            } else {
-                move = findBestXOMove(botSymbol) || findBestXOMove(mySymbol);
-                if (move === null) {
-                    let av = localXOBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-                    move = av[Math.floor(Math.random() * av.length)];
-                }
-            }
-            if(move !== null) {
-                localXOBoard[move] = botSymbol; renderXOFrontUI();
-                if (checkClientWin(localXOBoard, botSymbol)) return endBotRound("❌ البوت انتصر!");
-                if (!localXOBoard.includes("")) return endBotRound("تعادل");
-                currentTurn = mySymbol; updateBotUIState();
-            }
-        }
-        function endBotRound(res) { alert(res); currentRound++; localXOBoard.fill(""); currentTurn = "X"; clearXOFrontBoard(); updateBotUIState(); }
-        function findBestXOMove(sym) {
-            const w = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-            for (let comb of w) {
-                let counts = comb.map(idx => localXOBoard[idx]);
-                if (counts.filter(v => v === sym).length === 2 && counts.filter(v => v === "").length === 1) return comb[counts.indexOf("")];
-            }
-            return null;
-        }
-        function checkClientWin(b, s) { return [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(p => b[p[0]] === s && b[p[1]] === s && b[p[2]] === s); }
-        function renderXOFrontUI() { localXOBoard.forEach((v, i) => { const c = document.getElementById(`cell-${i}`); c.innerText = v; c.className = `bg-gray-950 text-4xl font-black rounded-xl h-full w-full border border-gray-800 ${v==='X'?'text-cyan-400':'text-rose-500'}`; }); }
-        function clearXOFrontBoard() { for(let i=0;i<9;i++) document.getElementById(`cell-${i}`).innerText = ""; }
-        function sendXOLocalChatMessage() {
-            const input = document.getElementById('xoChatMsgInput'); if(!input.value.trim()) return;
-            socket.emit('sendXOChatMessage', { roomCode: currentRoom, sender: myUsername, message: input.value.trim() });
-            input.value = "";
-        }
-        socket.on('receiveXOChatMessage', (data) => {
-            const container = document.getElementById('xoChatMessagesWrapper');
-            container.innerHTML += `<div class="bg-gray-900/80 p-2 rounded-xl border border-gray-800 text-right"><span class="text-amber-400 font-bold">${data.sender}:</span> <span class="text-white ml-1">${data.message}</span></div>`;
-            container.scrollTop = container.scrollHeight;
-        });
-        function startXORoomOnline() { gameMode = "online"; currentRoom = document.getElementById('customRoomCode').value.trim(); if(!currentRoom) return alert("أدخل رمز الغرفة!"); document.getElementById('xoChatBoxContainer').classList.remove('hidden'); socket.emit('joinXOGame', { roomCode: currentRoom, username: myUsername }); switchScreen('lobbyArea', 'xoPlayArea'); clearXOFrontBoard(); }
-        socket.on('xoInit', (data) => { mySymbol = data.symbol; });
-        socket.on('xoStart', (data) => { currentTurn = data.turn; document.getElementById('xoRoundWidget').innerText = `الجولة: ${data.round}`; document.getElementById('xoTurnStatus').innerText = currentTurn === mySymbol ? "دورك الآن!" : "انتظر الخصم..."; });
-        socket.on('xoUpdate', (data) => { currentTurn = data.turn; data.board.forEach((v, i) => { document.getElementById(`cell-${i}`).innerText = v; }); document.getElementById('xoTurnStatus').innerText = currentTurn === mySymbol ? "دورك الآن!" : "انتظر الخصم..."; });
-        socket.on('xoRoundEnd', (data) => { alert(`انتهاء الجولة! الفائز: ${data.winnerSymbol}`); document.getElementById('xoRoundWidget').innerText = `الجولة: ${data.round}`; clearXOFrontBoard(); });
-
-        // ================= [ نظام الدودة والحلويات ] =================
-        function startSnakeRoomOnline() { isOfflineMode = false; currentRoom = document.getElementById('customRoomCode').value.trim(); if(!currentRoom) return alert("أدخل الرمز!"); resizeCanvas(); switchScreen('lobbyArea', 'snakeCanvasArea'); socket.emit('joinSnakeRoom', { roomCode: currentRoom, username: myUsername, color: myColor }); }
-        socket.on('snakeRoomUpdate', (data) => { if(isOfflineMode) return; currentCandies = data.candies; currentPlayers = data.players; currentBots = data.bots; currentMagnets = data.magnets || []; drawSnakeGame(currentPlayers[socket.id]); });
-        
-        function startSnakeOfflineMode() {
-            isOfflineMode = true; resizeCanvas(); switchScreen('lobbyArea', 'snakeCanvasArea');
-            offlineCandies = []; 
-            for(let i=0; i<600; i++) { offlineCandies.push({ x: Math.floor(Math.random()*(MAP_SIZE/20))*20, y: Math.floor(Math.random()*(MAP_SIZE/20))*20 }); }
-            offlineBots = []; const botColors = ["#ec4899", "#f59e0b", "#10b981", "#ef4444"];
-            for(let i=1; i<=4; i++) {
-                let rx = Math.floor(Math.random()*80 + 20)*20, ry = Math.floor(Math.random()*80 + 20)*20;
-                let body = []; for(let l=0; l<15; l++) body.push({ x: rx, y: ry + (l*20) });
-                offlineBots.push({ id: i, username: `🤖 بوت عملاق ${i}`, color: botColors[i-1], body: body, direction: "UP", score: 200, isDead: false });
-            }
-            offlineLoopInterval = setInterval(updateOfflineLogic, 100);
-        }
-        
-        function updateOfflineLogic() {
-            let head = { ...offlinePlayer.body[0] };
-            if (offlinePlayer.direction === "UP") head.y -= 20; if (offlinePlayer.direction === "DOWN") head.y += 20; if (offlinePlayer.direction === "LEFT") head.x -= 20; if (offlinePlayer.direction === "RIGHT") head.x += 20;
-            if (head.x < 0 || head.x >= MAP_SIZE || head.y < 0 || head.y >= MAP_SIZE) { resetOfflinePlayer(); return; }
-            let ate = false;
-            for(let i=offlineCandies.length-1; i>=0; i--) {
-                let c = offlineCandies[i]; if(Math.abs(head.x - c.x) < 20 && Math.abs(head.y - c.y) < 20) { offlinePlayer.score += 10; offlineCandies.splice(i, 1); ate = true; offlineCandies.push({ x: Math.floor(Math.random()*(MAP_SIZE/20))*20, y: Math.floor(Math.random()*(MAP_SIZE/20))*20 }); break; }
-            }
-            if(!ate) offlinePlayer.body.pop(); offlinePlayer.body.unshift(head);
-            drawSnakeGame(offlinePlayer);
-        }
-        function resetOfflinePlayer() { offlinePlayer.body = [{x: 1000, y: 1000}]; offlinePlayer.score = 0; offlinePlayer.direction = "RIGHT"; }
-        
-        function drawSnakeGame(focusPlayer) {
-            let offsetX = 0, offsetY = 0;
-            if (focusPlayer && focusPlayer.body[0]) { offsetX = canvas.width / 2 - focusPlayer.body[0].x; offsetY = canvas.height / 2 - focusPlayer.body[0].y; document.getElementById('snakeLiveScore').innerText = `عداد نقاطك: ${focusPlayer.score}`; }
-            ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.save(); ctx.translate(offsetX, offsetY);
-            ctx.fillStyle = "#0c1322"; ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
-            let candies = isOfflineMode ? offlineCandies : currentCandies;
-            candies.forEach(c => { ctx.fillStyle = "#f43f5e"; ctx.beginPath(); ctx.arc(c.x + 10, c.y + 10, 8, 0, 2*Math.PI); ctx.fill(); });
-            if(isOfflineMode) {
-                offlinePlayer.body.forEach((seg, index) => { ctx.fillStyle = myColor; ctx.beginPath(); ctx.arc(seg.x + 10, seg.y + 10, index === 0 ? 13 : 10, 0, 2 * Math.PI); ctx.fill(); });
-            } else {
-                let allEntities = { ...currentPlayers, ...currentBots };
-                for (let id in allEntities) {
-                    let ent = allEntities[id]; ent.body.forEach((seg, idx) => { ctx.fillStyle = ent.color; ctx.beginPath(); ctx.arc(seg.x + 10, seg.y + 10, idx === 0 ? 13 : 10, 0, 2 * Math.PI); ctx.fill(); });
-                }
-            }
-            ctx.restore();
-        }
-
-        window.addEventListener("keydown", (e) => {
-            let dir = "";
-            if (e.key === "ArrowUp" || e.key === "w") dir = "UP"; if (e.key === "ArrowDown" || e.key === "s") dir = "DOWN"; if (e.key === "ArrowLeft" || e.key === "a") dir = "LEFT"; if (e.key === "ArrowRight" || e.key === "d") dir = "RIGHT";
-            if(dir) { if(isOfflineMode) offlinePlayer.direction = dir; else socket.emit('snakeRoomDirection', { roomCode: currentRoom, direction: dir }); }
-        });
-
-        function exitToHubDirectly(currentAreaId) {
-            if(offlineLoopInterval) clearInterval(offlineLoopInterval);
-            if(!isOfflineMode) {
-                if(currentAreaId === 'xoPlayArea') socket.emit('leaveXORoom', { roomCode: currentRoom, username: myUsername });
-                if(currentAreaId === 'snakeCanvasArea') socket.emit('leaveSnakeRoom', { roomCode: currentRoom, username: myUsername });
-                if(currentAreaId === 'chessPlayArea') socket.emit('leaveChessRoom', { roomCode: currentRoom, username: myUsername });
-            }
-            document.getElementById(currentAreaId).classList.add('hidden');
-            document.getElementById('gameHub').classList.remove('hidden');
-        }
         function exitToHubFromMenu() { switchScreen('lobbyArea', 'gameHub'); }
+        
+        function exitToHubDirectly(screenId) { 
+            if(screenId === 'snakeCanvasArea') { clearInterval(snakeGameInterval); clearInterval(magnetIntervalId); }
+            switchScreen(screenId, 'gameHub'); 
+        }
+
+        // ================= [ الأنظمة الفائقة لساحة الدودة المحسنة للهواتف ] =================
+        function startSnakeOfflineMode() {
+            switchScreen('lobbyArea', 'snakeCanvasArea');
+            resizeCanvas();
+            initSnakePlayer();
+            spawnGiantBots();
+            refillCandies();
+
+            // دورة تحديث اللعبة ومزامنة الـ 100 مللي ثانية
+            if(snakeGameInterval) clearInterval(snakeGameInterval);
+            snakeGameInterval = setInterval(updateSnakeGameLogic, 100);
+
+            // تدوير ظهور المغناطيس العشوائي كل 10 ثوانٍ
+            if(magnetIntervalId) clearInterval(magnetIntervalId);
+            magnetIntervalId = setInterval(() => {
+                if(magnets.length < 2) {
+                    magnets.push({
+                        x: Math.floor(Math.random() * (MAP_SIZE / GRID_SIZE)) * GRID_SIZE,
+                        y: Math.floor(Math.random() * (MAP_SIZE / GRID_SIZE)) * GRID_SIZE
+                    });
+                }
+            }, 10000);
+        }
+
+        function initSnakePlayer() {
+            player.body = [];
+            player.direction = "RIGHT"; player.nextDirection = "RIGHT"; player.score = 0; player.magnetTimer = 0;
+            let startX = 1500, startY = 1500;
+            for(let i = 0; i < 20; i++) { player.body.push({ x: startX - (i * GRID_SIZE), y: startY }); }
+            player.score = player.body.length * 10;
+        }
+
+        function spawnGiantBots() {
+            const names = ["🤖 الفولاذي", "🤖 غول الساحة", "🤖 النيون العملاق", "🤖 كاسر النقاط"];
+            const colors = ["#ec4899", "#eab308", "#10b981", "#ef4444"];
+            bots = [];
+            for(let i = 0; i < 4; i++) {
+                let rx = Math.floor(Math.random() * (MAP_SIZE - 400) + 200);
+                let ry = Math.floor(Math.random() * (MAP_SIZE - 400) + 200);
+                let body = [];
+                for(let l = 0; l < 50; l++) { body.push({ x: rx, y: ry + (l * GRID_SIZE) }); }
+                bots.push({ username: names[i], color: colors[i], body: body, direction: "UP", score: body.length * 10, isDead: false });
+            }
+        }
+
+        function refillCandies() {
+            while(candies.length < 500) {
+                candies.push({
+                    x: Math.floor(Math.random() * (MAP_SIZE / GRID_SIZE)) * GRID_SIZE,
+                    y: Math.floor(Math.random() * (MAP_SIZE / GRID_SIZE)) * GRID_SIZE,
+                    value: 10, size: 6
+                });
+            }
+        }
+
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resizeCanvas);
+
+        // التحكم بالكيبورد للكمبيوتر
+        window.addEventListener("keydown", (e) => {
+            if ((e.key === "ArrowUp" || e.key === "w") && player.direction !== "DOWN") player.nextDirection = "UP";
+            if ((e.key === "ArrowDown" || e.key === "s") && player.direction !== "UP") player.nextDirection = "DOWN";
+            if ((e.key === "ArrowLeft" || e.key === "a") && player.direction !== "RIGHT") player.nextDirection = "LEFT";
+            if ((e.key === "ArrowRight" || e.key === "d") && player.direction !== "LEFT") player.nextDirection = "RIGHT";
+        });
+
+        // التحكم باللمس للأزرار (الهاتف)
+        function changeDirectionTouch(dir) {
+            if (dir === "UP" && player.direction !== "DOWN") player.nextDirection = "UP";
+            if (dir === "DOWN" && player.direction !== "UP") player.nextDirection = "DOWN";
+            if (dir === "LEFT" && player.direction !== "RIGHT") player.nextDirection = "LEFT";
+            if (dir === "RIGHT" && player.direction !== "LEFT") player.nextDirection = "RIGHT";
+        }
+
+        // التحكم بالسحب (Swipe) للشاشة بالكامل للهواتف
+        let startTouchX = 0, startTouchY = 0;
+        window.addEventListener("touchstart", (e) => {
+            startTouchX = e.touches[0].clientX; startTouchY = e.touches[0].clientY;
+        }, { passive: true });
+        window.addEventListener("touchmove", (e) => {
+            if (!startTouchX || !startTouchY) return;
+            let diffX = e.touches[0].clientX - startTouchX;
+            let diffY = e.touches[0].clientY - startTouchY;
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (diffX > 30 && player.direction !== "LEFT") player.nextDirection = "RIGHT";
+                else if (diffX < -30 && player.direction !== "RIGHT") player.nextDirection = "LEFT";
+            } else {
+                if (diffY > 30 && player.direction !== "UP") player.nextDirection = "DOWN";
+                else if (diffY < -30 && player.direction !== "DOWN") player.nextDirection = "UP";
+            }
+        }, { passive: true });
+
+        function updateSnakeGameLogic() {
+            player.direction = player.nextDirection;
+            let head = { ...player.body[0] };
+            if (player.direction === "UP") head.y -= GRID_SIZE;
+            if (player.direction === "DOWN") head.y += GRID_SIZE;
+            if (player.direction === "LEFT") head.x -= GRID_SIZE;
+            if (player.direction === "RIGHT") head.x += GRID_SIZE;
+
+            if (head.x < 0 || head.x >= MAP_SIZE || head.y < 0 || head.y >= MAP_SIZE) { initSnakePlayer(); return; }
+            player.body.unshift(head);
+
+            // عداد المغناطيس وتأثيره الـ 6 ثواني
+            if (player.magnetTimer > 0) {
+                player.magnetTimer -= 0.1;
+                document.getElementById("magnetStatusWidget").classList.remove("hidden");
+                document.getElementById("magnetSecondsLeft").innerText = Math.ceil(player.magnetTimer);
+            } else { document.getElementById("magnetStatusWidget").classList.add("hidden"); }
+
+            for(let i = magnets.length - 1; i >= 0; i--) {
+                if (Math.abs(head.x - magnets[i].x) < GRID_SIZE && Math.abs(head.y - magnets[i].y) < GRID_SIZE) {
+                    player.magnetTimer = 6; magnets.splice(i, 1);
+                }
+            }
+
+            let ate = false;
+            for(let i = candies.length - 1; i >= 0; i--) {
+                let c = candies[i];
+                let dist = Math.hypot((head.x + 10) - (c.x + 10), (head.y + 10) - (c.y + 10));
+                if (player.magnetTimer > 0 && dist < 180) {
+                    c.x += ((head.x - c.x) * 0.25); c.y += ((head.y - c.y) * 0.25);
+                }
+                if (dist < GRID_SIZE) { player.score += c.value; candies.splice(i, 1); ate = true; }
+            }
+            if(!ate) player.body.pop();
+
+            // منطق حركة البوتات والقتل والسرقة والتجدد العشوائي للحلويات
+            bots.forEach(bot => {
+                if (bot.isDead) return;
+                let bHead = { ...bot.body[0] };
+                if (Math.random() < 0.15 && candies.length > 0) {
+                    let nearest = candies[0];
+                    if (nearest.x > bHead.x && bot.direction !== "LEFT") bot.direction = "RIGHT";
+                    else if (nearest.x < bHead.x && bot.direction !== "RIGHT") bot.direction = "LEFT";
+                    else if (nearest.y > bHead.y && bot.direction !== "UP") bot.direction = "DOWN";
+                    else if (nearest.y < bHead.y && bot.direction !== "DOWN") bot.direction = "UP";
+                }
+
+                if (bot.direction === "UP") bHead.y -= GRID_SIZE;
+                if (bot.direction === "DOWN") bHead.y += GRID_SIZE;
+                if (bot.direction === "LEFT") bHead.x -= GRID_SIZE;
+                if (bot.direction === "RIGHT") bHead.x += GRID_SIZE;
+
+                if (bHead.x < 0 || bHead.x >= MAP_SIZE || bHead.y < 0 || bHead.y >= MAP_SIZE) {
+                    explodeBot(bot.body); bot.isDead = true; return;
+                }
+
+                player.body.forEach(seg => {
+                    if (Math.abs(bHead.x - seg.x) < GRID_SIZE && Math.abs(bHead.y - seg.y) < GRID_SIZE) {
+                        explodeBot(bot.body); bot.isDead = true;
+                    }
+                });
+
+                if (bot.isDead) return;
+                bot.body.unshift(bHead);
+                let bAte = false;
+                if (Math.abs(bHead.x - candies[0].x) < GRID_SIZE && Math.abs(bHead.y - candies[0].y) < GRID_SIZE) {
+                    bot.score += 10; candies.splice(0, 1); bAte = true;
+                }
+                if(!bAte) bot.body.pop();
+            });
+
+            bots = bots.filter(b => !b.isDead);
+            if(bots.length < 4) spawnGiantBots();
+            refillCandies();
+            renderSnakeMap();
+        }
+
+        function explodeBot(body) {
+            body.forEach((seg, idx) => {
+                if(idx % 2 === 0) candies.push({ x: seg.x, y: seg.y, value: 40, size: 12 });
+            });
+        }
+
+        function renderSnakeMap() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let camX = canvas.width / 2 - player.body[0].x;
+            let camY = canvas.height / 2 - player.body[0].y;
+            ctx.save(); ctx.translate(camX, camY);
+
+            ctx.fillStyle = "#09101f"; ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
+
+            candies.forEach(c => {
+                ctx.fillStyle = c.size > 8 ? "#22c55e" : "#f43f5e";
+                ctx.beginPath(); ctx.arc(c.x+10, c.y+10, c.size, 0, 2*Math.PI); ctx.fill();
+            });
+
+            magnets.forEach(m => { ctx.font = "20px Arial"; ctx.fillText("🧲", m.x, m.y + 18); });
+
+            bots.forEach(bot => {
+                bot.body.forEach(seg => {
+                    ctx.fillStyle = bot.color; ctx.beginPath(); ctx.arc(seg.x+10, seg.y+10, 10, 0, 2*Math.PI); ctx.fill();
+                });
+            });
+
+            player.body.forEach((seg, idx) => {
+                ctx.fillStyle = player.color; ctx.beginPath(); ctx.arc(seg.x+10, seg.y+10, idx===0?14:11, 0, 2*Math.PI); ctx.fill();
+                if(player.magnetTimer > 0 && idx === 0) {
+                    ctx.strokeStyle = "#e0218a"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(seg.x+10, seg.y+10, 24, 0, 2*Math.PI); ctx.stroke();
+                }
+            });
+
+            ctx.restore();
+            document.getElementById("snakeLiveScore").innerText = `النقاط: ${player.score}`;
+            
+            let list = [{name: player.username, score: player.score}];
+            bots.forEach(b=>list.push({name: b.username, score: b.score}));
+            list.sort((a,b)=>b.score-a.score);
+            document.getElementById("snakeLiveLeaderboard").innerHTML = list.map(li=>`<div class='truncate'>• ${li.name}: ${li.score}</div>`).join('');
+        }
     </script>
 </body>
 </html>

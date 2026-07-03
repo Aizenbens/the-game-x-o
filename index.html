@@ -102,9 +102,6 @@
             <span class="text-cyan-400" id="snakeLiveScore">0</span>
             <button onclick="exitGame('snakeCanvasArea')" class="bg-red-950/80 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-md text-[8px]">خروج</button>
         </div>
-        <div class="absolute top-4 right-4 z-50 cyber-panel p-2 rounded-xl w-36 text-[8px] shadow-2xl max-h-[20vh] opacity-85 flex flex-col pointer-events-none">
-            <div id="snakeLiveLeaderboard" class="space-y-0.5 overflow-y-auto flex-1 font-bold"></div>
-        </div>
         <canvas id="snakeFullScreenCanvas"></canvas>
     </div>
 
@@ -131,7 +128,6 @@
             document.getElementById('gameHub').classList.remove('hidden');
             document.getElementById('globalChatAndUsersPanel').classList.remove('hidden');
             
-            // ربط تلقائي بغرفة انتظار افتراضية مشفرة عند تشغيل الموقع للمرة الأولى
             if(!currentRoomCode) currentRoomCode = "LOBBY_GLOBAL";
             socket.emit('joinRoom', { roomCode: currentRoomCode, username: myUsername, color: myColor, isSnakeMode: false });
         }
@@ -156,7 +152,7 @@
             document.getElementById('gameHub').classList.add('hidden');
             
             if(game === 'snake') {
-                document.getElementById('globalChatAndUsersPanel').classList.add('hidden'); // إخفاء الشات لعدم تشتيت اللعب بالدودة
+                document.getElementById('globalChatAndUsersPanel').classList.add('hidden'); 
                 document.getElementById('snakeCanvasArea').classList.remove('hidden');
                 socket.emit('joinRoom', { roomCode: currentRoomCode, username: myUsername, color: myColor, isSnakeMode: true });
                 startSuperSnakeOnline();
@@ -169,7 +165,6 @@
             }
         }
 
-        // إستقبال الرسائل وبثها في لوحة الشات فورا
         function sendChatMessageToServer() {
             const input = document.getElementById('chatMessageInputField');
             const txt = input.value.trim();
@@ -191,7 +186,6 @@
             container.scrollTop = container.scrollHeight;
         });
 
-        // مزامنة تحديثات الغرفة و المتصلين
         socket.on('roomUpdate', (data) => {
             if (targetGame === 'snake' && data.candies) {
                 candies = data.candies;
@@ -214,7 +208,7 @@
             }
         });
 
-        // ================= [ ذكاء واونلاين لـ XO ] =================
+        // ================= [ XO ] =================
         function initXOMatch() {
             xoBoard = Array(9).fill(null); xoGameActive = true;
             for(let i=0; i<9; i++) document.getElementById(`cell-${i}`).innerText = "";
@@ -244,7 +238,7 @@
             return wins.some(combo => combo.every(idx => xoBoard[idx] === sym));
         }
 
-        // ================= [ ذكاء واونلاين الشطرنج ] =================
+        // ================= [ الشطرنج ] =================
         function initChessMatch() { chessInstance = new Chess(); renderChessUI(); }
         function renderChessUI() {
             const boardEl = document.getElementById("chessBoard"); boardEl.innerHTML = "";

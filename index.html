@@ -9,15 +9,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #02040a; font-family: 'Tajawal', sans-serif; -webkit-user-select: none; user-select: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #02040a; font-family: 'Tajawal', sans-serif; user-select: none; }
         canvas { display: block; width: 100vw; height: 100vh; position: absolute; top:0; left:0; z-index: 1; }
-        .cyber-panel { background: rgba(5, 8, 16, 0.9); backdrop-filter: blur(30px); border: 1px solid rgba(139, 92, 246, 0.25); box-shadow: 0 25px 60px rgba(0,0,0,0.85), inset 0 0 20px rgba(139, 92, 246, 0.05); }
+        .cyber-panel { background: rgba(5, 8, 16, 0.9); backdrop-filter: blur(30px); border: 1px solid rgba(139, 92, 246, 0.25); box-shadow: 0 25px 60px rgba(0,0,0,0.85); }
         .neon-glow-purple { text-shadow: 0 0 12px rgba(168, 85, 247, 0.7); }
-        .game-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .game-card { transition: all 0.3s ease; cursor: pointer; }
         .game-card:hover { background: rgba(139, 92, 246, 0.1) !important; border-color: #a855f7 !important; }
-        .game-card:active { transform: scale(0.95); }
-        * { -webkit-tap-highlight-color: transparent; outline: none; box-sizing: border-box; }
         .bg-grid { background-size: 40px 40px; background-image: linear-gradient(to right, rgba(255, 255, 255, 0.01) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.01) 1px, transparent 1px); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #3b0764; border-radius: 10px; }
     </style>
 </head>
 <body class="text-gray-200 h-full flex flex-col justify-between bg-grid">
@@ -25,411 +25,287 @@
     <div id="loginScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 bg-[#010206]">
         <div class="cyber-panel p-6 rounded-3xl w-full max-w-sm text-center space-y-5 border border-purple-500/20">
             <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-500 to-indigo-500 neon-glow-purple">DARK ARENA</h2>
-            <input type="text" id="usernameInput" class="w-full p-4 rounded-2xl bg-[#070b14] border border-gray-800 text-center text-white font-bold placeholder-gray-600 focus:border-purple-500 transition-all shadow-inner" placeholder="اسمك المستعار...">
+            <input type="text" id="usernameInput" class="w-full p-4 rounded-2xl bg-[#070b14] border border-gray-800 text-center text-white font-bold" placeholder="اسمك المستعار...">
             <div class="text-right bg-[#04060c] p-4 rounded-2xl border border-gray-900">
-                <label class="text-xs text-purple-400 block mb-1.5 font-bold">🎨 لون الهالة السيبرانية:</label>
-                <input type="color" id="snakeColorInput" class="w-full h-10 p-1 rounded-xl bg-gray-950 border border-gray-800 cursor-pointer" value="#a855f7">
+                <label class="text-xs text-purple-400 block mb-1.5 font-bold">🎨 لون الهالة الافتراضي:</label>
+                <input type="color" id="snakeColorInput" class="w-full h-10 rounded-xl bg-gray-950 border border-gray-800 cursor-pointer" value="#a855f7">
             </div>
-            <button onclick="connectToHub()" onpointerdown="connectToHub()" class="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 font-black p-4 rounded-2xl text-white tracking-wider shadow-lg active:scale-95 transition-all">اتصال مـشـفـر</button>
+            <button onclick="connectToHub()" class="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 font-black p-4 rounded-2xl text-white">اتصال مـشـفـر</button>
+        </div>
+    </div>
+
+    <div id="globalChatAndUsersPanel" class="hidden fixed bottom-4 right-4 left-4 md:left-auto md:w-80 z-40 flex flex-col gap-3">
+        <div class="cyber-panel p-3 rounded-2xl border border-cyan-500/20 max-h-24 overflow-y-auto">
+            <div class="text-[10px] text-cyan-400 font-black mb-1 flex items-center gap-1">🟢 المتصلون بالاتصال المشفر (<span id="connectedUsersCount">0</span>):</div>
+            <div id="connectedUsersList" class="flex flex-wrap gap-1 text-[9px] font-bold"></div>
+        </div>
+        <div class="cyber-panel p-3 rounded-2xl border border-purple-500/20 flex flex-col h-44">
+            <div id="chatMessagesContainer" class="flex-1 overflow-y-auto space-y-1 text-[10px] p-1 bg-black/40 rounded-xl mb-2 text-right"></div>
+            <div class="flex gap-1.5">
+                <input type="text" id="chatMessageInputField" class="flex-1 bg-[#060a12] text-[10px] px-3 py-2 rounded-xl border border-gray-800 text-white" placeholder="اكتب رسالة مشفرة للغرفة..." onkeydown="if(event.key==='Enter') sendChatMessageToServer()">
+                <button onclick="sendChatMessageToServer()" class="bg-purple-900/80 text-purple-200 text-[10px] font-bold px-3 rounded-xl border border-purple-600/30">إرسال</button>
+            </div>
         </div>
     </div>
 
     <div id="gameHub" class="hidden flex-1 flex flex-col p-4 gap-4 h-full overflow-hidden z-10 bg-[#02040a]/80 justify-center items-center">
         <div class="cyber-panel p-6 rounded-3xl w-full max-w-md text-center space-y-4">
-            <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-purple-400 to-indigo-500">منصة التحكم بالغرف</h1>
+            <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-purple-400 to-indigo-500">منصة التحكم بالغرف أونلاين</h1>
             
             <div class="w-full bg-black/40 p-3 rounded-xl border border-gray-900 flex flex-col gap-2">
-                <button onclick="createNewPrivateRoom()" class="w-full bg-emerald-900/60 border border-emerald-500/40 text-emerald-300 py-2 rounded-xl text-xs font-bold">🛠️ إنشاء غرفة خاصة جديدة</button>
+                <button onclick="createNewPrivateRoom()" class="w-full bg-emerald-900/60 border border-emerald-500/40 text-emerald-300 py-2 rounded-xl text-xs font-bold">🛠️ إنشاء غرفة أونلاين جديدة</button>
                 <div class="flex gap-2">
-                    <input type="text" id="joinRoomCodeInput" class="flex-1 bg-[#050811] text-xs p-2 rounded-xl border border-gray-800 text-center text-white" placeholder="أدخل كود الغرفة المكون من 6 أرقام">
-                    <button onclick="joinPrivateRoomByCode()" class="bg-purple-900/60 text-purple-300 text-xs font-bold px-4 rounded-xl">دخول</button>
+                    <input type="text" id="joinRoomCodeInput" class="flex-1 bg-[#050811] text-xs p-2 rounded-xl border border-gray-800 text-center text-white" placeholder="أدخل كود الغرفة (6 أرقام)">
+                    <button onclick="joinPrivateRoomByCode()" class="bg-purple-900/60 text-purple-300 text-xs font-bold px-4 rounded-xl">تأكيد الكود</button>
                 </div>
-            </div>
-
-            <div class="w-full text-right">
-                <label class="text-[10px] text-gray-500 font-bold block mb-1">🤖 مستوى ذكاء البوت (في حال اللعب الفردي):</label>
-                <select id="botDifficultySelector" class="w-full bg-[#050811] text-xs p-2.5 rounded-xl border border-gray-800 text-purple-300 font-bold">
-                    <option value="medium">🤖 بوت متوسط (متزن)</option>
-                    <option value="strong">⚡ بوت قوي (هجومي ذكي)</option>
-                    <option value="expert">💀 بوت خبير (لا يرحم)</option>
-                </select>
             </div>
 
             <div class="flex flex-col gap-3 w-full">
                 <div onclick="selectGameMode('xo')" class="game-card cyber-panel border-amber-500/20 py-3.5 rounded-xl text-amber-500 font-bold bg-black/40 flex items-center justify-center gap-3">
-                    <span class="text-xl">❌⭕</span> <span class="text-xs tracking-widest">تحدي XO السيبراني</span>
+                    <span>❌⭕</span> <span>تحدي XO السيبراني (أونلاين)</span>
                 </div>
                 <div onclick="selectGameMode('chess')" class="game-card cyber-panel border-purple-500/20 py-3.5 rounded-xl text-purple-400 font-bold bg-black/40 flex items-center justify-center gap-3">
-                    <span class="text-xl">👑</span> <span class="text-xs tracking-widest">شطرنج التكتيك أونلاين</span>
+                    <span>👑</span> <span>شطرنج التكتيك (أونلاين)</span>
                 </div>
                 <div onclick="selectGameMode('snake')" class="game-card cyber-panel border-cyan-500/20 py-3.5 rounded-xl text-cyan-400 font-bold bg-black/40 flex items-center justify-center gap-3">
-                    <span class="text-xl">🐍</span> <span class="text-xs tracking-widest">ساحة الـ 10 بوتات الذكية (استخدم الأسهم ⌨️)</span>
+                    <span>🐍</span> <span>ساحة الدودة أونلاين الجماعية</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="lobbyScreen" class="hidden fixed inset-0 z-50 bg-[#010206] flex flex-col items-center justify-center p-4">
-        <div class="cyber-panel p-6 rounded-3xl w-full max-w-sm text-center space-y-5 border border-purple-500/20">
-            <h3 class="text-xl font-black text-purple-400">غرفة الانتظار المشفّرة</h3>
-            <div class="bg-black/60 p-4 rounded-xl border border-gray-900 space-y-2">
-                <p class="text-[10px] text-gray-500">شارك هذا الكود أو الرابط مع صديقك للدخول فوراً:</p>
-                <div id="displayRoomCode" class="text-2xl font-black tracking-widest text-cyan-400 select-all">000000</div>
-                <button onclick="copyRoomLink()" class="w-full bg-gray-900 border border-gray-800 text-[10px] py-1.5 rounded-lg text-gray-300">📋 نسخ رابط الدعوة المباشر</button>
-            </div>
-            <div class="text-right text-xs space-y-1">
-                <div class="text-gray-400">اللاعب 1: <span id="p1Name" class="text-white font-bold">في الانتظار...</span></div>
-                <div class="text-gray-400">اللاعب 2: <span id="p2Name" class="text-white font-bold">في الانتظار...</span></div>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="startPrivateMatchWithFriend()" id="startMatchBtn" class="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 font-black p-3 rounded-xl text-white text-xs opacity-50 cursor-not-allowed" disabled>ابدأ المواجهة أونلاين</button>
-                <button onclick="startPrivateMatchWithBot()" class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 font-black p-3 rounded-xl text-white text-xs">اللعب ضد البوت المحدد</button>
-            </div>
-            <button onclick="backToHub()" class="text-xs text-red-400 block mx-auto">إلغاء والعودة للقائمة</button>
-        </div>
-    </div>
-
-    <div id="xoPlayArea" class="hidden fixed inset-0 z-50 bg-[#010307] flex flex-col items-center justify-center p-4">
+    <div id="xoPlayArea" class="hidden fixed inset-0 z-30 bg-[#010307] flex flex-col items-center justify-center p-4">
         <h3 id="xoTurnStatus" class="text-xs font-black mb-5 text-amber-400 bg-gray-950 px-5 py-1.5 rounded-full border border-gray-900">دورك الآن...</h3>
-        <div class="grid grid-cols-3 gap-2.5 w-64 h-64 bg-[#050811] p-2.5 rounded-2xl border border-gray-900 shadow-2xl">
-            <button onclick="clickXOCell(0)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 border border-gray-950 h-full w-full" id="cell-0"></button>
-            <button onclick="clickXOCell(1)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 border border-gray-950 h-full w-full" id="cell-1"></button>
-            <button onclick="clickXOCell(2)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 border border-gray-950 h-full w-full" id="cell-2"></button>
-            <button onclick="clickXOCell(3)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 border border-gray-950 h-full w-full" id="cell-3"></button>
-            <button onclick="clickXOCell(4)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 border border-gray-950 h-full w-full" id="cell-4"></button>
-            <button onclick="clickXOCell(5)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 border border-gray-950 h-full w-full" id="cell-5"></button>
-            <button onclick="clickXOCell(6)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 border border-gray-950 h-full w-full" id="cell-6"></button>
-            <button onclick="clickXOCell(7)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 border border-gray-950 h-full w-full" id="cell-7"></button>
-            <button onclick="clickXOCell(8)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 border border-gray-950 h-full w-full" id="cell-8"></button>
+        <div class="grid grid-cols-3 gap-2.5 w-64 h-64 bg-[#050811] p-2.5 rounded-2xl border border-gray-900">
+            <button onclick="clickXOCell(0)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-0"></button>
+            <button onclick="clickXOCell(1)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-1"></button>
+            <button onclick="clickXOCell(2)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-2"></button>
+            <button onclick="clickXOCell(3)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-3"></button>
+            <button onclick="clickXOCell(4)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-4"></button>
+            <button onclick="clickXOCell(5)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-5"></button>
+            <button onclick="clickXOCell(6)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-6"></button>
+            <button onclick="clickXOCell(7)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-7"></button>
+            <button onclick="clickXOCell(8)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-8"></button>
         </div>
-        <button onclick="exitGame('xoPlayArea')" class="mt-5 bg-red-950/40 border border-red-500/30 text-red-400 px-6 py-2 rounded-xl font-bold text-xs">انسحاب</button>
+        <button onclick="exitGame('xoPlayArea')" class="mt-5 bg-red-950/40 border border-red-500/30 text-red-400 px-6 py-2 rounded-xl text-xs font-bold">انسحاب</button>
     </div>
 
-    <div id="chessPlayArea" class="hidden fixed inset-0 z-50 bg-[#010307] flex flex-col items-center justify-center p-4">
-        <div id="chessStatus" class="mb-4 text-[10px] font-black bg-purple-950/40 px-3 py-1.5 rounded-full border border-purple-500/20">شطرنج الذكاء المطور</div>
+    <div id="chessPlayArea" class="hidden fixed inset-0 z-30 bg-[#010307] flex flex-col items-center justify-center p-4">
+        <div id="chessStatus" class="mb-4 text-xs font-black bg-purple-950/40 px-4 py-1.5 rounded-full border border-purple-500/20 text-purple-300">شطرنج الأنظمة المطورة</div>
         <div id="chessBoard" class="grid grid-cols-8 grid-rows-8 w-80 h-80 bg-gray-950 border-4 border-purple-950 rounded-xl overflow-hidden shadow-2xl"></div>
-        <button onclick="exitGame('chessPlayArea')" class="mt-5 bg-red-950/40 border border-red-500/30 text-red-400 px-6 py-2 rounded-xl font-bold text-xs">انسحاب</button>
+        <button onclick="exitGame('chessPlayArea')" class="mt-5 bg-red-950/40 border border-red-500/30 text-red-400 px-6 py-2 rounded-xl text-xs font-bold">انسحاب</button>
     </div>
 
-    <div id="snakeCanvasArea" class="hidden fixed inset-0 z-50 bg-[#010205] flex flex-col overflow-hidden select-none">
+    <div id="snakeCanvasArea" class="hidden fixed inset-0 z-30 bg-[#010205] flex flex-col overflow-hidden select-none">
         <div class="absolute top-4 left-4 z-50 cyber-panel px-2.5 py-1 rounded-xl flex items-center gap-2 text-[10px] font-black shadow-2xl">
-            <span class="text-purple-400">🐍 ARENA</span>
+            <span class="text-purple-400">🐍 ONLINE ARENA</span>
             <span class="text-cyan-400" id="snakeLiveScore">0</span>
-            <span class="text-pink-500 hidden animate-pulse" id="magnetStatusWidget">🧲 <span id="magnetSecondsLeft">6</span>s</span>
             <button onclick="exitGame('snakeCanvasArea')" class="bg-red-950/80 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-md text-[8px]">خروج</button>
         </div>
-        <div class="absolute top-4 right-4 z-50 cyber-panel p-2 rounded-xl w-32 text-[8px] shadow-2xl max-h-[15vh] opacity-75 flex flex-col pointer-events-none">
+        <div class="absolute top-4 right-4 z-50 cyber-panel p-2 rounded-xl w-36 text-[8px] shadow-2xl max-h-[20vh] opacity-85 flex flex-col pointer-events-none">
             <div id="snakeLiveLeaderboard" class="space-y-0.5 overflow-y-auto flex-1 font-bold"></div>
         </div>
         <canvas id="snakeFullScreenCanvas"></canvas>
     </div>
 
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const rCode = urlParams.get('room');
-            if(rCode) {
-                document.getElementById('joinRoomCodeInput').value = rCode;
-            }
-        });
-
         const socket = io();
-        let myUsername = "", myColor = "", currentRoomCode = "", isHost = false, targetGame = "", playingAgainstBot = false;
+        let myUsername = "", myColor = "", currentRoomCode = "", targetGame = "";
         
-        let xoBoard = Array(9).fill(null), xoGameActive = true;
-        let chessInstance = new Chess(), selectedSquare = null;
+        let xoBoard = Array(9).fill(null), xoGameActive = true, mySymbol = "X", isMyTurnXO = true;
+        let chessInstance = new Chess(), selectedSquare = null, chessColor = 'w';
 
         const canvas = document.getElementById("snakeFullScreenCanvas");
         const ctx = canvas.getContext("2d");
         const MAP_SIZE = 2500;
         let GRID_SIZE = 14;
-        let player = { username: "أنت", color: "#a855f7", body: [], direction: "RIGHT", nextDirection: "RIGHT", score: 0, magnetTimer: 0 };
-        let candies = [], bots = [], magnets = [], snakeLoop = null;
+        let player = { body: [], direction: "RIGHT", nextDirection: "RIGHT", score: 250 };
+        
+        let candies = [], bots = [], onlinePlayers = [], snakeLoop = null;
 
         function connectToHub() {
             myUsername = document.getElementById('usernameInput').value.trim();
             myColor = document.getElementById('snakeColorInput').value;
-            if(!myUsername) return alert("الرجاء تحديد هويتك الرقمية أولاً!");
+            if(!myUsername) return alert("الرجاء إدخال اسمك المستعار أولاً!");
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('gameHub').classList.remove('hidden');
-        }
-
-        function selectGameMode(game) {
-            targetGame = game;
-            if(game === 'snake') {
-                document.getElementById('gameHub').classList.add('hidden');
-                document.getElementById('snakeCanvasArea').classList.remove('hidden');
-                startSuperSnakeOnline();
-            } else {
-                openLobbyScreen();
-            }
+            document.getElementById('globalChatAndUsersPanel').classList.remove('hidden');
+            
+            // ربط تلقائي بغرفة انتظار افتراضية مشفرة عند تشغيل الموقع للمرة الأولى
+            if(!currentRoomCode) currentRoomCode = "LOBBY_GLOBAL";
+            socket.emit('joinRoom', { roomCode: currentRoomCode, username: myUsername, color: myColor, isSnakeMode: false });
         }
 
         function createNewPrivateRoom() {
-            if(!targetGame) return alert("يرجى تحديد اللعبة من القائمة بالأسفل أولاً قبل إنشاء الغرفة!");
             currentRoomCode = Math.floor(100000 + Math.random() * 900000).toString();
-            isHost = true;
-            openLobbyScreen();
+            document.getElementById('joinRoomCodeInput').value = currentRoomCode;
+            socket.emit('joinRoom', { roomCode: currentRoomCode, username: myUsername, color: myColor, isSnakeMode: false });
+            alert("تم الانتقال لغرفة مستقلة!\nكود الغرفة: " + currentRoomCode);
         }
 
         function joinPrivateRoomByCode() {
             const code = document.getElementById('joinRoomCodeInput').value.trim();
-            if(code.length !== 6) return alert("الكود غير صالح!");
+            if(code.length !== 6) return alert("الكود غير صحيح!");
             currentRoomCode = code;
-            isHost = false;
-            openLobbyScreen();
+            socket.emit('joinRoom', { roomCode: currentRoomCode, username: myUsername, color: myColor, isSnakeMode: false });
+            alert("تم الانتقال للغرفة الجديدة بنجاح.");
         }
 
-        function openLobbyScreen() {
+        function selectGameMode(game) {
+            targetGame = game;
             document.getElementById('gameHub').classList.add('hidden');
-            document.getElementById('lobbyScreen').classList.remove('hidden');
-            document.getElementById('displayRoomCode').innerText = currentRoomCode || "ساحة فردية";
             
-            if(isHost) {
-                document.getElementById('p1Name').innerText = myUsername;
-                document.getElementById('p2Name').innerText = "في انتظار لاعب حقيقي...";
-            } else {
-                document.getElementById('p1Name').innerText = "مستضيف الغرفة";
-                document.getElementById('p2Name').innerText = myUsername;
-            }
-        }
-
-        function copyRoomLink() {
-            const link = window.location.origin + window.location.pathname + "?room=" + currentRoomCode;
-            navigator.clipboard.writeText(link).then(() => alert("تم نسخ الرابط المشفر بنجاح!"));
-        }
-
-        function startPrivateMatchWithBot() {
-            playingAgainstBot = true;
-            document.getElementById('lobbyScreen').classList.add('hidden');
-            if(targetGame === 'xo') {
+            if(game === 'snake') {
+                document.getElementById('globalChatAndUsersPanel').classList.add('hidden'); // إخفاء الشات لعدم تشتيت اللعب بالدودة
+                document.getElementById('snakeCanvasArea').classList.remove('hidden');
+                socket.emit('joinRoom', { roomCode: currentRoomCode, username: myUsername, color: myColor, isSnakeMode: true });
+                startSuperSnakeOnline();
+            } else if (game === 'xo') {
                 document.getElementById('xoPlayArea').classList.remove('hidden');
-                initXOBotMatch();
-            } else if(targetGame === 'chess') {
+                initXOMatch();
+            } else if (game === 'chess') {
                 document.getElementById('chessPlayArea').classList.remove('hidden');
                 initChessMatch();
             }
         }
 
-        function backToHub() {
-            document.getElementById('lobbyScreen').classList.add('hidden');
-            document.getElementById('gameHub').classList.remove('hidden');
+        // إستقبال الرسائل وبثها في لوحة الشات فورا
+        function sendChatMessageToServer() {
+            const input = document.getElementById('chatMessageInputField');
+            const txt = input.value.trim();
+            if(!txt) return;
+            socket.emit('sendChatMessage', txt);
+            input.value = "";
         }
 
-        function exitGame(screenId) {
-            if(screenId === 'snakeCanvasArea') clearInterval(snakeLoop);
-            document.getElementById(screenId).classList.add('hidden');
-            document.getElementById('gameHub').classList.remove('hidden');
-            playingAgainstBot = false;
-        }
+        socket.on('chatMessageReceived', (msg) => {
+            const container = document.getElementById('chatMessagesContainer');
+            const div = document.createElement('div');
+            if(msg.system) {
+                div.className = "text-yellow-500 font-bold italic border-b border-gray-900/40 pb-0.5";
+                div.innerText = msg.text;
+            } else {
+                div.innerHTML = `<span class="text-purple-400 font-black">${msg.username}:</span> <span class="text-gray-100">${msg.text}</span>`;
+            }
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        });
 
-        // ================= [ ذكاء اصطناعي XO ] =================
-        function initXOBotMatch() {
-            xoBoard = Array(9).fill(null);
-            xoGameActive = true;
-            document.getElementById('xoTurnStatus').innerText = "تحدي البوت: دورك الآن";
+        // مزامنة تحديثات الغرفة و المتصلين
+        socket.on('roomUpdate', (data) => {
+            if (targetGame === 'snake' && data.candies) {
+                candies = data.candies;
+            }
+            if (data.players) {
+                document.getElementById('connectedUsersCount').innerText = data.players.length;
+                document.getElementById('connectedUsersList').innerHTML = data.players.map(p => 
+                    `<span style="color: ${p.color}" class="bg-gray-900/60 px-2 py-0.5 rounded-md border border-gray-800">👤 ${p.username}</span>`
+                ).join(' ');
+
+                if (data.players.length === 1) {
+                    mySymbol = "X"; chessColor = 'w'; isMyTurnXO = true;
+                    if(targetGame === 'xo') document.getElementById('xoTurnStatus').innerText = "أنت اللاعب X (دورك الآن)";
+                } else if (data.players.length >= 2) {
+                    if (data.players[1].id === socket.id) {
+                        mySymbol = "O"; chessColor = 'b'; isMyTurnXO = false;
+                        if(targetGame === 'xo') document.getElementById('xoTurnStatus').innerText = "أنت اللاعب O. انتظر الخصم..";
+                    }
+                }
+            }
+        });
+
+        // ================= [ ذكاء واونلاين لـ XO ] =================
+        function initXOMatch() {
+            xoBoard = Array(9).fill(null); xoGameActive = true;
             for(let i=0; i<9; i++) document.getElementById(`cell-${i}`).innerText = "";
         }
-
         function clickXOCell(index) {
-            if(!xoGameActive || xoBoard[index] !== null) return;
-            xoBoard[index] = "X";
-            document.getElementById(`cell-${index}`).innerText = "X";
-            if(checkXOWin("X")) { document.getElementById('xoTurnStatus').innerText = "انتصرت على الأنظمة!"; xoGameActive = false; return; }
-            if(xoBoard.every(c => c !== null)) { document.getElementById('xoTurnStatus').innerText = "تعادل رقمي!"; xoGameActive = false; return; }
-            
-            if(playingAgainstBot) {
-                document.getElementById('xoTurnStatus').innerText = "جاري تفكير المعالج...";
-                setTimeout(executeXOBotMove, 300);
-            }
+            if(!xoGameActive || xoBoard[index] !== null || !isMyTurnXO) return;
+            xoBoard[index] = mySymbol;
+            document.getElementById(`cell-${index}`).innerText = mySymbol;
+            socket.emit('xoMove', { index: index, symbol: mySymbol });
+            isMyTurnXO = false;
+            document.getElementById('xoTurnStatus').innerText = "ينتظر حركة الخصم...";
+            checkXOWinState();
         }
-
-        function executeXOBotMove() {
-            if(!xoGameActive) return;
-            const diff = document.getElementById('botDifficultySelector').value;
-            let move = -1;
-
-            if(diff === 'expert') {
-                move = getXOMinimaxMove(xoBoard, "O").index;
-            } else if(diff === 'strong') {
-                move = findWinningOrBlockingMove("O") !== false ? findWinningOrBlockingMove("O") : (findWinningOrBlockingMove("X") !== false ? findWinningOrBlockingMove("X") : getRandomXOMove());
-            } else {
-                move = getRandomXOMove();
-            }
-
-            if(move !== -1 && move !== undefined && xoBoard[move] === null) {
-                xoBoard[move] = "O";
-                document.getElementById(`cell-${move}`).innerText = "O";
-                if(checkXOWin("O")) { document.getElementById('xoTurnStatus').innerText = "سحقك البوت!"; xoGameActive = false; return; }
-                if(xoBoard.every(c => c !== null)) { document.getElementById('xoTurnStatus').innerText = "تعادل رقمي!"; xoGameActive = false; return; }
-                document.getElementById('xoTurnStatus').innerText = "دورك الآن";
-            }
+        socket.on('xoMoveReceived', (data) => {
+            xoBoard[data.index] = data.symbol;
+            document.getElementById(`cell-${data.index}`).innerText = data.symbol;
+            isMyTurnXO = true;
+            document.getElementById('xoTurnStatus').innerText = "دورك الآن!";
+            checkXOWinState();
+        });
+        function checkXOWinState() {
+            if(checkXOWin(mySymbol)) { document.getElementById('xoTurnStatus').innerText = "لقد انتصرت! 🎉"; xoGameActive = false; } 
+            else if(checkXOWin(mySymbol === "X" ? "O" : "X")) { document.getElementById('xoTurnStatus').innerText = "لقد هُزمت!"; xoGameActive = false; }
         }
-
-        function findWinningOrBlockingMove(sym) {
-            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-            for(let combo of wins) {
-                let count = 0, empty = -1;
-                for(let cell of combo) {
-                    if(xoBoard[cell] === sym) count++;
-                    else if(xoBoard[cell] === null) empty = cell;
-                }
-                if(count === 2 && empty !== -1) return empty;
-            }
-            return false;
-        }
-
-        function getRandomXOMove() {
-            let empties = xoBoard.map((c, i) => c === null ? i : null).filter(c => c !== null);
-            return empties[Math.floor(Math.random() * empties.length)];
-        }
-
         function checkXOWin(sym) {
             const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
             return wins.some(combo => combo.every(idx => xoBoard[idx] === sym));
         }
 
-        function getXOMinimaxMove(newBoard, playerSym) {
-            let availSpots = newBoard.map((c, i) => c === null ? i : null).filter(c => c !== null);
-            if (checkXOWin("X")) return {score: -10};
-            if (checkXOWin("O")) return {score: 10};
-            if (availSpots.length === 0) return {score: 0};
-            let moves = [];
-            for (let i = 0; i < availSpots.length; i++) {
-                let currentMove = {}; currentMove.index = availSpots[i];
-                newBoard[availSpots[i]] = playerSym;
-                if (playerSym === "O") {
-                    let result = getXOMinimaxMove(newBoard, "X"); currentMove.score = result.score;
-                } else {
-                    let result = getXOMinimaxMove(newBoard, "O"); currentMove.score = result.score;
-                }
-                newBoard[availSpots[i]] = null; moves.push(currentMove);
-            }
-            let bestMove;
-            if(playerSym === "O") {
-                let bestScore = -10000;
-                for(let i = 0; i < moves.length; i++) { if(moves[i].score > bestScore) { bestScore = moves[i].score; bestMove = i; } }
-            } else {
-                let bestScore = 10000;
-                for(let i = 0; i < moves.length; i++) { if(moves[i].score < bestScore) { bestScore = moves[i].score; bestMove = i; } }
-            }
-            return moves[bestMove];
-        }
-
-        // ================= [ ذكاء اصطناعي شطرنج ] =================
+        // ================= [ ذكاء واونلاين الشطرنج ] =================
         function initChessMatch() { chessInstance = new Chess(); renderChessUI(); }
         function renderChessUI() {
             const boardEl = document.getElementById("chessBoard"); boardEl.innerHTML = "";
             const squares = chessInstance.board();
+            const syms = { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' };
             for(let r=0; r<8; r++) {
                 for(let c=0; c<8; c++) {
                     const squareObj = squares[r][c]; const squareName = String.fromCharCode(97 + c) + (8 - r);
                     const cell = document.createElement("div");
-                    cell.className = `flex items-center justify-center text-2xl font-bold cursor-pointer transition-all ${ (r+c)%2 === 0 ? 'bg-[#0b0f19]' : 'bg-[#151d30]' }`;
+                    cell.className = `flex items-center justify-center text-2xl font-bold transition-all ${(r+c)%2===0?'bg-[#0b0f19]':'bg-[#151d30]'}`;
                     if(selectedSquare === squareName) cell.className += " bg-purple-900/60";
-                    if(squareObj) {
-                        cell.innerText = getChessSymbol(squareObj.type, squareObj.color);
-                        cell.style.color = squareObj.color === 'w' ? '#06b6d4' : '#a855f7';
-                    }
-                    cell.onclick = () => clickChessSquare(squareName);
+                    if(squareObj) { cell.innerText = syms[squareObj.type] || ''; cell.style.color = squareObj.color === 'w' ? '#06b6d4' : '#a855f7'; }
+                    cell.onclick = () => {
+                        if((chessInstance.turn() === 'w' && chessColor !== 'w') || (chessInstance.turn() === 'b' && chessColor !== 'b')) return;
+                        if(selectedSquare === squareName) { selectedSquare = null; renderChessUI(); return; }
+                        if(selectedSquare) {
+                            let move = chessInstance.move({ from: selectedSquare, to: squareName, promotion: 'q' });
+                            if(move) {
+                                socket.emit('chessMove', { from: selectedSquare, to: squareName });
+                                selectedSquare = null; renderChessUI();
+                            } else { selectedSquare = squareName; renderChessUI(); }
+                        } else { if(squareObj && squareObj.color === chessColor) { selectedSquare = squareName; renderChessUI(); } }
+                    };
                     boardEl.appendChild(cell);
                 }
             }
+            document.getElementById('chessStatus').innerText = chessInstance.turn() === chessColor ? "دورك الآن لتنفيذ النقلة" : "انتظر حركة الخصم...";
         }
-        function getChessSymbol(type, color) {
-            const syms = { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' };
-            return syms[type] || '';
-        }
-        function clickChessSquare(square) {
-            if(chessInstance.turn() !== 'w' || chessInstance.game_over()) return;
-            if(selectedSquare === square) { selectedSquare = null; renderChessUI(); return; }
-            if(selectedSquare) {
-                let move = chessInstance.move({ from: selectedSquare, to: square, promotion: 'q' });
-                selectedSquare = null; renderChessUI();
-                if(move) {
-                    if(chessInstance.game_over()) { alert("كش مات! لقد انتصرت!"); return; }
-                    setTimeout(executeChessBotMove, 300);
-                }
-            } else {
-                if(chessInstance.get(square) && chessInstance.get(square).color === 'w') { selectedSquare = square; renderChessUI(); }
-            }
-        }
-        function executeChessBotMove() {
-            if(chessInstance.game_over()) return;
-            const moves = chessInstance.moves({ verbose: true }); if(moves.length === 0) return;
-            const diff = document.getElementById("botDifficultySelector").value;
-            let chosenMove = moves[0];
-            if(diff === 'medium') { chosenMove = moves[Math.floor(Math.random() * moves.length)]; }
-            else {
-                let bestScore = -100; const values = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 90 };
-                moves.forEach(m => {
-                    let score = 0; if(m.captured) score += values[m.captured] * 2; if(m.san.includes('+')) score += 2;
-                    if(score > bestScore) { bestScore = score; chosenMove = m; }
-                });
-                if(diff === 'strong' && Math.random() < 0.3) chosenMove = moves[Math.floor(Math.random() * moves.length)];
-            }
-            chessInstance.move(chosenMove); renderChessUI();
-        }
+        socket.on('chessMoveReceived', (data) => { chessInstance.move({ from: data.from, to: data.to, promotion: 'q' }); renderChessUI(); });
 
-        // ================= [ ساحة الدودة الفائقة (10 بوتات + دعم كيبورد) ] =================
+        // ================= [ ساحة الدودة ] =================
         function startSuperSnakeOnline() {
-            resizeCanvas(); initSnakeData(); spawnTenAdvancedBots(); refillCandiesData();
+            resizeCanvas(); initSnakeData(); spawnTenAdvancedBots();
             if(snakeLoop) clearInterval(snakeLoop);
             snakeLoop = setInterval(runSnakeEngine, 80);
-            setInterval(() => {
-                if(magnets.length < 3) magnets.push({ x: Math.floor(Math.random() * (MAP_SIZE/GRID_SIZE))*GRID_SIZE, y: Math.floor(Math.random() * (MAP_SIZE/GRID_SIZE))*GRID_SIZE });
-            }, 8000);
+            socket.on('snakePositions', (playersList) => { onlinePlayers = playersList.filter(p => p.id !== socket.id); });
+            socket.on('candyRemoved', (candyId) => { candies = candies.filter(c => c.id !== candyId); });
+            socket.on('newCandySpawned', (newCandy) => { candies.push(newCandy); });
         }
         function initSnakeData() {
-            player.body = []; player.direction = "RIGHT"; player.nextDirection = "RIGHT"; player.score = 0; player.magnetTimer = 0;
-            let sx = 1200, sy = 1200;
-            for(let i=0; i<25; i++) player.body.push({ x: sx - (i * GRID_SIZE), y: sy });
-            player.score = player.body.length * 10;
+            player.body = []; player.direction = "RIGHT"; player.nextDirection = "RIGHT"; player.score = 200;
+            let sx = Math.floor(Math.random() * 1000 + 500), sy = Math.floor(Math.random() * 1000 + 500);
+            for(let i=0; i<20; i++) player.body.push({ x: sx - (i * GRID_SIZE), y: sy });
         }
         function spawnTenAdvancedBots() {
-            const bNames = ["🤖 ألفا", "🤖 تانقو", "🤖 زيرو", "🤖 ماتريكس", "🤖 نيون", "🤖 سايبورغ", "🤖 قوست", "🤖 فانتوم", "🤖 دراغون", "🤖 سيكتور"];
-            const bColors = ["#ec4899","#06b6d4","#eab308","#10b981","#3b82f6","#ef4444","#f97316","#a855f7","#6366f1","#ec4899"];
+            const bNames = ["🤖 ألفا", "🤖 تانقو", "🤖 زيرو", "🤖 ماتريكس", "🤖 نيون"];
             bots = [];
-            for(let i=0; i<10; i++) {
-                let bx = Math.floor(Math.random() * (MAP_SIZE - 400) + 200); let by = Math.floor(Math.random() * (MAP_SIZE - 400) + 200);
-                let bBody = []; for(let l=0; l<40; l++) bBody.push({ x: bx, y: by + (l * GRID_SIZE) });
-                bots.push({ username: bNames[i], color: bColors[i], body: bBody, direction: "UP", score: bBody.length * 10 });
-            }
-        }
-        function refillCandiesData() {
-            const types = [{ val: 10, size: 4, col: "#ec4899" }, { val: 25, size: 6, col: "#06b6d4" }, { val: 50, size: 8, col: "#eab308" }];
-            while(candies.length < 450) {
-                let select = types[Math.floor(Math.random() * types.length)];
-                candies.push({ x: Math.floor(Math.random() * (MAP_SIZE / GRID_SIZE)) * GRID_SIZE, y: Math.floor(Math.random() * (MAP_SIZE / GRID_SIZE)) * GRID_SIZE, value: select.val, size: select.size, color: select.col, pulse: Math.random() * 5 });
+            for(let i=0; i<5; i++) {
+                let bx = Math.floor(Math.random() * 1800 + 200); let by = Math.floor(Math.random() * 1800 + 200);
+                let bBody = []; for(let l=0; l<25; l++) bBody.push({ x: bx, y: by + (l * GRID_SIZE) });
+                bots.push({ username: bNames[i], color: '#ef4444', body: bBody, direction: "UP", score: 250 });
             }
         }
         function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resizeCanvas);
-
-        // دعم التحكم عبر الكيبورد (للكمبيوتر)
         window.addEventListener("keydown", (e) => {
-            if (e.key === "ArrowUp" && player.direction !== "DOWN") player.nextDirection = "UP";
-            if (e.key === "ArrowDown" && player.direction !== "UP") player.nextDirection = "DOWN";
-            if (e.key === "ArrowLeft" && player.direction !== "RIGHT") player.nextDirection = "LEFT";
-            if (e.key === "ArrowRight" && player.direction !== "LEFT") player.nextDirection = "RIGHT";
+            if ((e.key === "ArrowUp" || e.key === "w" || e.key === "W") && player.direction !== "DOWN") player.nextDirection = "UP";
+            if ((e.key === "ArrowDown" || e.key === "s" || e.key === "S") && player.direction !== "UP") player.nextDirection = "DOWN";
+            if ((e.key === "ArrowLeft" || e.key === "a" || e.key === "A") && player.direction !== "RIGHT") player.nextDirection = "LEFT";
+            if ((e.key === "ArrowRight" || e.key === "d" || e.key === "D") && player.direction !== "LEFT") player.nextDirection = "RIGHT";
         });
-
-        // دعم اللمس (للهواتف)
-        let touchStartX = 0, touchStartY = 0;
-        canvas.addEventListener("touchstart", (e) => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; });
-        canvas.addEventListener("touchmove", (e) => {
-            if (!touchStartX || !touchStartY) return;
-            let diffX = e.touches[0].clientX - touchStartX; let diffY = e.touches[0].clientY - touchStartY;
-            if (Math.abs(diffX) > Math.abs(diffY)) {
-                if (diffX > 15 && player.direction !== "LEFT") player.nextDirection = "RIGHT";
-                else if (diffX < -15 && player.direction !== "RIGHT") player.nextDirection = "LEFT";
-            } else {
-                if (diffY > 15 && player.direction !== "UP") player.nextDirection = "DOWN";
-                else if (diffY < -15 && player.direction !== "DOWN") player.nextDirection = "UP";
-            }
-            touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
-        });
-
         function runSnakeEngine() {
             player.direction = player.nextDirection;
             let head = { ...player.body[0] };
@@ -437,92 +313,46 @@
             if (player.direction === "DOWN") head.y += GRID_SIZE;
             if (player.direction === "LEFT") head.x -= GRID_SIZE;
             if (player.direction === "RIGHT") head.x += GRID_SIZE;
-
             if (head.x < 0 || head.x >= MAP_SIZE || head.y < 0 || head.y >= MAP_SIZE) { initSnakeData(); return; }
-            for(let i=1; i<player.body.length; i++) { if(head.x === player.body[i].x && head.y === player.body[i].y) { initSnakeData(); return; } }
-
             player.body.unshift(head);
-
-            if (player.magnetTimer > 0) {
-                player.magnetTimer -= 0.08;
-                document.getElementById("magnetStatusWidget").classList.remove("hidden");
-                document.getElementById("magnetSecondsLeft").innerText = Math.ceil(player.magnetTimer);
-            } else { document.getElementById("magnetStatusWidget").classList.add("hidden"); }
-
-            for(let i = magnets.length - 1; i >= 0; i--) {
-                if (Math.abs(head.x - magnets[i].x) < GRID_SIZE*1.5 && Math.abs(head.y - magnets[i].y) < GRID_SIZE*1.5) { player.magnetTimer = 8; magnets.splice(i, 1); }
-            }
-
             let ate = false;
             for(let i = candies.length - 1; i >= 0; i--) {
-                let c = candies[i]; let dist = Math.hypot((head.x + GRID_SIZE/2) - (c.x + GRID_SIZE/2), (head.y + GRID_SIZE/2) - (c.y + GRID_SIZE/2));
-                if (player.magnetTimer > 0 && dist < 160) { c.x += ((head.x - c.x) * 0.38); c.y += ((head.y - c.y) * 0.38); }
-                if (dist < GRID_SIZE*1.2) { player.score += c.value; candies.splice(i, 1); ate = true; }
+                let c = candies[i]; 
+                let dist = Math.hypot((head.x + GRID_SIZE/2) - (c.x + GRID_SIZE/2), (head.y + GRID_SIZE/2) - (c.y + GRID_SIZE/2));
+                if (dist < GRID_SIZE * 1.5) { player.score += c.value; socket.emit('candyEaten', c.id); ate = true; break; }
             }
             if(!ate) player.body.pop();
-
+            socket.emit('snakeUpdate', { body: player.body, score: player.score, direction: player.direction });
             bots.forEach(bot => {
                 let bHead = { ...bot.body[0] };
-                if(candies.length > 0 && Math.random() < 0.4) {
-                    let closest = candies[0], minDist = 9999;
-                    candies.slice(0, 20).forEach(can => { let d = Math.hypot(bHead.x - can.x, bHead.y - can.y); if(d < minDist) { minDist = d; closest = can; } });
-                    if (closest.x > bHead.x && bot.direction !== "LEFT") bot.direction = "RIGHT";
-                    else if (closest.x < bHead.x && bot.direction !== "RIGHT") bot.direction = "LEFT";
-                    else if (closest.y > bHead.y && bot.direction !== "UP") bot.direction = "DOWN";
-                    else if (closest.y < bHead.y && bot.direction !== "DOWN") bot.direction = "UP";
-                }
-
-                if(bHead.x < 100) bot.direction = "RIGHT"; if(bHead.x > MAP_SIZE - 100) bot.direction = "LEFT";
-                if(bHead.y < 100) bot.direction = "DOWN"; if(bHead.y > MAP_SIZE - 100) bot.direction = "UP";
-
-                if (bot.direction === "UP") bHead.y -= GRID_SIZE; if (bot.direction === "DOWN") bHead.y += GRID_SIZE;
-                if (bot.direction === "LEFT") bHead.x -= GRID_SIZE; if (bot.direction === "RIGHT") bHead.x += GRID_SIZE;
-
-                let crashed = false;
-                player.body.forEach(seg => { if(Math.abs(bHead.x - seg.x) < GRID_SIZE && Math.abs(bHead.y - seg.y) < GRID_SIZE) crashed = true; });
-
-                if(crashed) {
-                    bot.body.forEach(s => { if(Math.random() < 0.4) candies.push({ x: s.x, y: s.y, value: 30, size: 6, color: "#10b981", pulse: 0 }); });
-                    let rx = Math.floor(Math.random() * (MAP_SIZE - 400) + 200); let ry = Math.floor(Math.random() * (MAP_SIZE - 400) + 200);
-                    bot.body = []; for(let l=0; l<30; l++) bot.body.push({ x: rx, y: ry });
-                    bot.score = 300;
-                } else {
-                    bot.body.unshift(bHead); let ateB = false;
-                    candies.forEach((cand, cIdx) => { if(Math.abs(bHead.x - cand.x) < GRID_SIZE && Math.abs(bHead.y - cand.y) < GRID_SIZE) { bot.score += cand.value; candies.splice(cIdx, 1); ateB = true; } });
-                    if(!ateB) bot.body.pop();
-                }
+                if (bot.direction === "UP") bHead.y -= GRID_SIZE;
+                if (bot.direction === "DOWN") bHead.y += GRID_SIZE;
+                if (bot.direction === "LEFT") bHead.x -= GRID_SIZE;
+                if (bot.direction === "RIGHT") bHead.x += GRID_SIZE;
+                if(bHead.x < 50) bot.direction = "RIGHT"; if(bHead.x > MAP_SIZE-50) bot.direction = "LEFT";
+                bot.body.unshift(bHead); bot.body.pop();
             });
-
-            refillCandiesData(); drawAdvancedSnakeGraphics();
+            drawSnakeGraphics();
         }
-
-        function drawAdvancedSnakeGraphics() {
+        function drawSnakeGraphics() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if(player.body.length === 0) return;
             let cx = canvas.width / 2 - player.body[0].x; let cy = canvas.height / 2 - player.body[0].y;
             ctx.save(); ctx.translate(cx, cy);
-
             ctx.fillStyle = "#020409"; ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
-            ctx.strokeStyle = "rgba(139, 92, 246, 0.05)"; ctx.lineWidth = 1.5;
-            for (let x = 0; x < MAP_SIZE; x += 60) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, MAP_SIZE); ctx.stroke(); }
-            for (let y = 0; y < MAP_SIZE; y += 60) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(MAP_SIZE, y); ctx.stroke(); }
-            ctx.strokeStyle = "#a855f7"; ctx.lineWidth = 5; ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
-
-            candies.forEach(c => { c.pulse += 0.2; let r = c.size + Math.sin(c.pulse) * 1.2; ctx.fillStyle = c.color; ctx.beginPath(); ctx.arc(c.x+GRID_SIZE/2, c.y+GRID_SIZE/2, r > 1 ? r : 2, 0, 2*Math.PI); ctx.fill(); });
-            magnets.forEach(m => { ctx.font = "16px Arial"; ctx.fillText("🧲", m.x, m.y + 12); });
-
-            bots.forEach(bot => { bot.body.forEach((seg, idx) => { ctx.fillStyle = bot.color; ctx.beginPath(); ctx.arc(seg.x+GRID_SIZE/2, seg.y+GRID_SIZE/2, idx===0?GRID_SIZE*0.65:GRID_SIZE*0.45, 0, 2*Math.PI); ctx.fill(); }); });
-
-            player.body.forEach((seg, idx) => {
-                ctx.fillStyle = player.color; ctx.beginPath(); ctx.arc(seg.x+GRID_SIZE/2, seg.y+GRID_SIZE/2, idx===0?GRID_SIZE*0.75:GRID_SIZE*0.5, 0, 2*Math.PI); ctx.fill();
-                if(player.magnetTimer > 0 && idx === 0) { ctx.strokeStyle = "rgba(6, 182, 212, 0.6)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(seg.x+GRID_SIZE/2, seg.y+GRID_SIZE/2, GRID_SIZE*1.5, 0, 2*Math.PI); ctx.stroke(); }
-            });
-
+            candies.forEach(c => { ctx.fillStyle = c.color; ctx.beginPath(); ctx.arc(c.x+GRID_SIZE/2, c.y+GRID_SIZE/2, c.size, 0, 2*Math.PI); ctx.fill(); });
+            onlinePlayers.forEach(p => { p.body.forEach((seg, idx) => { ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(seg.x+GRID_SIZE/2, seg.y+GRID_SIZE/2, idx===0?9:6, 0, 2*Math.PI); ctx.fill(); }); });
+            bots.forEach(bot => { bot.body.forEach((seg, idx) => { ctx.fillStyle = bot.color; ctx.beginPath(); ctx.arc(seg.x+GRID_SIZE/2, seg.y+GRID_SIZE/2, idx===0?8:5, 0, 2*Math.PI); ctx.fill(); }); });
+            player.body.forEach((seg, idx) => { ctx.fillStyle = myColor; ctx.beginPath(); ctx.arc(seg.x+GRID_SIZE/2, seg.y+GRID_SIZE/2, idx===0?10:7, 0, 2*Math.PI); ctx.fill(); });
             ctx.restore();
             document.getElementById("snakeLiveScore").innerText = player.score;
+        }
 
-            let leaders = [{name: player.username, score: player.score}]; bots.forEach(b => leaders.push({name: b.username, score: b.score}));
-            leaders.sort((a,b) => b.score - a.score);
-            document.getElementById("snakeLiveLeaderboard").innerHTML = leaders.slice(0, 5).map((l, i) => `<div class="truncate text-gray-400">${i+1}. ${l.name}: <span class="text-cyan-400">${l.score}</span></div>`).join('');
+        function exitGame(screenId) {
+            clearInterval(snakeLoop);
+            document.getElementById(screenId).classList.add('hidden');
+            document.getElementById('gameHub').classList.remove('hidden');
+            document.getElementById('globalChatAndUsersPanel').classList.remove('hidden');
         }
     </script>
 </body>

@@ -9,7 +9,6 @@ const io = new Server(server, {
     cors: { origin: "*", methods: ["GET", "POST"] }
 });
 
-// دعم قراءة ملف index.html سواء كان في المجلد الرئيسي أو داخل مجلد public
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname));
 
@@ -20,7 +19,7 @@ const GRID_SIZE = 14;
 function generateCandies() {
     const types = [{ val: 10, size: 4, col: "#ec4899" }, { val: 25, size: 6, col: "#06b6d4" }, { val: 50, size: 8, col: "#eab308" }];
     let arr = [];
-    for(let i=0; i<300; i++) {
+    for(let i=0; i<400; i++) {
         let select = types[Math.floor(Math.random() * types.length)];
         arr.push({
             id: Math.random().toString(36).substring(2, 9),
@@ -65,7 +64,7 @@ io.on('connection', (socket) => {
 
         io.to(roomCode).emit('chatMessageReceived', {
             system: true,
-            text: `📢 دخل اللاعب [${username}] إلى الغرفة.`
+            text: `📢 دخل العميل [${username}] إلى الساحة التكتيكية.`
         });
     });
 
@@ -93,22 +92,19 @@ io.on('connection', (socket) => {
     socket.on('candyEaten', (candyId) => {
         const roomCode = socket.roomCode;
         if (roomCode && rooms[roomCode]) {
-            const exists = rooms[roomCode].candies.some(c => c.id === candyId);
-            if (exists) {
-                rooms[roomCode].candies = rooms[roomCode].candies.filter(c => c.id !== candyId);
-                io.to(roomCode).emit('candyRemoved', candyId);
-                
-                const types = [{ val: 10, size: 4, col: "#ec4899" }, { val: 25, size: 6, col: "#06b6d4" }, { val: 50, size: 8, col: "#eab308" }];
-                let select = types[Math.floor(Math.random() * types.length)];
-                let newCandy = {
-                    id: Math.random().toString(36).substring(2, 9),
-                    x: Math.floor(Math.random() * (MAP_SIZE / GRID_SIZE)) * GRID_SIZE,
-                    y: Math.floor(Math.random() * (MAP_SIZE / GRID_SIZE)) * GRID_SIZE,
-                    value: select.val, size: select.size, color: select.col
-                };
-                rooms[roomCode].candies.push(newCandy);
-                io.to(roomCode).emit('newCandySpawned', newCandy);
-            }
+            rooms[roomCode].candies = rooms[roomCode].candies.filter(c => c.id !== candyId);
+            io.to(roomCode).emit('candyRemoved', candyId);
+            
+            const types = [{ val: 10, size: 4, col: "#ec4899" }, { val: 25, size: 6, col: "#06b6d4" }, { val: 50, size: 8, col: "#eab308" }];
+            let select = types[Math.floor(Math.random() * types.length)];
+            let newCandy = {
+                id: Math.random().toString(36).substring(2, 9),
+                x: Math.floor(Math.random() * (MAP_SIZE / GRID_SIZE)) * GRID_SIZE,
+                y: Math.floor(Math.random() * (MAP_SIZE / GRID_SIZE)) * GRID_SIZE,
+                value: select.val, size: select.size, color: select.col
+            };
+            rooms[roomCode].candies.push(newCandy);
+            io.to(roomCode).emit('newCandySpawned', newCandy);
         }
     });
 
@@ -133,11 +129,9 @@ io.on('connection', (socket) => {
                     players: Object.values(rooms[roomCode].players),
                     candies: rooms[roomCode].candies
                 });
-                io.to(roomCode).emit('snakePositions', Object.values(rooms[roomCode].players));
-                
                 io.to(roomCode).emit('chatMessageReceived', {
                     system: true,
-                    text: `❌ غادر اللاعب [${leftUsername}] الساحة.`
+                    text: `❌ غادر العميل [${leftUsername}] الساحة.`
                 });
             }
         }
@@ -145,4 +139,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`🚀 السيرفر يعمل على البورت ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 السيرفر المطور يعمل بكفاءة على البورت ${PORT}`));

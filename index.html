@@ -143,22 +143,22 @@
         let player = { body: [], direction: "RIGHT", nextDirection: "RIGHT", score: 250 };
         let candies = [], bots = [], onlinePlayers = [], snakeLoop = null;
 
-        // محرك البطاطا الطائرة المحدث (نظام تدرج الصعوبة كل 10 نقاط)
+        // محرك البطاطا الطائرة الفائقة السهولة
         const flappyCanvas = document.getElementById("flappyFullScreenCanvas");
         const fctx = flappyCanvas.getContext("2d");
         let flappyLoop = null;
         
-        // إعدادات البداية الجذابة والسهلة جداً
-        let potato = { x: 80, y: 200, velocity: 0, gravity: 0.28, jump: -5.2, radius: 15 }; 
+        // تعديل فيزياء القفز والجاذبية لتصبح أكثر مرونة وتحكماً
+        let potato = { x: 80, y: 200, velocity: 0, gravity: 0.24, jump: -4.8, radius: 15 }; 
         let pipes = [];
         let fScore = 0;
         let flappyLevel = 1;
         let flappyGameOver = false;
         
-        // المتغيرات التي تتحكم في الصعوبة الديناميكية
-        let currentPipeSpeed = 2.0; 
-        let currentPipeGap = 160;   
-        let currentPipeInterval = 220; 
+        // إعدادات المسافات والفراغات الواسعة والمريحة جداً في البداية
+        let currentPipeSpeed = 1.6;       // سرعة الأنابيب أصبحت أبطأ (1.6 بدلاً من 2.0)
+        let currentPipeGap = 190;         // الفجوة الرأسية بين الأنبوبين أصبحت أوسع بكثير (190 بدلاً من 165)
+        let currentPipeInterval = 280;    // الفراغ الأفقي بين كل أنبوب وآخر أصبح أبعد (280 بدلاً من 230) لإعطاء راحة تامة للمستخدم
 
         function connectToHub() {
             const inputElement = document.getElementById('usernameInput');
@@ -409,7 +409,7 @@
             document.getElementById("snakeLiveScore").innerText = player.score;
         }
 
-        // ================= [ محرك لعبة حبة البطاطا الطائرة المتطورة بتدريج الصعوبة ] =================
+        // ================= [ محرك لعبة حبة البطاطا الطائرة - نسخة فائقة السهولة ] =================
         function startFlappyPotatoGame() {
             resizeCanvas();
             potato.y = flappyCanvas.height / 2; potato.velocity = 0;
@@ -417,10 +417,10 @@
             fScore = 0; 
             flappyLevel = 1;
             
-            // إعادة ضبط قيم الصعوبة لتكون سهلة جداً في البداية
-            currentPipeSpeed = 2.0;       // سرعة حركة الأنابيب بطيئة وسلسة
-            currentPipeGap = 165;         // الفجوة بين الأنبوب العلوي والسفلي واسعة ومريحة جداً
-            currentPipeInterval = 230;    // المسافة الأفقية بين كل زوج أنابيب بعيدة لإعطاء وقت للاستعداد
+            // إعدادات مريحة وواسعة جداً للبداية
+            currentPipeSpeed = 1.6;       
+            currentPipeGap = 190;         
+            currentPipeInterval = 280;    
             
             document.getElementById('flappyScore').innerText = fScore;
             document.getElementById('flappyLevel').innerText = flappyLevel;
@@ -436,48 +436,48 @@
         }
 
         function runFlappyPotatoEngine() {
-            // تحديث الفيزياء لحبة البطاطا
+            // تحديث حركة البطاطا السلسة
             potato.velocity += potato.gravity;
             potato.y += potato.velocity;
 
-            // حساب الصعوبة التلقائية بناءً على النقاط (كل 10 نقاط يزيد المستوى وتزداد الصعوبة)
+            // حساب المستوى والصعوبة التلقائية كل 10 نقاط
             let calculatedLevel = Math.floor(fScore / 10) + 1;
             if(calculatedLevel !== flappyLevel) {
                 flappyLevel = calculatedLevel;
                 document.getElementById('flappyLevel').innerText = flappyLevel;
                 
-                // تضييق الفجوات وتسريع الحركة بشكل طفيف وتدريجي جداً لمنع الصدمة المفاجئة
-                currentPipeSpeed = 2.0 + (flappyLevel - 1) * 0.35; // تزيد السرعة قليلاً جداً
-                currentPipeGap = Math.max(115, 165 - (flappyLevel - 1) * 7); // تضيق الفجوة بحد أقصى معقول
-                currentPipeInterval = Math.max(160, 230 - (flappyLevel - 1) * 10); // تقترب الأنابيب من بعضها
+                // زيادة الصعوبة تدريجياً وبشكل طفيف جداً للمحافظة على التحدي الممتع
+                currentPipeSpeed = 1.6 + (flappyLevel - 1) * 0.35; 
+                currentPipeGap = Math.max(125, 190 - (flappyLevel - 1) * 8); 
+                currentPipeInterval = Math.max(170, 280 - (flappyLevel - 1) * 12); 
             }
 
-            // توليد الأنابيب السيبرانية بناءً على المسافة الأفقية المتغيرة
+            // توليد الأنابيب بناءً على المسافة الأفقية المحدثة
             if(pipes.length === 0 || pipes[pipes.length - 1].x < flappyCanvas.width - currentPipeInterval) {
                 let topH = Math.floor(Math.random() * (flappyCanvas.height - currentPipeGap - 100)) + 40;
                 pipes.push({ x: flappyCanvas.width, top: topH, bottom: flappyCanvas.height - topH - currentPipeGap, width: 55, passed: false });
             }
 
-            // تحديث حركة وفحص تصادم الأنابيب
+            // إدارة وحركة الأنابيب وفحص التصادم بدقة
             for(let i = pipes.length - 1; i >= 0; i--) {
                 let p = pipes[i]; 
-                p.x -= currentPipeSpeed; // التحرك بناءً على سرعة المستوى الحالية
+                p.x -= currentPipeSpeed;
 
-                // فحص تجاوز الأنبوب لزيادة النقاط
+                // احتساب النقاط عند التجاوز
                 if(!p.passed && p.x + p.width < potato.x) { 
                     p.passed = true; 
                     fScore++; 
                     document.getElementById('flappyScore').innerText = fScore; 
                 }
 
-                // فحص التصادم العادي بدقة
+                // فحص التصادم مع هيكل الأنبوب النيوني
                 if (potato.x + potato.radius > p.x && potato.x - potato.radius < p.x + p.width) {
                     if (potato.y - potato.radius < p.top || potato.y + potato.radius > flappyCanvas.height - p.bottom) { flappyGameOver = true; }
                 }
                 if(p.x < -p.width) pipes.splice(i, 1);
             }
 
-            // فحص ملامسة الأرض أو السقف
+            // فحص الخروج عن حدود الشاشة (الأرض والسقف)
             if(potato.y + potato.radius >= flappyCanvas.height || potato.y - potato.radius <= 0) { flappyGameOver = true; }
 
             if(flappyGameOver) { clearInterval(flappyLoop); }
@@ -485,15 +485,15 @@
         }
 
         function drawFlappyGraphics() {
-            // خلفية اللعبة السيبرانية
+            // الخلفية السيبرانية
             fctx.fillStyle = "#02050f"; fctx.fillRect(0, 0, flappyCanvas.width, flappyCanvas.height);
             fctx.strokeStyle = "rgba(255,255,255,0.01)"; fctx.lineWidth = 1;
             for(let x=0; x<flappyCanvas.width; x+=30) { fctx.beginPath(); fctx.moveTo(x,0); fctx.lineTo(x,flappyCanvas.height); fctx.stroke(); }
 
-            // رسم الأنابيب بتوهج نيون أخضر مائل للاصفرار حسب المستوى
+            // رسم الأنابيب بتأثير النيون الأخضر أو الأحمر بحسب مستوى الخطر والتقدم
             pipes.forEach(p => {
                 fctx.shadowBlur = 15; 
-                fctx.shadowColor = flappyLevel > 2 ? "#e11d48" : "#10b981"; // يتغير التوهج للأحمر في المستويات الصعبة
+                fctx.shadowColor = flappyLevel > 2 ? "#e11d48" : "#10b981"; 
                 fctx.fillStyle = "#064e3b"; fctx.strokeStyle = flappyLevel > 2 ? "#f43f5e" : "#10b981"; fctx.lineWidth = 3;
                 fctx.fillRect(p.x, 0, p.width, p.top); fctx.strokeRect(p.x, 0, p.width, p.top);
                 fctx.fillRect(p.x, flappyCanvas.height - p.bottom, p.width, p.bottom); fctx.strokeRect(p.x, flappyCanvas.height - p.bottom, p.width, p.bottom);
@@ -504,7 +504,7 @@
             fctx.save(); fctx.translate(potato.x, potato.y);
             fctx.shadowBlur = 18; fctx.shadowColor = "#ca8a04";
             
-            // جسم حبة البطاطا البيضاوي
+            // جسم حبة البطاطا البيضاوي اللطيف
             fctx.fillStyle = "#b45309"; fctx.beginPath(); fctx.ellipse(0, 0, potato.radius + 4, potato.radius, 0, 0, 2 * Math.PI); fctx.fill();
             fctx.strokeStyle = "#fbbf24"; fctx.lineWidth = 2; fctx.stroke();
 

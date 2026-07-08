@@ -118,9 +118,10 @@
     </div>
 
     <div id="flappyCanvasArea" class="hidden fixed inset-0 z-30 bg-[#02050d] flex flex-col overflow-hidden select-none" onclick="triggerPotatoJump()">
-        <div class="absolute top-4 left-4 z-50 cyber-panel px-3 py-1.5 rounded-xl flex items-center gap-4 text-xs font-black shadow-2xl">
+        <div class="absolute top-4 left-4 z-50 cyber-panel px-3 py-1.5 rounded-xl flex flex-wrap items-center gap-3 text-xs font-black shadow-2xl">
             <span class="text-yellow-500 font-black">🥔 FLAPPY POTATO</span>
             <span class="bg-black/50 px-2 py-0.5 rounded-md text-cyan-400">النقاط: <span id="flappyScore">0</span></span>
+            <span class="bg-purple-950/80 px-2 py-0.5 rounded-md text-purple-300 border border-purple-800">المستوى: <span id="flappyLevel">1</span></span>
             <button onclick="exitGame('flappyCanvasArea'); event.stopPropagation();" class="bg-red-900 border border-red-600 text-white px-2.5 py-0.5 rounded-md text-[10px] font-bold hover:brightness-110 transition-all">خروج</button>
         </div>
         <canvas id="flappyFullScreenCanvas"></canvas>
@@ -142,14 +143,22 @@
         let player = { body: [], direction: "RIGHT", nextDirection: "RIGHT", score: 250 };
         let candies = [], bots = [], onlinePlayers = [], snakeLoop = null;
 
-        // محرك البطاطا الطائرة (Flappy Potato)
+        // محرك البطاطا الطائرة المحدث (نظام تدرج الصعوبة كل 10 نقاط)
         const flappyCanvas = document.getElementById("flappyFullScreenCanvas");
         const fctx = flappyCanvas.getContext("2d");
         let flappyLoop = null;
-        let potato = { x: 80, y: 200, velocity: 0, gravity: 0.4, jump: -6.5, radius: 15 };
+        
+        // إعدادات البداية الجذابة والسهلة جداً
+        let potato = { x: 80, y: 200, velocity: 0, gravity: 0.28, jump: -5.2, radius: 15 }; 
         let pipes = [];
         let fScore = 0;
+        let flappyLevel = 1;
         let flappyGameOver = false;
+        
+        // المتغيرات التي تتحكم في الصعوبة الديناميكية
+        let currentPipeSpeed = 2.0; 
+        let currentPipeGap = 160;   
+        let currentPipeInterval = 220; 
 
         function connectToHub() {
             const inputElement = document.getElementById('usernameInput');
@@ -400,39 +409,68 @@
             document.getElementById("snakeLiveScore").innerText = player.score;
         }
 
-        // ================= [ محرك لعبة حبة البطاطا الطائرة المتطورة ] =================
+        // ================= [ محرك لعبة حبة البطاطا الطائرة المتطورة بتدريج الصعوبة ] =================
         function startFlappyPotatoGame() {
             resizeCanvas();
             potato.y = flappyCanvas.height / 2; potato.velocity = 0;
-            pipes = []; fScore = 0; flappyGameOver = false;
+            pipes = []; 
+            fScore = 0; 
+            flappyLevel = 1;
+            
+            // إعادة ضبط قيم الصعوبة لتكون سهلة جداً في البداية
+            currentPipeSpeed = 2.0;       // سرعة حركة الأنابيب بطيئة وسلسة
+            currentPipeGap = 165;         // الفجوة بين الأنبوب العلوي والسفلي واسعة ومريحة جداً
+            currentPipeInterval = 230;    // المسافة الأفقية بين كل زوج أنابيب بعيدة لإعطاء وقت للاستعداد
+            
             document.getElementById('flappyScore').innerText = fScore;
+            document.getElementById('flappyLevel').innerText = flappyLevel;
+            flappyGameOver = false;
+            
             if(flappyLoop) clearInterval(flappyLoop);
             flappyLoop = setInterval(runFlappyPotatoEngine, 1000 / 60);
         }
+
         function triggerPotatoJump() {
             if(flappyGameOver) { startFlappyPotatoGame(); return; }
             potato.velocity = potato.jump;
         }
+
         function runFlappyPotatoEngine() {
             // تحديث الفيزياء لحبة البطاطا
             potato.velocity += potato.gravity;
             potato.y += potato.velocity;
 
-            // توليد الأنابيب السيبرانية النيونية
-            if(pipes.length === 0 || pipes[pipes.length - 1].x < flappyCanvas.width - 180) {
-                let gap = 130;
-                let topH = Math.floor(Math.random() * (flappyCanvas.height - gap - 100)) + 40;
-                pipes.push({ x: flappyCanvas.width, top: topH, bottom: flappyCanvas.height - topH - gap, width: 55, passed: false });
+            // حساب الصعوبة التلقائية بناءً على النقاط (كل 10 نقاط يزيد المستوى وتزداد الصعوبة)
+            let calculatedLevel = Math.floor(fScore / 10) + 1;
+            if(calculatedLevel !== flappyLevel) {
+                flappyLevel = calculatedLevel;
+                document.getElementById('flappyLevel').innerText = flappyLevel;
+                
+                // تضييق الفجوات وتسريع الحركة بشكل طفيف وتدريجي جداً لمنع الصدمة المفاجئة
+                currentPipeSpeed = 2.0 + (flappyLevel - 1) * 0.35; // تزيد السرعة قليلاً جداً
+                currentPipeGap = Math.max(115, 165 - (flappyLevel - 1) * 7); // تضيق الفجوة بحد أقصى معقول
+                currentPipeInterval = Math.max(160, 230 - (flappyLevel - 1) * 10); // تقترب الأنابيب من بعضها
+            }
+
+            // توليد الأنابيب السيبرانية بناءً على المسافة الأفقية المتغيرة
+            if(pipes.length === 0 || pipes[pipes.length - 1].x < flappyCanvas.width - currentPipeInterval) {
+                let topH = Math.floor(Math.random() * (flappyCanvas.height - currentPipeGap - 100)) + 40;
+                pipes.push({ x: flappyCanvas.width, top: topH, bottom: flappyCanvas.height - topH - currentPipeGap, width: 55, passed: false });
             }
 
             // تحديث حركة وفحص تصادم الأنابيب
             for(let i = pipes.length - 1; i >= 0; i--) {
-                let p = pipes[i]; p.x -= 2.5;
+                let p = pipes[i]; 
+                p.x -= currentPipeSpeed; // التحرك بناءً على سرعة المستوى الحالية
 
                 // فحص تجاوز الأنبوب لزيادة النقاط
-                if(!p.passed && p.x + p.width < potato.x) { p.passed = true; fScore++; document.getElementById('flappyScore').innerText = fScore; }
+                if(!p.passed && p.x + p.width < potato.x) { 
+                    p.passed = true; 
+                    fScore++; 
+                    document.getElementById('flappyScore').innerText = fScore; 
+                }
 
-                // فحص التصادم العادي
+                // فحص التصادم العادي بدقة
                 if (potato.x + potato.radius > p.x && potato.x - potato.radius < p.x + p.width) {
                     if (potato.y - potato.radius < p.top || potato.y + potato.radius > flappyCanvas.height - p.bottom) { flappyGameOver = true; }
                 }
@@ -445,33 +483,36 @@
             if(flappyGameOver) { clearInterval(flappyLoop); }
             drawFlappyGraphics();
         }
+
         function drawFlappyGraphics() {
             // خلفية اللعبة السيبرانية
             fctx.fillStyle = "#02050f"; fctx.fillRect(0, 0, flappyCanvas.width, flappyCanvas.height);
             fctx.strokeStyle = "rgba(255,255,255,0.01)"; fctx.lineWidth = 1;
             for(let x=0; x<flappyCanvas.width; x+=30) { fctx.beginPath(); fctx.moveTo(x,0); fctx.lineTo(x,flappyCanvas.height); fctx.stroke(); }
 
-            // رسم الأنابيب بتوهج نيون أخضر
+            // رسم الأنابيب بتوهج نيون أخضر مائل للاصفرار حسب المستوى
             pipes.forEach(p => {
-                fctx.shadowBlur = 15; fctx.shadowColor = "#10b981"; fctx.fillStyle = "#064e3b"; fctx.strokeStyle = "#10b981"; fctx.lineWidth = 3;
+                fctx.shadowBlur = 15; 
+                fctx.shadowColor = flappyLevel > 2 ? "#e11d48" : "#10b981"; // يتغير التوهج للأحمر في المستويات الصعبة
+                fctx.fillStyle = "#064e3b"; fctx.strokeStyle = flappyLevel > 2 ? "#f43f5e" : "#10b981"; fctx.lineWidth = 3;
                 fctx.fillRect(p.x, 0, p.width, p.top); fctx.strokeRect(p.x, 0, p.width, p.top);
                 fctx.fillRect(p.x, flappyCanvas.height - p.bottom, p.width, p.bottom); fctx.strokeRect(p.x, flappyCanvas.height - p.bottom, p.width, p.bottom);
             });
             fctx.shadowBlur = 0;
 
-            // رسم حبة البطاطا الكرتونية المضيئة بدلاً من الطائر
+            // رسم حبة البطاطا الكرتونية المضيئة اللطيفة
             fctx.save(); fctx.translate(potato.x, potato.y);
             fctx.shadowBlur = 18; fctx.shadowColor = "#ca8a04";
             
-            // جسم حبة البطاطا البيضاوي اللطيف
+            // جسم حبة البطاطا البيضاوي
             fctx.fillStyle = "#b45309"; fctx.beginPath(); fctx.ellipse(0, 0, potato.radius + 4, potato.radius, 0, 0, 2 * Math.PI); fctx.fill();
             fctx.strokeStyle = "#fbbf24"; fctx.lineWidth = 2; fctx.stroke();
 
-            // عيون حبة البطاطا اللطيفة المفتوحة
+            // عيون حبة البطاطا المفتوحة
             fctx.fillStyle = "#ffffff"; fctx.beginPath(); fctx.arc(6, -4, 4, 0, 2*Math.PI); fctx.fill();
             fctx.fillStyle = "#000000"; fctx.beginPath(); fctx.arc(7, -4, 1.8, 0, 2*Math.PI); fctx.fill();
 
-            // تفاصيل نقاط كرتونية على حبة البطاطا
+            // نقاط وتفاصيل قشرة البطاطا
             fctx.fillStyle = "#78350f"; fctx.beginPath(); fctx.arc(-6, 2, 1.5, 0, 2*Math.PI); fctx.fill();
             fctx.beginPath(); fctx.arc(-2, -5, 1.5, 0, 2*Math.PI); fctx.fill();
             fctx.restore(); fctx.shadowBlur = 0;
@@ -479,9 +520,13 @@
             if(flappyGameOver) {
                 fctx.fillStyle = "rgba(0,0,0,0.75)"; fctx.fillRect(0,0,flappyCanvas.width,flappyCanvas.height);
                 fctx.fillStyle = "#ef4444"; fctx.font = "black 24px Tajawal"; fctx.textAlign = "center";
-                fctx.fillText("تحطمت البطاطا! 💥", flappyCanvas.width/2, flappyCanvas.height/2 - 20);
-                fctx.fillStyle = "#ffffff"; fctx.font = "bold 13px Tajawal";
-                fctx.fillText("اضغط على الشاشة أو زر القفز للمحاولة مجدداً", flappyCanvas.width/2, flappyCanvas.height/2 + 20);
+                fctx.fillText("تحطمت البطاطا! 💥", flappyCanvas.width/2, flappyCanvas.height/2 - 30);
+                
+                fctx.fillStyle = "#ca8a04"; fctx.font = "bold 16px Tajawal";
+                fctx.fillText(`النتيجة: ${fScore} نقطة (المستوى ${flappyLevel})`, flappyCanvas.width/2, flappyCanvas.height/2 + 5);
+                
+                fctx.fillStyle = "#ffffff"; fctx.font = "bold 12px Tajawal";
+                fctx.fillText("اضغط على الشاشة أو زر المسافة لإعادة المحاولة", flappyCanvas.width/2, flappyCanvas.height/2 + 40);
             }
         }
 

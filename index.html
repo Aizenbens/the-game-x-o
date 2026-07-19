@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none, viewport-fit=cover">
-    <title>DARK ARENA - النسخة الفائقة 3D</title>
+    <title>DARK ARENA - النسخة الأصلية المتكاملة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
@@ -17,7 +17,6 @@
         .game-card:hover { background: rgba(139, 92, 246, 0.15) !important; border-color: #a855f7 !important; transform: scale(1.02); }
         .bg-grid { background-size: 50px 50px; background-image: linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px); }
         
-        /* كروت الأونو */
         .uno-card { width: 70px; height: 110px; border-radius: 12px; border: 2px solid #fff; display: inline-flex; flex-direction: column; justify-content: space-between; padding: 8px; font-weight: 900; font-size: 1.3rem; cursor: pointer; transition: all 0.2s ease; position: relative; box-shadow: 0 6px 15px rgba(0,0,0,0.6); }
         .uno-card:hover { transform: translateY(-20px) scale(1.1); z-index: 50; box-shadow: 0 12px 25px rgba(255,255,255,0.25); }
         .uno-red { background: linear-gradient(135deg, #ef4444, #b91c1c); }
@@ -26,11 +25,10 @@
         .uno-yellow { background: linear-gradient(135deg, #eab308, #a16207); color: #000; }
         .uno-wild { background: linear-gradient(135deg, #111827, #374151); border-color: #a855f7; }
 
-        /* تأثيرات الشطرنج 3D المحسنة */
         .chess-container-3d { perspective: 1000px; }
         .chess-board-3d { transform: rotateX(25deg) rotateZ(0deg); transform-style: preserve-3d; transition: transform 0.5s ease; box-shadow: 0 30px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(168, 85, 247, 0.3); }
         .chess-square { position: relative; transition: background-color 0.2s ease; cursor: pointer; transform-style: preserve-3d; }
-        .chess-piece-3d { transform: translateZ(20px); text-shadow: 0 4px 8px rgba(0,0,0,0.7), 0 0 10px rgba(255,255,255,0.2); filter: drop-shadow(0px 8px 6px rgba(0,0,0,0.6)); font-size: 2.2rem; }
+        .chess-piece-3d { transform: translateZ(20px); text-shadow: 0 4px 8px rgba(0,0,0,0.7); filter: drop-shadow(0px 8px 6px rgba(0,0,0,0.6)); font-size: 2.2rem; }
         .chess-highlight::after { content: ''; position: absolute; width: 14px; height: 14px; background: rgba(16, 185, 129, 0.7); border-radius: 50%; top: 35%; left: 35%; }
         .chess-selected { background-color: rgba(168, 85, 247, 0.45) !important; border: 2px solid #a855f7; }
     </style>
@@ -40,12 +38,12 @@
     <div id="loginScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 bg-[#010206]">
         <div class="cyber-panel p-6 rounded-3xl w-full max-w-sm text-center space-y-5 border border-purple-500/20">
             <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-500 to-indigo-500 neon-glow-purple">DARK ARENA</h2>
-            <input type="text" id="usernameInput" class="w-full p-4 rounded-2xl bg-[#070b14] border border-gray-800 text-center text-white font-bold placeholder-gray-600 focus:outline-none focus:border-purple-500" placeholder="اسمك المستعار...">
+            <input type="text" id="usernameInput" class="w-full p-4 rounded-2xl bg-[#070b14] border border-gray-800 text-center text-white font-bold placeholder-gray-600 focus:outline-none" placeholder="اسمك المستعار...">
             <div class="text-right bg-[#04060c] p-4 rounded-2xl border border-gray-900">
                 <label class="text-xs text-purple-400 block mb-1.5 font-bold">🎨 لون النيون الخاص بك:</label>
                 <input type="color" id="snakeColorInput" class="w-full h-10 rounded-xl bg-gray-950 border border-gray-800 cursor-pointer" value="#06b6d4">
             </div>
-            <button onclick="connectToHub()" class="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 font-black p-4 rounded-2xl text-white shadow-lg hover:brightness-110 active:scale-95 transition-all">اتصال مـشـفـر</button>
+            <button onclick="connectToHub()" class="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 font-black p-4 rounded-2xl text-white shadow-lg">اتصال مـشـفـر</button>
         </div>
     </div>
 
@@ -61,10 +59,10 @@
     </div>
 
     <div id="chessGameOverModal" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-        <div class="cyber-panel p-8 rounded-3xl w-full max-w-sm text-center space-y-5 border-2 border-purple-500 shadow-[0_0_40px_rgba(168,85,247,0.5)] animate-bounce">
+        <div class="cyber-panel p-8 rounded-3xl w-full max-w-sm text-center space-y-5 border-2 border-purple-500 shadow-[0_0_40px_rgba(168,85,247,0.5)]">
             <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-purple-600">🏁 انتهت الجولة!</h2>
             <p id="chessGameOverMessage" class="text-base font-bold text-gray-300">لقد تم حسم المعركة على الرقعة.</p>
-            <button onclick="document.getElementById('chessGameOverModal').classList.add('hidden'); initChessMatch();" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 font-bold p-3 rounded-xl text-white shadow-lg">جولة جديدة</button>
+            <button onclick="document.getElementById('chessGameOverModal').classList.add('hidden'); initChessMatch();" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 font-bold p-3 rounded-xl text-white">جولة جديدة</button>
         </div>
     </div>
 
@@ -99,7 +97,7 @@
                 <div onclick="openModeModal('uno')" class="game-card cyber-panel border-red-500/30 py-3 rounded-xl text-red-400 font-bold bg-black/40 flex items-center justify-center gap-3">🃏 تحدي أونو النيون</div>
                 <div onclick="openModeModal('xo')" class="game-card cyber-panel border-amber-500/20 py-3 rounded-xl text-amber-500 font-bold bg-black/40 flex items-center justify-center gap-3">❌⭕ تحدي XO الجولات</div>
                 <div onclick="openModeModal('chess')" class="game-card cyber-panel border-purple-500/20 py-3 rounded-xl text-purple-400 font-bold bg-black/40 flex items-center justify-center gap-3">👑 شطرنج التكتيك 3D المحسن</div>
-                <div onclick="openModeModal('snake')" class="game-card cyber-panel border-cyan-500/20 py-3 rounded-xl text-cyan-400 font-bold bg-black/40 flex items-center justify-center gap-3">🐍 ساحة الدودة (بوتات + قدرات خاصة)</div>
+                <div onclick="openModeModal('snake')" class="game-card cyber-panel border-cyan-500/20 py-3 rounded-xl text-cyan-400 font-bold bg-black/40 flex items-center justify-center gap-3">🐍 ساحة الدودة الأصلية (نقاط مكثفة + تصنيف)</div>
             </div>
         </div>
     </div>
@@ -145,39 +143,45 @@
     </div>
 
     <div id="snakeCanvasArea" class="hidden fixed inset-0 z-30 bg-[#010205] flex flex-col overflow-hidden select-none">
-        <div class="absolute top-4 left-4 right-4 z-50 flex justify-between items-center cyber-panel px-4 py-2 rounded-xl text-xs font-black shadow-2xl">
-            <div class="flex items-center gap-3">
-                <span class="text-cyan-400">🐍 ساحة الدودة الفائقة</span>
-                <span class="bg-black/50 px-2 py-0.5 rounded-md text-yellow-400">النقاط: <span id="snakeLiveScore">0</span></span>
-                <span id="snakeActiveAbility" class="text-pink-400 hidden">⚡ قدرة نشطة!</span>
+        <div class="absolute top-4 left-4 right-4 z-50 flex justify-between items-start pointer-events-none">
+            <div class="flex flex-col gap-2 pointer-events-auto cyber-panel px-4 py-2 rounded-xl text-xs font-black shadow-2xl">
+                <div class="flex items-center gap-3">
+                    <span class="text-cyan-400">🐍 ساحة الدودة الأصلية</span>
+                    <span class="bg-black/50 px-2 py-0.5 rounded-md text-yellow-400">نقاطك: <span id="snakeLiveScore">0</span></span>
+                    <span id="snakeActiveAbility" class="text-pink-400 hidden">⚡ قدرة نشطة!</span>
+                </div>
+                <button onclick="exitGame('snakeCanvasArea')" class="bg-red-900 text-white px-3 py-1 rounded-md text-[10px] self-start mt-1">خروج</button>
             </div>
-            <button onclick="exitGame('snakeCanvasArea')" class="bg-red-900 text-white px-3 py-1 rounded-md text-[10px]">خروج</button>
+            <div class="pointer-events-auto cyber-panel p-3 rounded-xl w-44 text-right border border-cyan-500/30 text-[11px] font-bold">
+                <div class="text-cyan-400 font-black border-b border-gray-800 pb-1 mb-1">📊 لائحة الصدارة</div>
+                <div id="snakeLeaderboardList" class="space-y-1 text-gray-300"></div>
+            </div>
         </div>
         <canvas id="snakeFullScreenCanvas"></canvas>
     </div>
 
     <script>
         const socket = io();
-        let myUsername = "", myColor = "", currentRoomCode = "LOBBY_GLOBAL", targetGame = "";
+        let myUsername = "أنت", myColor = "#06b6d4", currentRoomCode = "LOBBY_GLOBAL", targetGame = "";
         let isOnlineMode = false, botDifficulty = "normal"; 
         
         let xoBoard = Array(9).fill(null), xoGameActive = true, mySymbol = "X", isMyTurnXO = true, pScoreXO = 0, oScoreXO = 0;
         let chessInstance = new Chess(), selectedSquare = null, chessColor = 'w', highlightedSquares = [];
 
-        // محرك الدودة المطور
+        // إعدادات محرك الدودة المطور
         const canvas = document.getElementById("snakeFullScreenCanvas");
         const ctx = canvas.getContext("2d");
-        const MAP_SIZE = 2000;
-        let player = { body: [], direction: "RIGHT", nextDirection: "RIGHT", score: 0 };
-        let candy = { x: 300, y: 300 };
+        const MAP_SIZE = 2000; 
+        let player = { name: "أنت", body: [], direction: "RIGHT", nextDirection: "RIGHT", score: 0, isDead: false };
+        let candies = []; 
         let specialPower = { x: -100, y: -100, type: "speed", active: false };
         let powerActiveTimer = 0, powerSpawnTimer = 0, snakeLoop = null;
         let touchStartX = 0, touchStartY = 0;
         
-        // بوتات ساحة الدودة
         let aiSnakes = [
-            { body: [{x:500,y:500},{x:490,y:500}], direction: "UP", color: "#e11d48" },
-            { body: [{x:800,y:700},{x:790,y:700}], direction: "DOWN", color: "#2563eb" }
+            { name: "البوت Alpha", body: [], direction: "UP", color: "#e11d48", score: 40, isDead: false },
+            { name: "البوت Shadow", body: [], direction: "DOWN", color: "#a855f7", score: 60, isDead: false },
+            { name: "البوت Hunter", body: [], direction: "LEFT", color: "#10b981", score: 50, isDead: false }
         ];
 
         function openModeModal(game) { targetGame = game; document.getElementById('modeSelectionModal').classList.remove('hidden'); }
@@ -203,12 +207,11 @@
             }
         }
 
-        // ================= [ محرك الشطرنج ثلاثي الأبعاد 3D المحسن ] =================
+        // ================= [ محرك الشطرنج ثلاثي الأبعاد 3D ] =================
         function initChessMatch() {
             chessInstance = new Chess(); selectedSquare = null; highlightedSquares = [];
             renderChessUI();
         }
-
         function renderChessUI() {
             const boardEl = document.getElementById("chessBoard"); boardEl.innerHTML = "";
             const squares = chessInstance.board();
@@ -219,10 +222,7 @@
                     const squareObj = squares[r][c];
                     const squareName = String.fromCharCode(97 + c) + (8 - r);
                     const cell = document.createElement("div");
-                    
                     cell.className = `chess-square flex items-center justify-center transition-all duration-200 ${(r+c)%2===0?'bg-[#161224]':'bg-[#2d224b]'}`;
-                    cell.id = `chess-sq-${squareName}`;
-
                     if(selectedSquare === squareName) cell.classList.add('chess-selected');
                     if(highlightedSquares.includes(squareName)) cell.classList.add('chess-highlight');
 
@@ -233,13 +233,11 @@
                         pieceEl.style.color = squareObj.color === 'w' ? '#06b6d4' : '#f43f5e';
                         cell.appendChild(pieceEl);
                     }
-
                     cell.onclick = () => handleChessSquareClick(squareName);
                     boardEl.appendChild(cell);
                 }
             }
         }
-
         function handleChessSquareClick(squareName) {
             if(selectedSquare) {
                 let move = chessInstance.move({ from: selectedSquare, to: squareName, promotion: 'q' });
@@ -256,18 +254,14 @@
             } else { selectedSquare = null; highlightedSquares = []; }
             renderChessUI();
         }
-
         function makeBotChessMove() {
-            const moves = chessInstance.moves();
-            if(moves.length === 0) return;
+            const moves = chessInstance.moves(); if(moves.length === 0) return;
             chessInstance.move(moves[Math.floor(Math.random() * moves.length)]);
-            renderChessUI();
-            checkChessGameOver();
+            renderChessUI(); checkChessGameOver();
         }
-
         function checkChessGameOver() {
             if(chessInstance.game_over()) {
-                let msg = chessInstance.in_checkmate() ? "انتهاء الجولة: كش ملك رائع!" : "انتهاء الجولة: تعادل وتقاسم نقاط.";
+                let msg = chessInstance.in_checkmate() ? "انتهاء الجولة: كش ملك!" : "انتهاء الجولة: تعادل.";
                 document.getElementById('chessGameOverMessage').innerText = msg;
                 document.getElementById('chessGameOverModal').classList.remove('hidden');
                 return true;
@@ -275,20 +269,30 @@
             return false;
         }
 
-        // ================= [ محرك الدودة المتطور بالكامل (نقاط + لمس + بوتات + طاقة) ] =================
+        // ================= [ محرك الدودة المتطور المليء بالنقاط والاصطدامات الأصلية ] =================
         function startSuperSnake() {
             resizeCanvas();
-            player.body = []; player.direction = "RIGHT"; player.nextDirection = "RIGHT"; player.score = 0;
-            let sx = 200, sy = 200; for(let i=0; i<8; i++) player.body.push({x: sx - i*15, y: sy});
+            player.name = myUsername || "أنت";
+            player.body = []; player.direction = "RIGHT"; player.nextDirection = "RIGHT"; player.score = 0; player.isDead = false;
+            let sx = 200, sy = 200; for(let i=0; i<12; i++) player.body.push({x: sx - i*15, y: sy});
             
-            respawnCandy();
+            // توليد 50 نقطة عشوائية لملء الخريطة نسبياً فور بدء اللعبة
+            candies = [];
+            for(let i=0; i<50; i++) candies.push(generateRandomCandyPosition());
+
+            // إعادة تعيين البوتات في أماكن متفرقة
+            aiSnakes.forEach((bot, idx) => {
+                bot.isDead = false; bot.score = 50; bot.body = [];
+                let bx = 400 + idx*300, by = 400 + idx*300;
+                for(let i=0; i<10; i++) bot.body.push({x: bx - i*15, y: by});
+            });
+
             powerSpawnTimer = 0; powerActiveTimer = 0; specialPower.active = false;
 
-            // إعدادات اللمس للهواتف
+            // اللمس للهواتف
             window.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; });
             window.addEventListener('touchend', e => {
-                let dx = e.changedTouches[0].clientX - touchStartX;
-                let dy = e.changedTouches[0].clientY - touchStartY;
+                let dx = e.changedTouches[0].clientX - touchStartX; let dy = e.changedTouches[0].clientY - touchStartY;
                 if(Math.abs(dx) > Math.abs(dy)) {
                     if(dx > 30 && player.direction !== "LEFT") player.nextDirection = "RIGHT";
                     else if(dx < -30 && player.direction !== "RIGHT") player.nextDirection = "LEFT";
@@ -302,62 +306,136 @@
             snakeLoop = setInterval(runSnakeEngine, 70);
         }
 
-        function respawnCandy() { candy.x = Math.floor(Math.random() * (MAP_SIZE - 40)) + 20; candy.y = Math.floor(Math.random() * (MAP_SIZE - 40)) + 20; }
+        function generateRandomCandyPosition() {
+            return {
+                x: Math.floor(Math.random() * (MAP_SIZE - 60)) + 30,
+                y: Math.floor(Math.random() * (MAP_SIZE - 60)) + 30,
+                color: ['#eab308', '#ec4899', '#22c55e', '#3b82f6', '#f97316'][Math.floor(Math.random()*5)]
+            };
+        }
         function respawnPower() { specialPower.x = Math.floor(Math.random() * (MAP_SIZE - 40)) + 20; specialPower.y = Math.floor(Math.random() * (MAP_SIZE - 40)) + 20; specialPower.active = true; }
 
         function runSnakeEngine() {
-            // تحديث الاتجاه والتحرك
+            if(player.isDead) return;
+
+            // 1. تحريك اللاعب الأساسي
             player.direction = player.nextDirection;
             let head = { ...player.body[0] };
-            let moveSpeed = (specialPower.active && powerActiveTimer > 0) ? 20 : 15;
+            let moveSpeed = (specialPower.active && powerActiveTimer > 0) ? 22 : 15;
 
             if(player.direction === "UP") head.y -= moveSpeed;
             if(player.direction === "DOWN") head.y += moveSpeed;
             if(player.direction === "LEFT") head.x -= moveSpeed;
             if(player.direction === "RIGHT") head.x += moveSpeed;
-            
             player.body.unshift(head);
 
-            // التحقق من أكل النقطة
-            if(Math.hypot(head.x - candy.x, head.y - candy.y) < 25) {
-                player.score += 10;
-                document.getElementById('snakeLiveScore').innerText = player.score;
-                respawnCandy(); // تظهر نقطة أخرى في منطقة عشوائية فوراً
-            } else { player.body.pop(); }
-
-            // التوقيت الزمني للقدرات الخاصة (تظهر كل 10 ثوانٍ وتدوم 7 ثوانٍ)
-            powerSpawnTimer += 70;
-            if(powerSpawnTimer >= 10000) { powerSpawnTimer = 0; respawnPower(); }
-
-            if(specialPower.active) {
-                if(Math.hypot(head.x - specialPower.x, head.y - specialPower.y) < 25) {
-                    powerActiveTimer = 7000; // تدوم القدرة لمدة 7 ثوانٍ كاملة
-                    specialPower.active = false;
-                    document.getElementById('snakeActiveAbility').classList.remove('hidden');
+            // التحقق من أكل النقاط الموزعة في الخريطة
+            let ateCandy = false;
+            for(let i=0; i<candies.length; i++) {
+                if(Math.hypot(head.x - candies[i].x, head.y - candies[i].y) < 22) {
+                    player.score += 10; document.getElementById('snakeLiveScore').innerText = player.score;
+                    candies[i] = generateRandomCandyPosition(); // تختفي وتظهر واحدة أخرى في مكان عشوائي فوراً
+                    ateCandy = true; break;
                 }
             }
+            if(!ateCandy) player.body.pop();
 
-            if(powerActiveTimer > 0) {
-                powerActiveTimer -= 70;
-                if(powerActiveTimer <= 0) document.getElementById('snakeActiveAbility').classList.add('hidden');
+            // 2. حدود مشعة للخريطة (الموت عند ملامستها)
+            if(head.x <= 0 || head.x >= MAP_SIZE || head.y <= 0 || head.y >= MAP_SIZE) {
+                killSnake(player); alert("💥 اصطدمت بحدود الخريطة المشعة! انتهت اللعبة."); startSuperSnake(); return;
             }
 
-            // تحريك البوتات الذكية داخل الساحة لتنافس اللاعب
+            // 3. تحريك البوتات وفحصها
             aiSnakes.forEach(bot => {
+                if(bot.isDead) return;
                 let bHead = bot.body[0];
-                if(Math.random() < 0.15) {
-                    bot.direction = bHead.x < candy.x ? "RIGHT" : "LEFT";
-                    if(Math.random() < 0.5) bot.direction = bHead.y < candy.y ? "DOWN" : "UP";
+                
+                // ذكاء اصطناعي بسيط للبوتات للتوجه نحو أقرب نقطة حلوى
+                if(Math.random() < 0.2 && candies.length > 0) {
+                    let nearest = candies[0]; let minDist = Math.hypot(bHead.x - nearest.x, bHead.y - nearest.y);
+                    for(let i=1; i<candies.length; i++){
+                        let d = Math.hypot(bHead.x - candies[i].x, bHead.y - candies[i].y);
+                        if(d < minDist) { minDist = d; nearest = candies[i]; }
+                    }
+                    bot.direction = bHead.x < nearest.x ? "RIGHT" : "LEFT";
+                    if(Math.random() < 0.5) bot.direction = bHead.y < nearest.y ? "DOWN" : "UP";
                 }
+
                 let nbHead = { ...bHead };
-                if(bot.direction === "UP") nbHead.y -= 12;
-                if(bot.direction === "DOWN") nbHead.y += 12;
-                if(bot.direction === "LEFT") nbHead.x -= 12;
-                if(bot.direction === "RIGHT") nbHead.x += 12;
-                bot.body.unshift(nbHead); bot.body.pop();
+                if(bot.direction === "UP") nbHead.y -= 13;
+                if(bot.direction === "DOWN") nbHead.y += 13;
+                if(bot.direction === "LEFT") nbHead.x -= 13;
+                if(bot.direction === "RIGHT") nbHead.x += 13;
+                bot.body.unshift(nbHead);
+
+                // فحص إذا أكل البوت نقطة
+                let bAte = false;
+                for(let i=0; i<candies.length; i++) {
+                    if(Math.hypot(nbHead.x - candies[i].x, nbHead.y - candies[i].y) < 22) {
+                        bot.score += 10; candies[i] = generateRandomCandyPosition(); bAte = true; break;
+                    }
+                }
+                if(!bAte) bot.body.pop();
+
+                // فحص موت البوت عند حدود الخريطة
+                if(nbHead.x <= 0 || nbHead.x >= MAP_SIZE || nbHead.y <= 0 || nbHead.y >= MAP_SIZE) { killSnake(bot); }
             });
 
+            // 4. تطبيق قواعد الاصطدام الأصلية (إذا اصطدم الرأس بجسم لاعب آخر يموت ويتحول لنقاط)
+            // فحص اصطدام اللاعب بجسم البوتات
+            aiSnakes.forEach(bot => {
+                if(bot.isDead) return;
+                bot.body.forEach((part, idx) => {
+                    if(idx > 0 && Math.hypot(head.x - part.x, head.y - part.y) < 15) {
+                        killSnake(player); alert("💥 اصطدمت بجسم لاعب آخر وتحولت إلى نقاط!"); startSuperSnake();
+                    }
+                });
+            });
+
+            // فحص اصطدام البوتات بجسم اللاعب أو بجسم بوتات أخرى
+            aiSnakes.forEach(bot => {
+                if(bot.isDead) return;
+                let bHead = bot.body[0];
+                // مع جسم اللاعب الأساسي
+                player.body.forEach(part => {
+                    if(Math.hypot(bHead.x - part.x, bHead.y - part.y) < 15) { killSnake(bot); }
+                });
+            });
+
+            // 5. إدارة مؤقت القدرات الخاصة
+            powerSpawnTimer += 70; if(powerSpawnTimer >= 10000) { powerSpawnTimer = 0; respawnPower(); }
+            if(specialPower.active && Math.hypot(head.x - specialPower.x, head.y - specialPower.y) < 25) {
+                powerActiveTimer = 7000; specialPower.active = false; document.getElementById('snakeActiveAbility').classList.remove('hidden');
+            }
+            if(powerActiveTimer > 0) { powerActiveTimer -= 70; if(powerActiveTimer <= 0) document.getElementById('snakeActiveAbility').classList.add('hidden'); }
+
+            updateLeaderboardUI();
             drawSnakeGraphics();
+        }
+
+        function killSnake(snakeObj) {
+            snakeObj.isDead = true;
+            // اللعبة الأصلية: تحويل جسم الدودة الميتة إلى نقاط مضيئة على الخريطة فوراً لينتفع بها الآخرون
+            snakeObj.body.forEach(part => {
+                candies.push({ x: part.x, y: part.y, color: '#ffffff' });
+            });
+            snakeObj.body = [];
+            if(snakeObj !== player) {
+                // إعادة إحياء البوت بعد 3 ثوانٍ
+                setTimeout(() => {
+                    snakeObj.isDead = false; snakeObj.score = 30;
+                    let rx = Math.floor(Math.random()*(MAP_SIZE-200))+100; let ry = Math.floor(Math.random()*(MAP_SIZE-200))+100;
+                    for(let i=0; i<8; i++) snakeObj.body.push({x: rx - i*15, y: ry});
+                }, 300);
+            }
+        }
+
+        function updateLeaderboardUI() {
+            let list = [player, ...aiSnakes.filter(b => !b.isDead)];
+            list.sort((a,b) => b.score - a.score);
+            document.getElementById('snakeLeaderboardList').innerHTML = list.slice(0, 5).map((s, idx) => 
+                `<div class="flex justify-between ${s.name===player.name?'text-cyan-400 font-black':''}"><span class="truncate max-w-[90px]">${idx+1}. ${s.name}</span><span>${s.score}</span></div>`
+            ).join('');
         }
 
         function drawSnakeGraphics() {
@@ -365,33 +443,35 @@
             let cx = canvas.width/2 - player.body[0].x, cy = canvas.height/2 - player.body[0].y;
             ctx.save(); ctx.translate(cx, cy);
 
-            // أرضية الخريطة
-            ctx.fillStyle = "#040714"; ctx.fillRect(0,0,MAP_SIZE,MAP_SIZE);
+            ctx.fillStyle = "#03050d"; ctx.fillRect(0,0,MAP_SIZE,MAP_SIZE);
 
-            // رسم النقطة العشوائية الأساسية
-            ctx.fillStyle = "#eab308"; ctx.shadowBlur = 15; ctx.shadowColor = "#eab308";
-            ctx.beginPath(); ctx.arc(candy.x, candy.y, 10, 0, 2*Math.PI); ctx.fill();
+            // رسم الحدود المشعة (جدار نيون مضيء)
+            ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 12; ctx.shadowBlur = 25; ctx.shadowColor = "#ef4444";
+            ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
+            ctx.shadowBlur = 0; // إلغاء تشتيت الظل للعناصر الداخلية لتفادي البطء
 
-            // رسم القدرة الخاصة إن وجدت
+            // رسم مصفوفة النقاط التي تملأ الخريطة
+            candies.forEach(c => {
+                ctx.fillStyle = c.color; ctx.beginPath(); ctx.arc(c.x, c.y, 7, 0, 2*Math.PI); ctx.fill();
+            });
+
             if(specialPower.active) {
-                ctx.fillStyle = "#ec4899"; ctx.shadowColor = "#ec4899";
-                ctx.beginPath(); ctx.arc(specialPower.x, specialPower.y, 12, 0, 2*Math.PI); ctx.fill();
+                ctx.fillStyle = "#ec4899"; ctx.beginPath(); ctx.arc(specialPower.x, specialPower.y, 12, 0, 2*Math.PI); ctx.fill();
             }
 
-            // رسم ثعبان اللاعب
-            ctx.shadowBlur = 10; ctx.shadowColor = myColor || "#06b6d4"; ctx.fillStyle = myColor || "#06b6d4";
+            // رسم دودة اللاعب
+            ctx.fillStyle = myColor || "#06b6d4";
             player.body.forEach(b => ctx.fillRect(b.x, b.y, 14, 14));
 
-            // رسم ثعابين البوتات
+            // رسم البوتات
             aiSnakes.forEach(bot => {
-                ctx.fillStyle = bot.color; ctx.shadowColor = bot.color;
+                if(bot.isDead) return; ctx.fillStyle = bot.color;
                 bot.body.forEach(b => ctx.fillRect(b.x, b.y, 14, 14));
             });
 
             ctx.restore();
         }
 
-        // التعامل مع الكيبورد للكمبيوتر (الأسهم)
         window.addEventListener("keydown", e => {
             if(e.key === "ArrowUp" && player.direction !== "DOWN") player.nextDirection = "UP";
             if(e.key === "ArrowDown" && player.direction !== "UP") player.nextDirection = "DOWN";
@@ -399,59 +479,15 @@
             if(e.key === "ArrowRight" && player.direction !== "LEFT") player.nextDirection = "RIGHT";
         });
 
-        // ================= [ الأكواد والوظائف المكملة والربط بالردهة ] =================
-        function initUnoMatch() {
-            unoGameActive = true; unoPlayerHand = []; unoDiscardPile = [];
-            document.getElementById('unoOpponentName').innerText = `🤖 بوت الأونو المطور [${botDifficulty}]`;
-            setupUnoLogic();
-        }
-        function setupUnoLogic() {
-            const colors = ['red', 'blue', 'green', 'yellow'];
-            for(let i=0; i<7; i++) unoPlayerHand.push({ color: colors[Math.floor(Math.random()*4)], value: Math.floor(Math.random()*9).toString() });
-            unoDiscardPile.push({ color: 'red', value: '5' });
-            renderUnoHand(); updateUnoDiscardUI();
-        }
-        function renderUnoHand() {
-            const container = document.getElementById('unoPlayerHandContainer'); container.innerHTML = "";
-            unoPlayerHand.forEach((card, index) => {
-                const cardEl = document.createElement('div'); cardEl.className = `uno-card uno-${card.color} text-white`;
-                cardEl.innerHTML = `<span class="text-xs">${card.value}</span><span class="text-center font-bold">${card.value}</span>`;
-                cardEl.onclick = () => {
-                    const top = unoDiscardPile[unoDiscardPile.length-1];
-                    if(card.color === top.color || card.value === top.value) {
-                        unoPlayerHand.splice(index, 1); unoDiscardPile.push(card);
-                        renderUnoHand(); updateUnoDiscardUI();
-                        if(unoPlayerHand.length===0) alert("🎉 فزت بجولة الأونو!");
-                        else setTimeout(() => { unoDiscardPile.push({ color: card.color, value: '3' }); updateUnoDiscardUI(); }, 800);
-                    }
-                }; container.appendChild(cardEl);
-            });
-        }
-        function updateUnoDiscardUI() {
-            const top = unoDiscardPile[unoDiscardPile.length-1];
-            const el = document.getElementById('unoCurrentDiscardCard'); el.className = `uno-card uno-${top.color} text-white`;
-            el.innerHTML = `<span class="text-xs">${top.value}</span><span class="text-center font-bold">${top.value}</span>`;
-        }
+        // ================= [ الأنظمة والألعاب الإضافية الملحقة لتفادي الأخطاء ] =================
+        function initUnoMatch() { unoGameActive = true; unoPlayerHand = []; unoDiscardPile = []; setupUnoLogic(); }
+        function setupUnoLogic() { const colors = ['red', 'blue', 'green', 'yellow']; for(let i=0; i<7; i++) unoPlayerHand.push({ color: colors[Math.floor(Math.random()*4)], value: Math.floor(Math.random()*9).toString() }); unoDiscardPile.push({ color: 'red', value: '5' }); renderUnoHand(); updateUnoDiscardUI(); }
+        function renderUnoHand() { const container = document.getElementById('unoPlayerHandContainer'); container.innerHTML = ""; unoPlayerHand.forEach((card, index) => { const cardEl = document.createElement('div'); cardEl.className = `uno-card uno-${card.color} text-white`; cardEl.innerHTML = `<span class="text-xs">${card.value}</span><span class="text-center font-bold">${card.value}</span>`; cardEl.onclick = () => { const top = unoDiscardPile[unoDiscardPile.length-1]; if(card.color === top.color || card.value === top.value) { unoPlayerHand.splice(index, 1); unoDiscardPile.push(card); renderUnoHand(); updateUnoDiscardUI(); if(unoPlayerHand.length===0) alert("🎉 فزت بالجولة!"); } }; container.appendChild(cardEl); }); }
+        function updateUnoDiscardUI() { const top = unoDiscardPile[unoDiscardPile.length-1]; const el = document.getElementById('unoCurrentDiscardCard'); el.className = `uno-card uno-${top.color} text-white`; el.innerHTML = `<span class="text-xs">${top.value}</span><span class="text-center font-bold">${top.value}</span>`; }
         function unoDrawCardAction() { unoPlayerHand.push({ color: 'blue', value: '7' }); renderUnoHand(); }
-
-        function initXOMatch() { xoBoard = Array(9).fill(null); xoGameActive = true; for(let i=0; i<9; i++) document.getElementById(`cell-${i}`).innerText = ""; document.getElementById('xoScorePlayer').innerText = pScoreXO; document.getElementById('xoScoreOpponent').innerText = oScoreXO; }
-        function clickXOCell(i) {
-            if(!xoGameActive || xoBoard[i]!==null) return; xoBoard[i] = "X"; document.getElementById(`cell-${i}`).innerText = "X";
-            if(checkXOWin("X")) { pScoreXO++; alert("جولة رائعة لك!"); initXOMatch(); return; }
-            let avail = xoBoard.map((v,idx)=>v===null?idx:null).filter(v=>v!==null);
-            if(avail.length===0) { alert("تعادل!"); initXOMatch(); return; }
-            let choice = avail[Math.floor(Math.random()*avail.length)]; xoBoard[choice] = "O"; document.getElementById(`cell-${choice}`).innerText = "O";
-            if(checkXOWin("O")) { oScoreXO++; alert("فاز البوت بالجولة!"); initXOMatch(); }
-        }
-        function checkXOWin(s) { const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; return wins.some(c => c.every(i => xoBoard[i] === s)); }
-
-        function connectToHub() {
-            myUsername = document.getElementById('usernameInput').value.trim() || "لاعب";
-            myColor = document.getElementById('snakeColorInput').value;
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('gameHub').classList.remove('hidden');
-            document.getElementById('globalChatAndUsersPanel').classList.remove('hidden');
-        }
+        function initXOMatch() { xoBoard = Array(9).fill(null); xoGameActive = true; for(let i=0; i<9; i++) document.getElementById(`cell-${i}`).innerText = ""; }
+        function clickXOCell(i) { if(!xoGameActive || xoBoard[i]!==null) return; xoBoard[i] = "X"; document.getElementById(`cell-${i}`).innerText = "X"; let avail = xoBoard.map((v,idx)=>v===null?idx:null).filter(v=>v !== null); if(avail.length>0 && xoGameActive){ let c = avail[Math.floor(Math.random()*avail.length)]; xoBoard[c] = "O"; document.getElementById(`cell-${c}`).innerText = "O"; } }
+        function connectToHub() { myUsername = document.getElementById('usernameInput').value.trim() || "لاعب النيون"; myColor = document.getElementById('snakeColorInput').value; document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('gameHub').classList.remove('hidden'); document.getElementById('globalChatAndUsersPanel').classList.remove('hidden'); }
         function resizeCanvas() { if(canvas) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; } }
         function exitGame(id) { clearInterval(snakeLoop); document.getElementById(id).classList.add('hidden'); document.getElementById('gameHub').classList.remove('hidden'); document.getElementById('globalChatAndUsersPanel').classList.remove('hidden'); }
     </script>

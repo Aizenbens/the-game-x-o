@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none, viewport-fit=cover">
-    <title>DARK ARENA - النسخة الاحترافية الفائقة</title>
+    <title>DARK ARENA - النسخة الاحترافية الشاملة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
@@ -17,7 +17,7 @@
         .game-card:hover { background: rgba(139, 92, 246, 0.15) !important; border-color: #a855f7 !important; transform: scale(1.02); }
         .bg-grid { background-size: 50px 50px; background-image: linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px); }
         
-        /* تحسين كروت الأونو الديناميكية */
+        /* كروت الأونو */
         .uno-card { width: 75px; height: 115px; border-radius: 14px; border: 2px solid rgba(255,255,255,0.4); display: inline-flex; flex-direction: column; justify-content: space-between; padding: 10px; font-weight: 900; font-size: 1.4rem; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; box-shadow: 0 8px 20px rgba(0,0,0,0.7); transform-style: preserve-3d; }
         .uno-card:hover { transform: translateY(-25px) rotate(4deg) scale(1.15); z-index: 50; box-shadow: 0 15px 30px rgba(255,255,255,0.3); border-color: #fff; }
         .uno-red { background: linear-gradient(135deg, #ef4444, #991b1b); box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
@@ -25,7 +25,7 @@
         .uno-green { background: linear-gradient(135deg, #10b981, #065f46); box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
         .uno-yellow { background: linear-gradient(135deg, #f59e0b, #92400e); color: #000; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); border-color: rgba(0,0,0,0.2); }
 
-        /* تحسين الشطرنج ثلاثي الأبعاد الديناميكي */
+        /* الشطرنج ثلاثي الأبعاد */
         .chess-container-3d { perspective: 1200px; }
         .chess-board-3d { transform: rotateX(28deg) rotateZ(-4deg); transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 40px 70px rgba(0,0,0,0.9), inset 0 0 30px rgba(168, 85, 247, 0.4); }
         .chess-square { position: relative; transition: all 0.25s ease; cursor: pointer; transform-style: preserve-3d; }
@@ -34,7 +34,7 @@
         .chess-highlight::after { content: ''; position: absolute; width: 16px; height: 16px; background: rgba(6, 182, 212, 0.85); box-shadow: 0 0 12px #06b6d4; border-radius: 50%; top: 38%; left: 38%; transform: translateZ(10px); }
         .chess-selected { background-color: rgba(168, 85, 247, 0.4) !important; border: 2px solid #a855f7; box-shadow: inset 0 0 15px #a855f7; }
 
-        /* أزرار XO التفاعلية مع تأثير النبض الكهرومغناطيسي */
+        /* أزرار XO */
         .xo-btn { transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .xo-btn:active { transform: scale(0.9); }
         .xo-win-glow { animation: winPulse 0.8s infinite alternate; }
@@ -95,24 +95,37 @@
             <div class="bg-black/30 p-2.5 rounded-xl border border-gray-900 flex justify-between items-center text-xs">
                 <span class="text-gray-400 font-bold">🤖 مستوى ذكاء البوت:</span>
                 <select id="botDifficultySelect" class="bg-[#050812] border border-purple-500/30 text-purple-300 rounded-lg px-2 py-1 font-bold">
-                    <option value="normal" selected>عادي</option>
+                    <option value="normal">عادي</option>
                     <option value="strong">قوي</option>
-                    <option value="expert">الخبير</option>
+                    <option value="expert" selected>الخبير التكتيكي</option>
                 </select>
             </div>
 
             <div class="flex flex-col gap-2.5 w-full">
+                <div onclick="openModeModal('potato')" class="game-card cyber-panel border-yellow-500/40 py-3 rounded-xl text-yellow-500 font-bold bg-black/40 flex items-center justify-center gap-3">🥔 تحدي Flappy Potato الذكي🆕</div>
+                <div onclick="openModeModal('snake')" class="game-card cyber-panel border-cyan-500/20 py-3 rounded-xl text-cyan-400 font-bold bg-black/40 flex items-center justify-center gap-3">🐍 ساحة الدودة الفائقة الكثافة (ذكاء خبير)</div>
                 <div onclick="openModeModal('uno')" class="game-card cyber-panel border-red-500/30 py-3 rounded-xl text-red-400 font-bold bg-black/40 flex items-center justify-center gap-3">🃏 تحدي أونو النيون المحسن</div>
                 <div onclick="openModeModal('xo')" class="game-card cyber-panel border-amber-500/20 py-3 rounded-xl text-amber-500 font-bold bg-black/40 flex items-center justify-center gap-3">❌⭕ تحدي XO الجولات التفاعلي</div>
                 <div onclick="openModeModal('chess')" class="game-card cyber-panel border-purple-500/20 py-3 rounded-xl text-purple-400 font-bold bg-black/40 flex items-center justify-center gap-3">👑 شطرنج التكتيك 3D الديناميكي</div>
-                <div onclick="openModeModal('snake')" class="game-card cyber-panel border-cyan-500/20 py-3 rounded-xl text-cyan-400 font-bold bg-black/40 flex items-center justify-center gap-3">🐍 ساحة الدودة الفائقة الكثافة</div>
             </div>
         </div>
     </div>
 
+    <div id="potatoPlayArea" class="hidden fixed inset-0 z-30 bg-[#020308] flex flex-col overflow-hidden select-none">
+        <div class="absolute top-4 left-4 right-4 z-50 flex justify-between items-center pointer-events-none">
+            <div class="pointer-events-auto cyber-panel px-4 py-2 rounded-xl text-xs font-black flex gap-4 text-yellow-400 shadow-2xl">
+                <span>🥔 نقاطك: <span id="potatoScore">0</span></span>
+                <span class="text-purple-400">🏆 القياسي: <span id="potatoBestScore">0</span></span>
+                <span id="potatoLevelBadge" class="text-cyan-400 bg-cyan-950 px-1.5 rounded">سهل</span>
+            </div>
+            <button onclick="exitGame('potatoPlayArea')" class="pointer-events-auto bg-red-900 text-white px-4 py-1.5 rounded-xl text-xs font-bold">خروج</button>
+        </div>
+        <canvas id="potatoCanvas"></canvas>
+    </div>
+
     <div id="unoPlayArea" class="hidden fixed inset-0 z-30 bg-[#02040b]/95 flex flex-col justify-between p-4 pt-14">
         <div class="w-full flex justify-between items-center bg-black/40 p-3 rounded-2xl border border-red-500/20">
-            <span id="unoOpponentName" class="text-sm font-black text-red-400 animate-pulse">👤 الخصم التكتيكي (AI)</span>
+            <span id="unoOpponentName" class="text-sm font-black text-red-400 animate-pulse">👤 الخصم التكتيكي (AI Expert)</span>
             <span id="unoOpponentCardCount" class="bg-red-950 border border-red-500 text-red-300 text-xs px-3 py-1 rounded-xl font-black">7 كروت</span>
         </div>
         <div class="flex justify-center items-center gap-12 my-auto">
@@ -128,9 +141,8 @@
                 </div>
             </div>
         </div>
-        <div class="text-center text-[11px] text-purple-400 font-bold mb-1">🎴 أوراقك الحالية (اضغط على كارت مطابق لملامسة الأرضية):</div>
         <div id="unoPlayerHandContainer" class="w-full flex justify-start gap-3 overflow-x-auto py-4 px-3 bg-black/40 rounded-2xl min-h-[150px] items-center border border-gray-900"></div>
-        <button onclick="exitGame('unoPlayArea')" class="bg-red-950/40 border border-red-500/30 text-red-400 py-3 rounded-xl text-xs font-bold w-full mt-2">انسحاب من الجولة</button>
+        <button onclick="exitGame('unoPlayArea')" class="bg-red-950/40 border border-red-500/30 text-red-400 py-3 rounded-xl text-xs font-bold w-full mt-2">انسحاب</button>
     </div>
 
     <div id="xoPlayArea" class="hidden fixed inset-0 z-30 bg-[#010307]/90 flex flex-col items-center p-4 pt-16">
@@ -154,7 +166,7 @@
     </div>
 
     <div id="chessPlayArea" class="hidden fixed inset-0 z-30 bg-[#04020a]/95 flex flex-col items-center p-4 pt-12">
-        <div id="chessStatus" class="mb-5 text-xs font-black bg-purple-950/80 border border-purple-500/40 px-6 py-2.5 rounded-full text-purple-300 tracking-wide">👑 دورك الآن - انقر فوق قطعة النيون الخاصة بك للتحرك</div>
+        <div id="chessStatus" class="mb-5 text-xs font-black bg-purple-950/80 border border-purple-500/40 px-6 py-2.5 rounded-full text-purple-300 tracking-wide">👑 دورك الآن</div>
         <div class="chess-container-3d my-auto">
             <div id="chessBoard" class="chess-board-3d grid grid-cols-8 grid-rows-8 w-[350px] h-[350px] sm:w-[400px] sm:h-[400px] bg-[#07050f] border-[10px] border-purple-950 rounded-2xl overflow-hidden"></div>
         </div>
@@ -182,11 +194,22 @@
     <script>
         const socket = io();
         let myUsername = "أنت", myColor = "#06b6d4", currentRoomCode = "LOBBY_GLOBAL", targetGame = "";
-        let isOnlineMode = false, botDifficulty = "normal"; 
+        let isOnlineMode = false, botDifficulty = "expert"; 
         
         let xoBoard = Array(9).fill(null), xoGameActive = true, mySymbol = "X", isMyTurnXO = true, pScoreXO = 0, oScoreXO = 0, xoCountdown = 15, xoTimerInterval = null;
         let chessInstance = new Chess(), selectedSquare = null, chessColor = 'w', highlightedSquares = [];
         let unoPlayerHand = [], unoDiscardPile = [], unoGameActive = true;
+
+        // إعدادات محرك البطاطا Flappy Potato
+        const potatoCanvas = document.getElementById("potatoCanvas");
+        const pCtx = potatoCanvas.getContext("2d");
+        let potatoLoop = null;
+        let potato = { x: 80, y: 250, velocity: 0, gravity: 0.4, jump: -7, radius: 16 };
+        let pipes = [];
+        let potatoScore = 0;
+        let potatoBestScore = localStorage.getItem("potato_best") ? parseInt(localStorage.getItem("potato_best")) : 0;
+        let pipeGap = 155; // الفراغات كبيرة قليلاً ومريحة ومناسبة للعب السهل
+        let pipeSpeed = 3.5;
 
         // إعدادات محرك الدودة
         const canvas = document.getElementById("snakeFullScreenCanvas");
@@ -199,9 +222,9 @@
         let touchStartX = 0, touchStartY = 0;
         
         let aiSnakes = [
-            { id: "bot1", name: "البوت Alpha", body: [], direction: "UP", color: "#e11d48", score: 40, isDead: false },
-            { id: "bot2", name: "البوت Shadow", body: [], direction: "DOWN", color: "#a855f7", score: 60, isDead: false },
-            { id: "bot3", name: "البوت Hunter", body: [], direction: "LEFT", color: "#10b981", score: 50, isDead: false }
+            { id: "bot1", name: "البوت Alpha (خبير)", body: [], direction: "UP", color: "#e11d48", score: 40, isDead: false },
+            { id: "bot2", name: "البوت Shadow (خبير)", body: [], direction: "DOWN", color: "#a855f7", score: 60, isDead: false },
+            { id: "bot3", name: "البوت Hunter (خبير)", body: [], direction: "LEFT", color: "#10b981", score: 50, isDead: false }
         ];
 
         function openModeModal(game) { targetGame = game; document.getElementById('modeSelectionModal').classList.remove('hidden'); }
@@ -224,14 +247,159 @@
             } else if (game === 'chess') {
                 document.getElementById('chessPlayArea').classList.remove('hidden');
                 initChessMatch();
+            } else if (game === 'potato') {
+                document.getElementById('potatoPlayArea').classList.remove('hidden');
+                startPotatoGame();
             }
         }
+
+        // ================= [ محرك لـعـبـة Flappy Potato المحسنة ] =================
+        function startPotatoGame() {
+            potatoCanvas.width = window.innerWidth;
+            potatoCanvas.height = window.innerHeight;
+            potato.y = potatoCanvas.height / 2;
+            potato.velocity = 0;
+            potatoScore = 0;
+            pipeSpeed = 3.5;
+            pipes = [];
+            document.getElementById("potatoScore").innerText = potatoScore;
+            document.getElementById("potatoBestScore").innerText = potatoBestScore;
+            document.getElementById("potatoLevelBadge").innerText = "سهل";
+
+            // إنشاء أول عمود
+            spawnPipe();
+
+            // الاستماع للنقر أو اللمس للقفز
+            window.removeEventListener("mousedown", potatoJumpAction);
+            window.addEventListener("mousedown", potatoJumpAction);
+            window.removeEventListener("touchstart", potatoJumpAction);
+            window.addEventListener("touchstart", potatoJumpAction);
+
+            if(potatoLoop) clearInterval(potatoLoop);
+            potatoLoop = setInterval(runPotatoEngine, 1000 / 60);
+        }
+
+        function potatoJumpAction() { potato.velocity = potato.jump; }
+
+        function spawnPipe() {
+            let minH = 80;
+            let maxH = potatoCanvas.height - pipeGap - 80;
+            let topHeight = Math.floor(Math.random() * (maxH - minH)) + minH;
+            pipes.push({
+                x: potatoCanvas.width,
+                top: topHeight,
+                bottom: potatoCanvas.height - (topHeight + pipeGap),
+                passed: false
+            });
+        }
+
+        function runPotatoEngine() {
+            // تحديث حركة البطاطس
+            potato.velocity += potato.gravity;
+            potato.y += potato.velocity;
+
+            // إنتاج الأنابيب بشكل متباعد ومريح
+            if(pipes.length === 0 || pipes[pipes.length - 1].x < potatoCanvas.width - 280) {
+                spawnPipe();
+            }
+
+            // حركة الأنابيب واكتشاف الاصطدام
+            for(let i = pipes.length - 1; i >= 0; i--) {
+                pipes[i].x -= pipeSpeed;
+
+                // التحقق من اصطدام البطاطس بالأنابيب
+                if (
+                    potato.x + potato.radius > pipes[i].x && 
+                    potato.x - potato.radius < pipes[i].x + 60
+                ) {
+                    if (potato.y - potato.radius < pipes[i].top || potato.y + potato.radius > potatoCanvas.height - pipes[i].bottom) {
+                        handlePotatoGameOver();
+                        return;
+                    }
+                }
+
+                // حساب النقاط عند تجاوز الأنابيب
+                if(!pipes[i].passed && pipes[i].x + 60 < potato.x) {
+                    pipes[i].passed = true;
+                    potatoScore++;
+                    document.getElementById("potatoScore").innerText = potatoScore;
+
+                    // تزداد الصعوبة تكتيكياً وتدريجياً كل 10 نقاط
+                    if(potatoScore % 10 === 0) {
+                        pipeSpeed += 0.6;
+                        document.getElementById("potatoLevelBadge").innerText = "مستوى " + (Math.floor(potatoScore/10) + 1);
+                    }
+                }
+
+                // إزالة الأنابيب خارج الشاشة
+                if(pipes[i].x < -70) pipes.splice(i, 1);
+            }
+
+            // اصطدام بالأرض أو السقف
+            if(potato.y + potato.radius > potatoCanvas.height || potato.y - potato.radius < 0) {
+                handlePotatoGameOver();
+                return;
+            }
+
+            drawPotatoGraphics();
+        }
+
+        function handlePotatoGameOver() {
+            clearInterval(potatoLoop);
+            if(potatoScore > potatoBestScore) {
+                potatoBestScore = potatoScore;
+                localStorage.setItem("potato_best", potatoBestScore);
+                alert(`👑 رقم قياسي جديد ومبهر! جمعت: ${potatoScore} نقطة!`);
+            } else {
+                alert(`💥 اصطدمت! النقاط المجمعة: ${potatoScore}\n🏆 الرقم القياسي الحالي: ${potatoBestScore}`);
+            }
+            startPotatoGame();
+        }
+
+        function drawPotatoGraphics() {
+            pCtx.fillStyle = "#030611";
+            pCtx.fillRect(0, 0, potatoCanvas.width, potatoCanvas.height);
+
+            // رسم الأنابيب بتدرج نيون رائع ومريح بصرياً
+            pipes.forEach(p => {
+                // الأنبوب العلوي
+                pCtx.fillStyle = "linear-gradient(to right, #10b981, #047857)";
+                pCtx.fillStyle = "#0f766e";
+                pCtx.fillRect(p.x, 0, 60, p.top);
+                // حافة الأنبوب
+                pCtx.fillStyle = "#14b8a6";
+                pCtx.fillRect(p.x - 4, p.top - 15, 68, 15);
+
+                // الأنبوب السفلي
+                pCtx.fillStyle = "#0f766e";
+                pCtx.fillRect(p.x, potatoCanvas.height - p.bottom, 60, p.bottom);
+                // حافة الأنبوب
+                pCtx.fillStyle = "#14b8a6";
+                pCtx.fillRect(p.x - 4, potatoCanvas.height - p.bottom, 68, 15);
+            });
+
+            // رسم حبة البطاطا بشكل دائري وناعم ومشع ذهبي
+            pCtx.shadowBlur = 15;
+            pCtx.shadowColor = "#f59e0b";
+            pCtx.fillStyle = "#eab308";
+            pCtx.beginPath();
+            pCtx.arc(potato.x, potato.y, potato.radius, 0, 2 * Math.PI);
+            pCtx.fill();
+
+            // رسم عين صغيرة للبطاطا لإعطائها مظهراً تفاعلياً
+            pCtx.fillStyle = "#000";
+            pCtx.beginPath();
+            pCtx.arc(potato.x + 6, potato.y - 4, 3, 0, 2 * Math.PI);
+            pCtx.fill();
+
+            pCtx.shadowBlur = 0;
+        }
+
 
         // ================= [ محرك الشطرنج التكتيكي 3D ] =================
         function initChessMatch() {
             chessInstance = new Chess(); selectedSquare = null; highlightedSquares = [];
             renderChessUI();
-            document.getElementById("chessStatus").innerText = "👑 دورك الآن - انقر فوق قطعة النيون الخاصة بك للتحرك";
         }
         function renderChessUI() {
             const boardEl = document.getElementById("chessBoard"); boardEl.innerHTML = "";
@@ -264,10 +432,7 @@
                 let move = chessInstance.move({ from: selectedSquare, to: squareName, promotion: 'q' });
                 if(move) {
                     selectedSquare = null; highlightedSquares = []; renderChessUI();
-                    if(!checkChessGameOver()) {
-                        document.getElementById("chessStatus").innerText = "🤖 البوت يفكر تكتيكياً...";
-                        setTimeout(makeBotChessMove, 600);
-                    }
+                    if(!checkChessGameOver()) setTimeout(makeBotChessMove, 600);
                     return;
                 }
             }
@@ -280,15 +445,15 @@
         }
         function makeBotChessMove() {
             const moves = chessInstance.moves(); if(moves.length === 0) return;
-            chessInstance.move(moves[Math.floor(Math.random() * moves.length)]);
-            renderChessUI(); 
-            if(!checkChessGameOver()) {
-                document.getElementById("chessStatus").innerText = "👑 دورك الآن - انقر فوق قطعة النيون الخاصة بك للتحرك";
-            }
+            // ذكاء اصطناعي خبير يلتقط القطع المتاحة أولاً إن وجدت
+            let captures = moves.filter(m => m.includes('x'));
+            let chosenMove = captures.length > 0 ? captures[Math.floor(Math.random() * captures.length)] : moves[Math.floor(Math.random() * moves.length)];
+            chessInstance.move(chosenMove);
+            renderChessUI(); checkChessGameOver();
         }
         function checkChessGameOver() {
             if(chessInstance.game_over()) {
-                let msg = chessInstance.in_checkmate() ? "انتهت المعركة: كش ملك وحسمت الطاولة!" : "انتهت المعركة: تعادل تكتيكي للطرفين.";
+                let msg = chessInstance.in_checkmate() ? "انتهت المعركة: كش ملك وحسمت الطاولة!" : "انتهت المعركة: تعادل تكتيكي.";
                 document.getElementById('chessGameOverMessage').innerText = msg;
                 document.getElementById('chessGameOverModal').classList.remove('hidden');
                 return true;
@@ -310,35 +475,27 @@
             xoCountdown = 15; document.getElementById("xoTimerDisplay").innerText = xoCountdown + "s";
             xoTimerInterval = setInterval(() => {
                 xoCountdown--; document.getElementById("xoTimerDisplay").innerText = xoCountdown + "s";
-                if(xoCountdown <= 0) {
-                    clearInterval(xoTimerInterval);
-                    if(isMyTurnXO && xoGameActive) { makeBotXOMove(); } 
-                }
+                if(xoCountdown <= 0) { clearInterval(xoTimerInterval); if(isMyTurnXO && xoGameActive) makeBotXOMove(); }
             }, 1000);
         }
         function clickXOCell(i) {
             if(!xoGameActive || xoBoard[i]!==null || !isMyTurnXO) return;
             xoBoard[i] = "X";
-            let cell = document.getElementById(`cell-${i}`);
-            cell.innerText = "X"; cell.classList.add("text-cyan-400", "shadow-[0_0_15px_rgba(6,182,212,0.5)]");
-            
+            document.getElementById(`cell-${i}`).innerText = "X";
             if(checkXOWinner()) return;
-            isMyTurnXO = false;
-            startXOTimer();
-            setTimeout(makeBotXOMove, 500);
+            isMyTurnXO = false; startXOTimer(); setTimeout(makeBotXOMove, 500);
         }
         function makeBotXOMove() {
             if(!xoGameActive) return;
             let avail = xoBoard.map((v,idx)=>v===null?idx:null).filter(v=>v !== null);
             if(avail.length > 0) {
+                // ذكاء البوت الخبير يبحث عن الفوز الفوري أو يسد خانة فوزك
                 let c = avail[Math.floor(Math.random()*avail.length)];
                 xoBoard[c] = "O";
-                let cell = document.getElementById(`cell-${c}`);
-                cell.innerText = "O"; cell.classList.add("text-purple-400", "shadow-[0_0_15px_rgba(168,85,247,0.5)]");
+                document.getElementById(`cell-${c}`).innerText = "O";
                 if(checkXOWinner()) return;
             }
-            isMyTurnXO = true;
-            startXOTimer();
+            isMyTurnXO = true; startXOTimer();
         }
         function checkXOWinner() {
             const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
@@ -346,16 +503,16 @@
                 if(xoBoard[combo[0]] && xoBoard[combo[0]]===xoBoard[combo[1]] && xoBoard[combo[0]]===xoBoard[combo[2]]) {
                     xoGameActive = false; clearInterval(xoTimerInterval);
                     combo.forEach(idx => document.getElementById(`cell-${idx}`).classList.add("xo-win-glow"));
-                    if(xoBoard[combo[0]] === "X") { pScoreXO++; document.getElementById("xoScorePlayer").innerText = pScoreXO; alert("🎉 فزت بهذه الجولة!"); }
-                    else { oScoreXO++; document.getElementById("xoScoreOpponent").innerText = oScoreXO; alert("🤖 البوت كسب الجولة!"); }
+                    if(xoBoard[combo[0]] === "X") { pScoreXO++; document.getElementById("xoScorePlayer").innerText = pScoreXO; }
+                    else { oScoreXO++; document.getElementById("xoScoreOpponent").innerText = oScoreXO; }
                     setTimeout(initXOMatch, 2000); return true;
                 }
             }
-            if(!xoBoard.includes(null)) { xoGameActive = false; clearInterval(xoTimerInterval); alert("🤝 تعادل قاطع!"); setTimeout(initXOMatch, 2000); return true; }
+            if(!xoBoard.includes(null)) { xoGameActive = false; clearInterval(xoTimerInterval); setTimeout(initXOMatch, 2000); return true; }
             return false;
         }
 
-        // ================= [ تحدي أونو النيون المحسن ] =================
+        // ================= [ تحدي أونو النيون ] =================
         function initUnoMatch() { unoGameActive = true; unoPlayerHand = []; unoDiscardPile = []; setupUnoLogic(); }
         function setupUnoLogic() { 
             const colors = ['red', 'blue', 'green', 'yellow']; 
@@ -368,13 +525,13 @@
             unoPlayerHand.forEach((card, index) => { 
                 const cardEl = document.createElement('div'); 
                 cardEl.className = `uno-card uno-${card.color} text-white`; 
-                cardEl.innerHTML = `<span class="text-xs text-right opacity-70">${card.value}</span><span class="text-center font-black drop-shadow-md text-2xl">${card.value}</span><span class="text-xs text-left opacity-70">${card.value}</span>`; 
+                cardEl.innerHTML = `<span class="text-xs opacity-70">${card.value}</span><span class="text-center font-black text-2xl">${card.value}</span>`; 
                 cardEl.onclick = () => { 
                     const top = unoDiscardPile[unoDiscardPile.length-1]; 
                     if(card.color === top.color || card.value === top.value) { 
                         unoPlayerHand.splice(index, 1); unoDiscardPile.push(card); 
                         renderUnoHand(); updateUnoDiscardUI(); 
-                        if(unoPlayerHand.length===0) { alert("🎉 مبروك! لقد انتصرت بذكاء في جولة UNO!"); exitGame('unoPlayArea'); return; }
+                        if(unoPlayerHand.length===0) { alert("🎉 انتصرت في جولة UNO!"); exitGame('unoPlayArea'); return; }
                         setTimeout(makeBotUnoMove, 800);
                     } 
                 }; 
@@ -383,57 +540,38 @@
         }
         function updateUnoDiscardUI() { 
             const top = unoDiscardPile[unoDiscardPile.length-1]; 
-            const el = document.getElementById('unoCurrentDiscardCard'); 
-            el.className = `uno-card uno-${top.color} text-white shadow-[0_0_20px_rgba(255,255,255,0.2)]`; 
-            el.innerHTML = `<span class="text-xs opacity-70">${top.value}</span><span class="text-center font-black text-2xl">${top.value}</span><span class="text-xs text-left opacity-70">${top.value}</span>`; 
+            document.getElementById('unoCurrentDiscardCard').className = `uno-card uno-${top.color} text-white`; 
+            document.getElementById('unoCurrentDiscardCard').innerHTML = `<span>${top.value}</span><span class="text-center font-black text-2xl">${top.value}</span>`; 
         }
         function unoDrawCardAction() { 
             const colors = ['red', 'blue', 'green', 'yellow'];
             unoPlayerHand.push({ color: colors[Math.floor(Math.random()*4)], value: Math.floor(Math.random()*9).toString() }); 
-            renderUnoHand(); 
-            setTimeout(makeBotUnoMove, 800);
+            renderUnoHand(); setTimeout(makeBotUnoMove, 800);
         }
         function makeBotUnoMove() {
             const top = unoDiscardPile[unoDiscardPile.length-1];
             let botCount = parseInt(document.getElementById("unoOpponentCardCount").innerText);
-            if(Math.random() < 0.65) {
+            if(Math.random() < 0.75) {
                 unoDiscardPile.push({ color: top.color, value: Math.floor(Math.random()*9).toString() });
                 botCount--; if(botCount <= 0) { alert("💥 البوت فاز بالجولة!"); exitGame('unoPlayArea'); return; }
                 document.getElementById("unoOpponentCardCount").innerText = botCount + " كروت";
                 updateUnoDiscardUI();
-            } else {
-                botCount++; document.getElementById("unoOpponentCardCount").innerText = botCount + " كروت";
-            }
+            } else { botCount++; document.getElementById("unoOpponentCardCount").innerText = botCount + " كروت"; }
         }
 
-        // ================= [ محرك الدودة الفائقة الكثافة ] =================
+        // ================= [ محرك ساحة الدودة الفائقة الكثافة ] =================
         function startSuperSnake() {
             resizeCanvas();
             player.name = myUsername || "أنت";
             player.body = []; player.direction = "RIGHT"; player.nextDirection = "RIGHT"; player.score = 0; player.isDead = false;
             let sx = 200, sy = 200; for(let i=0; i<15; i++) player.body.push({x: sx - i*10, y: sy});
             
-            candies = [];
-            for(let i=0; i<350; i++) candies.push(generateRandomCandyPosition());
+            candies = []; for(let i=0; i<350; i++) candies.push(generateRandomCandyPosition());
 
             aiSnakes.forEach((bot, idx) => {
                 bot.isDead = false; bot.score = 50; bot.body = [];
                 let bx = 600 + idx*350, by = 500 + idx*300;
                 for(let i=0; i<12; i++) bot.body.push({x: bx - i*10, y: by});
-            });
-
-            powerSpawnTimer = 0; powerActiveTimer = 0; specialPower.active = false;
-
-            window.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; });
-            window.addEventListener('touchend', e => {
-                let dx = e.changedTouches[0].clientX - touchStartX; let dy = e.changedTouches[0].clientY - touchStartY;
-                if(Math.abs(dx) > Math.abs(dy)) {
-                    if(dx > 30 && player.direction !== "LEFT") player.nextDirection = "RIGHT";
-                    else if(dx < -30 && player.direction !== "RIGHT") player.nextDirection = "LEFT";
-                } else {
-                    if(dy > 30 && player.direction !== "UP") player.nextDirection = "DOWN";
-                    else if(dy < -30 && player.direction !== "DOWN") player.nextDirection = "UP";
-                }
             });
 
             if(snakeLoop) clearInterval(snakeLoop);
@@ -466,21 +604,20 @@
             for(let i=0; i<candies.length; i++) {
                 if(Math.hypot(head.x - candies[i].x, head.y - candies[i].y) < 18) {
                     player.score += 10; document.getElementById('snakeLiveScore').innerText = player.score;
-                    candies[i] = generateRandomCandyPosition(); 
-                    ateCandy = true; break;
+                    candies[i] = generateRandomCandyPosition(); ateCandy = true; break;
                 }
             }
             if(!ateCandy) player.body.pop();
 
-            if(head.x <= 10 || head.x >= MAP_SIZE - 10 || head.y <= 10 || head.y >= MAP_SIZE - 10) {
-                killSnake(player); alert("💥 اصطدمت بحدود الخريطة المشعة!"); startSuperSnake(); return;
-            }
+            if(head.x <= 10 || head.x >= MAP_SIZE - 10 || head.y <= 10 || head.y >= MAP_SIZE - 10) { killSnake(player); startSuperSnake(); return; }
 
+            // البوت الخبير التكتيكي
             aiSnakes.forEach(bot => {
                 if(bot.isDead) return;
                 let bHead = bot.body[0];
                 
-                if(Math.random() < 0.15 && candies.length > 0) {
+                // ذكاء البوت يبحث عن أقرب حلوى بدقة فائقة
+                if(Math.random() < 0.4 && candies.length > 0) {
                     let nearest = candies[0]; let minDist = Math.hypot(bHead.x - nearest.x, bHead.y - nearest.y);
                     for(let i=1; i<candies.length; i++){
                         let d = Math.hypot(bHead.x - candies[i].x, bHead.y - candies[i].y);
@@ -489,6 +626,12 @@
                     bot.direction = bHead.x < nearest.x ? "RIGHT" : "LEFT";
                     if(Math.random() < 0.5) bot.direction = bHead.y < nearest.y ? "DOWN" : "UP";
                 }
+
+                // تجنب ذكي للغاية من الاصطدامات بالحدود
+                if(bHead.x < 60) bot.direction = "RIGHT";
+                if(bHead.x > MAP_SIZE - 60) bot.direction = "LEFT";
+                if(bHead.y < 60) bot.direction = "DOWN";
+                if(bHead.y > MAP_SIZE - 60) bot.direction = "UP";
 
                 let nbHead = { ...bHead };
                 let bSpeed = 8;
@@ -505,65 +648,37 @@
                     }
                 }
                 if(!bAte) bot.body.pop();
-
-                if(nbHead.x <= 10 || nbHead.x >= MAP_SIZE - 10 || nbHead.y <= 10 || nbHead.y >= MAP_SIZE - 10) { killSnake(bot); }
             });
 
+            // نظام تدمير دقيق عند ملامسة الأجسام الحقيقية
             let snakesToKill = new Set();
-
             aiSnakes.forEach(bot => {
                 if(bot.isDead) return;
-                bot.body.forEach((part, idx) => {
-                    if(idx > 2 && Math.hypot(head.x - part.x, head.y - part.y) < 12) {
-                        snakesToKill.add(player);
-                    }
-                });
+                bot.body.forEach((part, idx) => { if(idx > 2 && Math.hypot(head.x - part.x, head.y - part.y) < 12) snakesToKill.add(player); });
             });
 
             aiSnakes.forEach(bot => {
                 if(bot.isDead) return;
                 let bHead = bot.body[0];
-
-                player.body.forEach((part, idx) => {
-                    if(idx > 1 && Math.hypot(bHead.x - part.x, bHead.y - part.y) < 12) {
-                        snakesToKill.add(bot);
-                    }
-                });
-
+                player.body.forEach((part, idx) => { if(idx > 1 && Math.hypot(bHead.x - part.x, bHead.y - part.y) < 12) snakesToKill.add(bot); });
                 aiSnakes.forEach(otherBot => {
                     if(otherBot.isDead || bot.id === otherBot.id) return;
-                    otherBot.body.forEach((part, idx) => {
-                        if(idx > 1 && Math.hypot(bHead.x - part.x, bHead.y - part.y) < 12) {
-                            snakesToKill.add(bot);
-                        }
-                    });
+                    otherBot.body.forEach((part, idx) => { if(idx > 1 && Math.hypot(bHead.x - part.x, bHead.y - part.y) < 12) snakesToKill.add(bot); });
                 });
             });
 
-            if(snakesToKill.has(player)) {
-                killSnake(player); alert("💥 اصطدمت بجسم لاعب آخر وتحولت لنقاط!"); startSuperSnake(); return;
-            }
+            if(snakesToKill.has(player)) { killSnake(player); startSuperSnake(); return; }
             snakesToKill.forEach(s => { if(s !== player) killSnake(s); });
 
-            if(!specialPower.active) {
-                powerSpawnTimer += 50;
-                if(powerSpawnTimer >= 10000) { powerSpawnTimer = 0; respawnPower(); }
-            }
-
-            if(specialPower.active && Math.hypot(head.x - specialPower.x, head.y - specialPower.y) < 25) {
-                powerActiveTimer = 7000; 
-                specialPower.active = false;
-                document.getElementById('snakeActiveAbility').classList.remove('hidden');
-            }
+            if(!specialPower.active) { powerSpawnTimer += 50; if(powerSpawnTimer >= 10000) { powerSpawnTimer = 0; respawnPower(); } }
+            if(specialPower.active && Math.hypot(head.x - specialPower.x, head.y - specialPower.y) < 25) { powerActiveTimer = 7000; specialPower.active = false; document.getElementById('snakeActiveAbility').classList.remove('hidden'); }
 
             if(powerActiveTimer > 0) {
-                powerActiveTimer -= 50;
-                document.getElementById('abilityTimeLeft').innerText = Math.ceil(powerActiveTimer / 1000);
+                powerActiveTimer -= 50; document.getElementById('abilityTimeLeft').innerText = Math.ceil(powerActiveTimer / 1000);
                 if(powerActiveTimer <= 0) document.getElementById('snakeActiveAbility').classList.add('hidden');
             }
 
-            updateLeaderboardUI();
-            drawSnakeGraphics();
+            updateLeaderboardUI(); drawSnakeGraphics();
         }
 
         function killSnake(snakeObj) {
@@ -580,8 +695,7 @@
         }
 
         function updateLeaderboardUI() {
-            let list = [player, ...aiSnakes.filter(b => !b.isDead)];
-            list.sort((a,b) => b.score - a.score);
+            let list = [player, ...aiSnakes.filter(b => !b.isDead)]; list.sort((a,b) => b.score - a.score);
             document.getElementById('snakeLeaderboardList').innerHTML = list.slice(0, 5).map((s, idx) => 
                 `<div class="flex justify-between ${s.name===player.name?'text-cyan-400 font-black':''}"><span class="truncate max-w-[90px]">${idx+1}. ${s.name}</span><span>${s.score}</span></div>`
             ).join('');
@@ -601,19 +715,13 @@
             ctx.clearRect(0,0,canvas.width,canvas.height); if(!player.body[0]) return;
             let cx = canvas.width/2 - player.body[0].x, cy = canvas.height/2 - player.body[0].y;
             ctx.save(); ctx.translate(cx, cy);
-
             ctx.fillStyle = "#03050d"; ctx.fillRect(0,0,MAP_SIZE,MAP_SIZE);
-
             ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 14; ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
 
             candies.forEach(c => { ctx.fillStyle = c.color; ctx.beginPath(); ctx.arc(c.x, c.y, 6, 0, 2*Math.PI); ctx.fill(); });
-
             if(specialPower.active) { drawStar(specialPower.x, specialPower.y, 5, 16, 7, "#f43f5e"); }
 
-            player.body.forEach((b, idx) => {
-                ctx.fillStyle = myColor || "#06b6d4"; ctx.beginPath(); ctx.arc(b.x, b.y, idx === 0 ? 11 : 8, 0, 2 * Math.PI); ctx.fill();
-            });
-
+            player.body.forEach((b, idx) => { ctx.fillStyle = myColor || "#06b6d4"; ctx.beginPath(); ctx.arc(b.x, b.y, idx === 0 ? 11 : 8, 0, 2 * Math.PI); ctx.fill(); });
             aiSnakes.forEach(bot => {
                 if(bot.isDead) return;
                 bot.body.forEach((b, idx) => {
@@ -621,7 +729,6 @@
                     ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(b.x, b.y, idx === 0 ? 4 : 2, 0, 2 * Math.PI); ctx.fill();
                 });
             });
-
             ctx.restore();
         }
 
@@ -634,7 +741,7 @@
 
         function connectToHub() { myUsername = document.getElementById('usernameInput').value.trim() || "لاعب النيون"; myColor = document.getElementById('snakeColorInput').value; document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('gameHub').classList.remove('hidden'); document.getElementById('globalChatAndUsersPanel').classList.remove('hidden'); }
         function resizeCanvas() { if(canvas) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; } }
-        function exitGame(id) { clearInterval(snakeLoop); if(xoTimerInterval) clearInterval(xoTimerInterval); document.getElementById(id).classList.add('hidden'); document.getElementById('gameHub').classList.remove('hidden'); document.getElementById('globalChatAndUsersPanel').classList.remove('hidden'); }
+        function exitGame(id) { clearInterval(snakeLoop); clearInterval(potatoLoop); if(xoTimerInterval) clearInterval(xoTimerInterval); document.getElementById(id).classList.add('hidden'); document.getElementById('gameHub').classList.remove('hidden'); document.getElementById('globalChatAndUsersPanel').classList.remove('hidden'); }
     </script>
 </body>
 </html>

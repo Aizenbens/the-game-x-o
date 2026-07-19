@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none, viewport-fit=cover">
-    <title>DARK ARENA - النسخة الفائقة الكاملة</title>
+    <title>DARK ARENA - النسخة الفائقة المطورة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
@@ -16,17 +16,14 @@
         .game-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
         .game-card:hover { background: rgba(139, 92, 246, 0.15) !important; border-color: #a855f7 !important; transform: scale(1.02); }
         .bg-grid { background-size: 50px 50px; background-image: linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px); }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #6b21a8; border-radius: 10px; }
         
-        /* ستايل كروت الأونو */
-        .uno-card { width: 65px; height: 100px; border-radius: 8px; border: 2px solid #fff; display: inline-flex; flex-col; justify-content: center; align-items: center; font-weight: 900; font-size: 1.25rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .uno-card:hover { transform: translateY(-15px) scale(1.05); z-index: 50; box-shadow: 0 10px 20px rgba(255,255,255,0.2); }
-        .uno-red { background: linear-gradient(135deg, #ef4444, #b91c1c); text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
-        .uno-blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
-        .uno-green { background: linear-gradient(135deg, #10b981, #047857); text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
-        .uno-yellow { background: linear-gradient(135deg, #eab308, #a16207); text-shadow: 0 2px 4px rgba(0,0,0,0.6); text-color: #000; }
-        .uno-wild { background: linear-gradient(135deg, #111827, #374151); border-color: #a855f7; text-shadow: 0 0 8px #a855f7; }
+        .uno-card { width: 70px; height: 110px; border-radius: 12px; border: 2px solid #fff; display: inline-flex; flex-direction: column; justify-content: space-between; padding: 8px; font-weight: 900; font-size: 1.3rem; cursor: pointer; transition: all 0.2s ease; position: relative; box-shadow: 0 6px 15px rgba(0,0,0,0.6); }
+        .uno-card:hover { transform: translateY(-20px) scale(1.1); z-index: 50; box-shadow: 0 12px 25px rgba(255,255,255,0.25); }
+        .uno-red { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+        .uno-blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .uno-green { background: linear-gradient(135deg, #10b981, #047857); }
+        .uno-yellow { background: linear-gradient(135deg, #eab308, #a16207); color: #000; }
+        .uno-wild { background: linear-gradient(135deg, #111827, #374151); border-color: #a855f7; }
     </style>
 </head>
 <body class="text-gray-200 h-full flex flex-col justify-between bg-grid">
@@ -43,6 +40,18 @@
         </div>
     </div>
 
+    <div id="modeSelectionModal" class="hidden fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="cyber-panel p-6 rounded-3xl w-full max-w-xs text-center space-y-4 border border-cyan-500/30">
+            <h3 class="text-lg font-black text-cyan-400">🌐 اختر نظام تشغيل اللعبة</h3>
+            <p class="text-xs text-gray-400">هل ترغب في مواجهة عملاء الشبكة أم التدريب ضد النظام؟</p>
+            <div class="flex flex-col gap-2">
+                <button onclick="confirmGameModeSelection(true)" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 font-bold p-3 rounded-xl text-white hover:brightness-110 transition-all">مباراة أونلاين (شبكة)</button>
+                <button onclick="confirmGameModeSelection(false)" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 font-bold p-3 rounded-xl text-white hover:brightness-110 transition-all">مباراة أوفلاين (ضد البوت)</button>
+            </div>
+            <button onclick="document.getElementById('modeSelectionModal').classList.add('hidden')" class="text-xs text-gray-500 hover:text-gray-300 underline mt-2">إلغاء</button>
+        </div>
+    </div>
+
     <div id="globalChatAndUsersPanel" class="hidden fixed bottom-4 right-4 left-4 md:left-auto md:w-80 z-40 flex flex-col gap-3">
         <div class="cyber-panel p-3 rounded-2xl border border-cyan-500/20 max-h-24 overflow-y-auto">
             <div class="text-[10px] text-cyan-400 font-black mb-1 flex items-center gap-1">🟢 عملاء الغرفة الحالية (<span id="connectedUsersCount">0</span>):</div>
@@ -51,7 +60,7 @@
         <div class="cyber-panel p-3 rounded-2xl border border-purple-500/20 flex flex-col h-48">
             <div id="chatMessagesContainer" class="flex-1 overflow-y-auto space-y-1 text-[10px] p-1 bg-black/40 rounded-xl mb-2 text-right"></div>
             <div class="flex gap-1.5">
-                <input type="text" id="chatMessageInputField" class="flex-1 bg-[#060a12] text-[10px] px-3 py-2 rounded-xl border border-gray-800 text-white focus:outline-none focus:border-purple-500" placeholder="اكتب رسالة مشفرة للغرفة..." onkeydown="if(event.key==='Enter') sendChatMessageToServer()">
+                <input type="text" id="chatMessageInputField" class="flex-1 bg-[#060a12] text-[10px] px-3 py-2 rounded-xl border border-gray-800 text-white focus:outline-none focus:border-purple-500" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter') sendChatMessageToServer()">
                 <button onclick="sendChatMessageToServer()" class="bg-purple-950 border border-purple-600/50 hover:bg-purple-900 text-purple-200 text-[10px] font-bold px-3 rounded-xl transition-all">إرسال</button>
             </div>
         </div>
@@ -62,37 +71,37 @@
             <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-purple-400 to-indigo-500">غرفة التحكم والأنظمة</h1>
             
             <div class="w-full bg-black/40 p-3 rounded-xl border border-gray-900 flex flex-col gap-2">
-                <button onclick="createNewPrivateRoom()" class="w-full bg-emerald-950 border border-emerald-500/40 text-emerald-400 py-2 rounded-xl text-xs font-black shadow-md hover:bg-emerald-900 transition-all">🛠️ توليد وإنشاء غرفة خاصة جديدة</button>
+                <button onclick="createNewPrivateRoom()" class="w-full bg-emerald-950 border border-emerald-500/40 text-emerald-400 py-2 rounded-xl text-xs font-black shadow-md hover:bg-emerald-900 transition-all">🛠️ إنشاء غرفة خاصة جديدة أونلاين</button>
                 <div class="flex gap-2">
-                    <input type="text" id="joinRoomCodeInput" class="flex-1 bg-[#050811] text-xs p-2 rounded-xl border border-gray-800 text-center text-white tracking-widest font-bold" placeholder="أدخل كود الغرفة المكون من 6 أرقام">
+                    <input type="text" id="joinRoomCodeInput" class="flex-1 bg-[#050811] text-xs p-2 rounded-xl border border-gray-800 text-center text-white tracking-widest font-bold" placeholder="أدخل كود الغرفة">
                     <button onclick="joinPrivateRoomByCode()" class="bg-purple-900/60 border border-purple-500/30 text-purple-300 text-xs font-bold px-4 rounded-xl hover:bg-purple-800 transition-all">تأكيد</button>
                 </div>
             </div>
 
             <div class="bg-black/30 p-2.5 rounded-xl border border-gray-900 flex justify-between items-center text-xs">
-                <span class="text-gray-400 font-bold">🤖 مستوى ذكاء البوت (الفردي):</span>
+                <span class="text-gray-400 font-bold">🤖 مستوى ذكاء البوت (للأوفلاين):</span>
                 <select id="botDifficultySelect" class="bg-[#050812] border border-purple-500/30 text-purple-300 rounded-lg px-2 py-1 font-bold focus:outline-none">
-                    <option value="easy">عادي (مبتدئ)</option>
-                    <option value="smart">عبقري (متوسط)</option>
-                    <option value="expert" selected>خبير (محترف جداً)</option>
+                    <option value="normal" selected>عادي { مستواه متوسط }</option>
+                    <option value="strong">قوي { مستواه قوي }</option>
+                    <option value="expert">الخبير { مستواه قوي جداً }</option>
                 </select>
             </div>
 
             <div class="flex flex-col gap-2.5 w-full">
-                <div onclick="selectGameMode('uno')" class="game-card cyber-panel border-red-500/30 py-3 rounded-xl text-red-400 font-bold bg-black/40 flex items-center justify-center gap-3 shadow-[0_0_15px_rgba(239,68,68,0.15)] animate-pulse">
-                    <span>🃏</span> <span>تحدي أونو النيون (UNO أونلاين بكامل القوانين)</span>
+                <div onclick="openModeModal('uno')" class="game-card cyber-panel border-red-500/30 py-3 rounded-xl text-red-400 font-bold bg-black/40 flex items-center justify-center gap-3">
+                    <span>🃏</span> <span>تحدي أونو النيون</span>
                 </div>
-                <div onclick="selectGameMode('xo')" class="game-card cyber-panel border-amber-500/20 py-3 rounded-xl text-amber-500 font-bold bg-black/40 flex items-center justify-center gap-3">
-                    <span>❌⭕</span> <span>تحدي XO (أونلاين + شات / بوت ذكي)</span>
+                <div onclick="openModeModal('xo')" class="game-card cyber-panel border-amber-500/20 py-3 rounded-xl text-amber-500 font-bold bg-black/40 flex items-center justify-center gap-3">
+                    <span>❌⭕</span> <span>تحدي XO (مع نظام جولات متطور)</span>
                 </div>
-                <div onclick="selectGameMode('chess')" class="game-card cyber-panel border-purple-500/20 py-3 rounded-xl text-purple-400 font-bold bg-black/40 flex items-center justify-center gap-3">
-                    <span>👑</span> <span>شطرنج التكتيك (أونلاين + شات / بوت مطور)</span>
+                <div onclick="openModeModal('chess')" class="game-card cyber-panel border-purple-500/20 py-3 rounded-xl text-purple-400 font-bold bg-black/40 flex items-center justify-center gap-3">
+                    <span>👑</span> <span>شطرنج التكتيك</span>
                 </div>
-                <div onclick="selectGameMode('snake')" class="game-card cyber-panel border-cyan-500/20 py-3 rounded-xl text-cyan-400 font-bold bg-black/40 flex items-center justify-center gap-3">
-                    <span>🐍</span> <span>ساحة الدودة الفائقة (خريطة نيوني مطورة)</span>
+                <div onclick="openModeModal('snake')" class="game-card cyber-panel border-cyan-500/20 py-3 rounded-xl text-cyan-400 font-bold bg-black/40 flex items-center justify-center gap-3">
+                    <span>🐍</span> <span>ساحة الدودة الفائقة</span>
                 </div>
-                <div onclick="selectGameMode('flappy')" class="game-card cyber-panel border-yellow-500/25 py-3 rounded-xl text-yellow-500 font-bold bg-black/40 flex items-center justify-center gap-3">
-                    <span>🥔</span> <span>حبة البطاطا الطائرة (Flappy Potato السهلة)</span>
+                <div onclick="selectGameMode('flappy', false)" class="game-card cyber-panel border-yellow-500/25 py-3 rounded-xl text-yellow-500 font-bold bg-black/40 flex items-center justify-center gap-3">
+                    <span>🥔</span> <span>حبة البطاطا الطائرة (فردية ومحلية 📴)</span>
                 </div>
             </div>
         </div>
@@ -106,7 +115,6 @@
                 <span id="unoOpponentCardCount" class="bg-purple-950 text-purple-300 text-xs px-2 py-0.5 rounded font-black border border-purple-800">0</span>
             </div>
         </div>
-
         <div class="flex justify-center items-center gap-8 my-auto">
             <div class="text-center">
                 <div class="text-[10px] text-gray-500 font-bold mb-1">الكارت المكشوف</div>
@@ -120,61 +128,62 @@
                 </div>
             </div>
         </div>
-
-        <div id="unoColorChooserPanel" class="hidden flex justify-center gap-2 mb-3 bg-black/60 p-2 rounded-xl border border-purple-500/30 animate-bounce">
-            <button onclick="unoChooseColor('red')" class="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-3 py-1 rounded-lg">أحمر</button>
-            <button onclick="unoChooseColor('blue')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-3 py-1 rounded-lg">أزرق</button>
-            <button onclick="unoChooseColor('green')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3 py-1 rounded-lg">أخضر</button>
-            <button onclick="unoChooseColor('yellow')" class="bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-xs px-3 py-1 rounded-lg">أصفر</button>
+        <div id="unoColorChooserPanel" class="hidden flex justify-center gap-2 mb-3 bg-black/60 p-2 rounded-xl border border-purple-500/30">
+            <button onclick="unoChooseColor('red')" class="bg-red-600 text-white font-bold text-xs px-3 py-1 rounded-lg">أحمر</button>
+            <button onclick="unoChooseColor('blue')" class="bg-blue-600 text-white font-bold text-xs px-3 py-1 rounded-lg">أزرق</button>
+            <button onclick="unoChooseColor('green')" class="bg-emerald-600 text-white font-bold text-xs px-3 py-1 rounded-lg">أخضر</button>
+            <button onclick="unoChooseColor('yellow')" class="bg-yellow-500 text-black font-bold text-xs px-3 py-1 rounded-lg">أصفر</button>
         </div>
-
         <div class="w-full space-y-3">
             <div class="flex justify-between items-center px-1">
-                <span id="unoTurnStatusText" class="text-xs font-black bg-amber-950/50 text-amber-400 px-4 py-1 rounded-full border border-amber-500/20">جاري بدء توزيع النظام المشفر...</span>
-                <button onclick="exitGame('unoPlayArea')" class="bg-red-950/40 border border-red-500/30 text-red-400 px-4 py-1 rounded-xl text-[10px] font-bold hover:bg-red-900/40 transition-all">انسحاب</button>
+                <span id="unoTurnStatusText" class="text-xs font-black bg-amber-950/50 text-amber-400 px-4 py-1 rounded-full border border-amber-500/20">جاري التحميل...</span>
+                <button onclick="exitGame('unoPlayArea')" class="bg-red-950/40 border border-red-500/30 text-red-400 px-4 py-1 rounded-xl text-[10px] font-bold">انسحاب</button>
             </div>
-            
-            <div id="unoPlayerHandContainer" class="w-full flex gap-1.5 overflow-x-auto py-3 px-1 bg-black/20 rounded-2xl border border-gray-900 min-h-[120px] items-center"></div>
+            <div id="unoPlayerHandContainer" class="w-full flex gap-1.5 overflow-x-auto py-3 px-1 bg-black/20 rounded-2xl border border-gray-900 min-h-[130px] items-center"></div>
         </div>
     </div>
 
     <div id="xoPlayArea" class="hidden fixed inset-0 z-30 bg-[#010307]/90 flex flex-col items-center p-4 pt-16">
+        <div class="cyber-panel px-4 py-2 rounded-2xl border border-amber-500/30 mb-4 flex items-center gap-6 text-xs font-black">
+            <div class="text-cyan-400">أنت (X): <span id="xoScorePlayer" class="bg-black/40 px-2 py-0.5 rounded text-white ml-1">0</span></div>
+            <div class="text-gray-500">|</div>
+            <div class="text-purple-400">الخصم (O): <span id="xoScoreOpponent" class="bg-black/40 px-2 py-0.5 rounded text-white ml-1">0</span></div>
+        </div>
         <h3 id="xoTurnStatus" class="text-xs font-black mb-5 text-amber-400 bg-gray-950 px-5 py-1.5 rounded-full border border-gray-900">دورك الآن...</h3>
         <div class="grid grid-cols-3 gap-2.5 w-64 h-64 bg-[#050811] p-2.5 rounded-2xl border border-gray-900 shadow-2xl">
-            <button onclick="clickXOCell(0)" class="bg-black/80 hover:bg-black/40 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900 transition-all" id="cell-0"></button>
-            <button onclick="clickXOCell(1)" class="bg-black/80 hover:bg-black/40 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900 transition-all" id="cell-1"></button>
-            <button onclick="clickXOCell(2)" class="bg-black/80 hover:bg-black/40 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900 transition-all" id="cell-2"></button>
-            <button onclick="clickXOCell(3)" class="bg-black/80 hover:bg-black/40 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900 transition-all" id="cell-3"></button>
-            <button onclick="clickXOCell(4)" class="bg-black/80 hover:bg-black/40 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900 transition-all" id="cell-4"></button>
-            <button onclick="clickXOCell(5)" class="bg-black/80 hover:bg-black/40 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900 transition-all" id="cell-5"></button>
-            <button onclick="clickXOCell(6)" class="bg-black/80 hover:bg-black/40 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900 transition-all" id="cell-6"></button>
-            <button onclick="clickXOCell(7)" class="bg-black/80 hover:bg-black/40 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900 transition-all" id="cell-7"></button>
-            <button onclick="clickXOCell(8)" class="bg-black/80 hover:bg-black/40 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900 transition-all" id="cell-8"></button>
+            <button onclick="clickXOCell(0)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-0"></button>
+            <button onclick="clickXOCell(1)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-1"></button>
+            <button onclick="clickXOCell(2)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-2"></button>
+            <button onclick="clickXOCell(3)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-3"></button>
+            <button onclick="clickXOCell(4)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-4"></button>
+            <button onclick="clickXOCell(5)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-5"></button>
+            <button onclick="clickXOCell(6)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-6"></button>
+            <button onclick="clickXOCell(7)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-7"></button>
+            <button onclick="clickXOCell(8)" class="bg-black/80 text-3xl font-black rounded-xl text-cyan-400 h-full w-full border border-gray-900" id="cell-8"></button>
         </div>
-        <button onclick="exitGame('xoPlayArea')" class="mt-5 bg-red-950/40 border border-red-500/30 text-red-400 px-6 py-2 rounded-xl text-xs font-bold hover:bg-red-900/40 transition-all">انسحاب للردهة</button>
+        <button onclick="exitGame('xoPlayArea')" class="mt-5 bg-red-950/40 border border-red-500/30 text-red-400 px-6 py-2 rounded-xl text-xs font-bold">انسحاب للردهة</button>
     </div>
 
     <div id="chessPlayArea" class="hidden fixed inset-0 z-30 bg-[#010307]/90 flex flex-col items-center p-4 pt-12">
         <div id="chessStatus" class="mb-4 text-xs font-black bg-purple-950/40 px-4 py-1.5 rounded-full border border-purple-500/20 text-purple-300">جاري التحميل...</div>
         <div id="chessBoard" class="grid grid-cols-8 grid-rows-8 w-80 h-80 bg-gray-950 border-4 border-purple-950 rounded-xl overflow-hidden shadow-2xl"></div>
-        <button onclick="exitGame('chessPlayArea')" class="mt-4 bg-red-950/40 border border-red-500/30 text-red-400 px-6 py-2 rounded-xl text-xs font-bold hover:bg-red-900/40 transition-all">انسحاب للردهة</button>
+        <button onclick="exitGame('chessPlayArea')" class="mt-4 bg-red-950/40 border border-red-500/30 text-red-400 px-6 py-2 rounded-xl text-xs font-bold">انسحاب للردهة</button>
     </div>
 
     <div id="snakeCanvasArea" class="hidden fixed inset-0 z-30 bg-[#010205] flex flex-col overflow-hidden select-none">
         <div class="absolute top-4 left-4 z-50 cyber-panel px-3 py-1.5 rounded-xl flex items-center gap-3 text-xs font-black shadow-2xl">
-            <span class="text-cyan-400 font-black">⚡ CYBER SNAKE</span>
+            <span id="snakeTitle" class="text-cyan-400 font-black">⚡ CYBER SNAKE</span>
             <span class="bg-black/50 px-2 py-0.5 rounded-md text-yellow-400">النقاط: <span id="snakeLiveScore">0</span></span>
-            <button onclick="exitGame('snakeCanvasArea')" class="bg-red-900 border border-red-600 text-white px-2.5 py-0.5 rounded-md text-[10px] font-bold hover:brightness-110 transition-all">خروج</button>
+            <button onclick="exitGame('snakeCanvasArea')" class="bg-red-900 border border-red-600 text-white px-2.5 py-0.5 rounded-md text-[10px] font-bold">خروج</button>
         </div>
         <canvas id="snakeFullScreenCanvas"></canvas>
     </div>
 
     <div id="flappyCanvasArea" class="hidden fixed inset-0 z-30 bg-[#02050d] flex flex-col overflow-hidden select-none" onclick="triggerPotatoJump()">
         <div class="absolute top-4 left-4 z-50 cyber-panel px-3 py-1.5 rounded-xl flex flex-wrap items-center gap-3 text-xs font-black shadow-2xl">
-            <span class="text-yellow-500 font-black">🥔 FLAPPY POTATO</span>
+            <span class="text-yellow-500 font-black">🥔 FLAPPY POTATO (OFFLINE)</span>
             <span class="bg-black/50 px-2 py-0.5 rounded-md text-cyan-400">النقاط: <span id="flappyScore">0</span></span>
-            <span class="bg-purple-950/80 px-2 py-0.5 rounded-md text-purple-300 border border-purple-800">المستوى: <span id="flappyLevel">1</span></span>
-            <button onclick="exitGame('flappyCanvasArea'); event.stopPropagation();" class="bg-red-900 border border-red-600 text-white px-2.5 py-0.5 rounded-md text-[10px] font-bold hover:brightness-110 transition-all">خروج</button>
+            <button onclick="exitGame('flappyCanvasArea'); event.stopPropagation();" class="bg-red-900 border border-red-600 text-white px-2.5 py-0.5 rounded-md text-[10px] font-bold">خروج</button>
         </div>
         <canvas id="flappyFullScreenCanvas"></canvas>
     </div>
@@ -182,10 +191,11 @@
     <script>
         const socket = io();
         let myUsername = "", myColor = "", currentRoomCode = "LOBBY_GLOBAL", targetGame = "";
-        let currentPlayersCount = 1;
-        let botDifficulty = "expert";
+        let isOnlineMode = false; 
+        let botDifficulty = "normal"; 
         
         let xoBoard = Array(9).fill(null), xoGameActive = true, mySymbol = "X", isMyTurnXO = true;
+        let pScoreXO = 0, oScoreXO = 0; // عداد نقاط الجولات لـ XO
         let chessInstance = new Chess(), selectedSquare = null, chessColor = 'w';
 
         // محرك الدودة
@@ -193,354 +203,215 @@
         const ctx = canvas.getContext("2d");
         const MAP_SIZE = 2500; 
         let player = { body: [], direction: "RIGHT", nextDirection: "RIGHT", score: 250 };
-        let candies = [], bots = [], onlinePlayers = [], snakeLoop = null;
+        let candies = [], snakeLoop = null;
 
-        // محرك البطاطا الطائرة السهلة
+        // محرك البطاطا
         const flappyCanvas = document.getElementById("flappyFullScreenCanvas");
         const fctx = flappyCanvas.getContext("2d");
         let flappyLoop = null;
         let potato = { x: 80, y: 200, velocity: 0, gravity: 0.24, jump: -4.8, radius: 15 }; 
-        let pipes = []; let fScore = 0; let flappyLevel = 1; let flappyGameOver = false;
+        let pipes = []; let fScore = 0; let flappyGameOver = false;
         let currentPipeSpeed = 1.6; let currentPipeGap = 190; let currentPipeInterval = 280;    
 
-        // ================= [ متغيرات ومحرك أونو UNO المحسّن ] =================
+        // محرك أونو (UNO)
         let unoDeck = [], unoPlayerHand = [], unoOpponentHandCount = 7, unoDiscardPile = [];
         let isMyTurnUno = true, unoGameActive = true, unoPendingWildCardIndex = null;
 
-        function selectGameMode(game) {
+        function openModeModal(game) {
             targetGame = game;
+            document.getElementById('modeSelectionModal').classList.remove('hidden');
+        }
+
+        function confirmGameModeSelection(onlineChosen) {
+            isOnlineMode = onlineChosen;
+            document.getElementById('modeSelectionModal').classList.add('hidden');
+            selectGameMode(targetGame, onlineChosen);
+        }
+
+        function selectGameMode(game, online) {
             botDifficulty = document.getElementById('botDifficultySelect').value;
+            document.getElementById('gameHub').classList.add('hidden');
             
             if(game === 'snake') {
-                document.getElementById('globalChatAndUsersPanel').classList.add('hidden'); 
-                document.getElementById('gameHub').classList.add('hidden');
                 document.getElementById('snakeCanvasArea').classList.remove('hidden');
-                socket.emit('joinRoom', { roomCode: currentRoomCode, username: myUsername, color: myColor, isSnakeMode: true });
-                startSuperSnakeOnline();
+                document.getElementById('snakeTitle').innerText = online ? "⚡ CYBER SNAKE (أونلاين)" : "⚡ CYBER SNAKE (أوفلاين)";
+                startSuperSnake();
             } else if(game === 'flappy') {
                 document.getElementById('globalChatAndUsersPanel').classList.add('hidden');
-                document.getElementById('gameHub').classList.add('hidden');
                 document.getElementById('flappyCanvasArea').classList.remove('hidden');
                 startFlappyPotatoGame();
             } else if(game === 'uno') {
-                document.getElementById('gameHub').classList.add('hidden');
                 document.getElementById('unoPlayArea').classList.remove('hidden');
                 initUnoMatch();
-            } else {
-                document.getElementById('gameHub').classList.add('hidden');
-                if(game === 'xo') {
-                    document.getElementById('xoPlayArea').classList.remove('hidden');
-                    initXOMatch();
-                } else if (game === 'chess') {
-                    document.getElementById('chessPlayArea').classList.remove('hidden');
-                    initChessMatch();
+            } else if(game === 'xo') {
+                document.getElementById('xoPlayArea').classList.remove('hidden');
+                initXOMatch();
+            } else if (game === 'chess') {
+                document.getElementById('chessPlayArea').classList.remove('hidden');
+                initChessMatch();
+            }
+        }
+
+        socket.on('roomUpdate', (data) => {
+            if(data.players && isOnlineMode) {
+                document.getElementById('connectedUsersCount').innerText = data.players.length;
+                document.getElementById('connectedUsersList').innerHTML = data.players.map(p => 
+                    `<span style="color: ${p.color}" class="bg-gray-900/80 px-2 py-0.5 rounded-md border border-gray-800">👤 ${p.username}</span>`
+                ).join(' ');
+                if (data.players.length >= 2) {
+                    if (data.players[1].id === socket.id) {
+                        mySymbol = "O"; chessColor = 'b'; isMyTurnXO = false; isMyTurnUno = false;
+                    } else {
+                        mySymbol = "X"; chessColor = 'w'; isMyTurnXO = true; isMyTurnUno = true;
+                    }
                 }
             }
-        }
+        });
 
+        // ================= [ ديناميكية كروت الأونو المطورة ] =================
         function initUnoMatch() {
-            unoGameActive = true;
-            unoPlayerHand = [];
-            unoDiscardPile = [];
+            unoGameActive = true; unoPlayerHand = []; unoDiscardPile = [];
             document.getElementById('unoColorChooserPanel').classList.add('hidden');
             
-            if (currentPlayersCount >= 2) {
-                document.getElementById('unoOpponentName').innerText = "👤 العميل الخصم: متصل أونلاين";
-                // في وضع الأونلاين الحقيقي يقوم الخادم بالمزامنة، هنا سنقوم بمحاكاتها برمجياً لضمان الفاعلية الفورية
-                setupLocalUnoGame();
+            if(isOnlineMode) {
+                document.getElementById('unoOpponentName').innerText = "👤 الخصم: عميل متصل أونلاين";
             } else {
-                document.getElementById('unoOpponentName').innerText = "🤖 النظام الافتراضي (البوت الذكي)";
-                setupLocalUnoGame();
+                document.getElementById('unoOpponentName').innerText = `🤖 بوت النظام [مستوى: ${botDifficulty}]`;
             }
+            setupUnoLogic();
         }
 
-        function setupLocalUnoGame() {
-            // إنشاء كروت الأونو (ألوان وأرقام وكروت خاصة)
+        function setupUnoLogic() {
             const colors = ['red', 'blue', 'green', 'yellow'];
             const values = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Skip', 'Reverse', '+2'];
             unoDeck = [];
-
-            colors.forEach(c => {
-                values.forEach(v => {
-                    unoDeck.push({ color: c, value: v });
-                    if(v !== '0') unoDeck.push({ color: c, value: v }); // كروت مكررة كما في الأونو الحقيقي
-                });
-            });
-            // إضافة كروت الجوكر السحرية
-            for(let i=0; i<4; i++) {
-                unoDeck.push({ color: 'wild', value: 'Wild' });
-                unoDeck.push({ color: 'wild', value: '+4' });
-            }
-
-            // خلط الكروت عشوائياً
+            colors.forEach(c => values.forEach(v => { unoDeck.push({ color: c, value: v }); unoDeck.push({ color: c, value: v }); }));
+            for(let i=0; i<4; i++) { unoDeck.push({ color: 'wild', value: 'Wild' }); unoDeck.push({ color: 'wild', value: '+4' }); }
             unoDeck.sort(() => Math.random() - 0.5);
 
-            // توزيع 7 كروت للاعب و 7 للخصم
-            for(let i=0; i<7; i++) {
-                unoPlayerHand.push(unoDeck.pop());
-            }
+            for(let i=0; i<7; i++) unoPlayerHand.push(unoDeck.pop());
             unoOpponentHandCount = 7;
 
-            // كارت البداية على الأرض (يجب ألا يكون كارت نفاذ أو جوكر لتسهيل البداية)
             let startCard = unoDeck.pop();
-            while(startCard.color === 'wild') {
-                unoDeck.unshift(startCard);
-                startCard = unoDeck.pop();
-            }
+            while(startCard.color === 'wild') { unoDeck.unshift(startCard); startCard = unoDeck.pop(); }
             unoDiscardPile.push(startCard);
 
-            isMyTurnUno = true;
-            document.getElementById('unoTurnStatusText').innerText = "توزيع مشفر ناجح! دورك الآن لرمي كارت مناسب.";
-            renderUnoHand();
-            updateUnoDiscardUI();
-            
-            if(currentPlayersCount >= 2) {
-                // إرسال حالة اللعبة للطرف الآخر عبر السيرفر
-                socket.emit('sendChatMessage', "📋 أنشأ ساحة أونو جديدة مشفرة بالكامل!");
-            }
+            document.getElementById('unoTurnStatusText').innerText = isMyTurnUno ? "دورك الآن لإلقاء كارت متوافق." : "في انتظار حركة الطرف الآخر...";
+            renderUnoHand(); updateUnoDiscardUI();
         }
 
         function renderUnoHand() {
-            const container = document.getElementById('unoPlayerHandContainer');
-            container.innerHTML = "";
-            
+            const container = document.getElementById('unoPlayerHandContainer'); container.innerHTML = "";
             unoPlayerHand.forEach((card, index) => {
                 const cardEl = document.createElement('div');
-                cardEl.className = `uno-card uno-${card.color} flex-shrink-0 flex flex-col justify-between p-2 text-white`;
-                
-                // تنسيق الرموز لكروت الأكشن
-                let displayVal = card.value;
-                if(card.value === 'Skip') displayVal = '🚫';
-                if(card.value === 'Reverse') displayVal = '🔄';
-                if(card.value === '+2') displayVal = '✌️';
-                
-                cardEl.innerHTML = `<span class="text-[10px] text-right self-start">${displayVal}</span>
-                                    <span class="text-base font-black">${displayVal}</span>
-                                    <span class="text-[10px] text-left self-end">${displayVal}</span>`;
-                
+                cardEl.className = `uno-card uno-${card.color} flex-shrink-0 text-white`;
+                cardEl.innerHTML = `<span class="text-[10px] text-right">${card.value}</span><span class="text-base font-black text-center">${card.value}</span>`;
                 cardEl.onclick = () => playUnoCard(index);
                 container.appendChild(cardEl);
             });
-
             document.getElementById('unoOpponentCardCount').innerText = unoOpponentHandCount;
         }
 
         function updateUnoDiscardUI() {
             const topCard = unoDiscardPile[unoDiscardPile.length - 1];
             const discardEl = document.getElementById('unoCurrentDiscardCard');
-            discardEl.className = `uno-card uno-${topCard.color} flex flex-col justify-between p-2 text-white`;
-            
-            let displayVal = topCard.value;
-            if(topCard.value === 'Skip') displayVal = '🚫';
-            if(topCard.value === 'Reverse') displayVal = '🔄';
-            if(topCard.value === '+2') displayVal = '✌️';
-
-            discardEl.innerHTML = `<span class="text-[10px] self-start">${displayVal}</span>
-                                   <span class="text-base font-black">${displayVal}</span>
-                                   <span class="text-[10px] self-end">${displayVal}</span>`;
+            discardEl.className = `uno-card uno-${topCard.color} text-white`;
+            discardEl.innerHTML = `<span class="text-[10px]">${topCard.value}</span><span class="text-base font-black text-center">${topCard.value}</span>`;
         }
 
         function playUnoCard(index) {
             if(!unoGameActive || !isMyTurnUno) return;
-            
-            const card = unoPlayerHand[index];
-            const topCard = unoDiscardPile[unoDiscardPile.length - 1];
+            const card = unoPlayerHand[index]; const topCard = unoDiscardPile[unoDiscardPile.length - 1];
 
-            // فحص مطابقة القوانين (تطابق لون، أو رقم، أو كارت جوكر سحري)
             if(card.color === 'wild' || card.color === topCard.color || card.value === topCard.value) {
-                unoPlayerHand.splice(index, 1);
-                unoDiscardPile.push(card);
+                unoPlayerHand.splice(index, 1); unoDiscardPile.push(card);
                 
-                // تطبيق تكتيك وقوانين الكروت السحرية والأكشن
                 if(card.color === 'wild') {
                     unoPendingWildCardIndex = unoDiscardPile.length - 1;
                     document.getElementById('unoColorChooserPanel').classList.remove('hidden');
-                    document.getElementById('unoTurnStatusText').innerText = "🔮 كارت سحري! اختر اللون البديل فوراً:";
-                    renderUnoHand();
-                    if(card.value === '+4') {
-                        unoOpponentHandCount += 4;
-                        socket.emit('sendChatMessage', `🔥 ألقى كارت سحري +4 ضد الخصم!`);
-                    }
-                    return; // انتظر اختيار اللون
-                }
-
-                if(card.value === '+2') {
-                    unoOpponentHandCount += 2;
-                    socket.emit('sendChatMessage', `⚠️ ألقى كارت هجومي +2!`);
-                } else if(card.value === 'Skip' || card.value === 'Reverse') {
-                    // في اللعب الثنائي، كارت العكس والتخطي يبقيان الدور معك!
-                    document.getElementById('unoTurnStatusText').innerText = "⚡ كارت تكتيكي! بقيت السيطرة والدور معك!";
-                    renderUnoHand();
-                    updateUnoDiscardUI();
-                    checkUnoWinStatus();
-                    if(currentPlayersCount >= 2) socket.emit('unoStateSync', { oppCount: unoPlayerHand.length, top: card });
                     return;
                 }
-
-                // تمرير الدور للخصم
+                
+                if(isOnlineMode) socket.emit('unoStateSync', { oppCount: unoPlayerHand.length, top: card });
+                
                 isMyTurnUno = false;
-                document.getElementById('unoTurnStatusText').innerText = "تم رمي الكارت. في انتظار حركة نظام الخصم...";
-                renderUnoHand();
-                updateUnoDiscardUI();
-                checkUnoWinStatus();
-
-                if(unoGameActive) {
-                    if (currentPlayersCount >= 2) {
-                        socket.emit('unoStateSync', { oppCount: unoPlayerHand.length, top: card });
-                        // محاكاة استجابة الطرف الآخر أونلاين بعد ثانيتين لضمان استمرار اللعب التلقائي
-                        setTimeout(makeOpponentUnoMove, 1500);
-                    } else {
-                        setTimeout(makeOpponentUnoMove, 1500);
-                    }
-                }
-            } else {
-                alert("❌ الكارت لا يطابق القوانين! يجب أن يماثل اللون أو الرقم الحالي.");
+                renderUnoHand(); updateUnoDiscardUI(); checkUnoWinStatus();
+                if(unoGameActive && !isOnlineMode) setTimeout(makeBotUnoMove, 1000);
             }
         }
 
         function unoChooseColor(color) {
             if(unoPendingWildCardIndex !== null) {
-                unoDiscardPile[unoPendingWildCardIndex].color = color;
-                unoPendingWildCardIndex = null;
+                unoDiscardPile[unoPendingWildCardIndex].color = color; unoPendingWildCardIndex = null;
                 document.getElementById('unoColorChooserPanel').classList.add('hidden');
-                updateUnoDiscardUI();
-                
-                // تمرير الدور بعد اختيار اللون
-                isMyTurnUno = false;
-                document.getElementById('unoTurnStatusText').innerText = "تم تغيير لون الساحة. دور الخصم الآن...";
-                setTimeout(makeOpponentUnoMove, 1200);
+                updateUnoDiscardUI(); isMyTurnUno = false;
+                if(isOnlineMode) socket.emit('unoStateSync', { oppCount: unoPlayerHand.length, top: unoDiscardPile[unoDiscardPile.length-1] });
+                if(!isOnlineMode) setTimeout(makeBotUnoMove, 1000);
             }
         }
 
         function unoDrawCardAction() {
             if(!unoGameActive || !isMyTurnUno) return;
-            
-            if(unoDeck.length === 0) setupLocalUnoGame(); // إعادة تدوير السلة إذا فرغت
-            
-            const drawn = unoDeck.pop();
-            unoPlayerHand.push(drawn);
-            
-            document.getElementById('unoTurnStatusText').innerText = "سحبت كارت جديد. تم تمرير الدور تلقائياً.";
-            renderUnoHand();
-            
-            isMyTurnUno = false;
-            setTimeout(makeOpponentUnoMove, 1500);
+            unoPlayerHand.push(unoDeck.pop() || {color:'red', value:'1'});
+            isMyTurnUno = false; renderUnoHand();
+            if(isOnlineMode) socket.emit('unoStateSync', { oppCount: unoPlayerHand.length, top: unoDiscardPile[unoDiscardPile.length-1] });
+            if(!isOnlineMode) setTimeout(makeBotUnoMove, 1000);
         }
 
-        function makeOpponentUnoMove() {
+        function makeBotUnoMove() {
             if(!unoGameActive) return;
-
             const topCard = unoDiscardPile[unoDiscardPile.length - 1];
-            // محاكاة ذكاء اصطناعي أو حركة أونلاين للخصم
-            let foundIndex = -1;
-            
-            // البوت يبحث عن كارت مناسب في يده الوهمية المخفية
-            // لمحاكاة القوانين بكفاءة:
-            let simulatedOppHand = [];
-            for(let i=0; i<unoOpponentHandCount; i++) simulatedOppHand.push({ color: ['red','blue','green','yellow','wild'][Math.floor(Math.random()*5)], value: ['1','5','+2','Skip','Wild','+4'][Math.floor(Math.random()*6)] });
-
-            for(let i=0; i<simulatedOppHand.length; i++) {
-                let c = simulatedOppHand[i];
-                if(c.color === 'wild' || c.color === topCard.color || c.value === topCard.value) {
-                    foundIndex = i;
-                    break;
-                }
-            }
-
-            if(foundIndex === -1) {
-                // الخصم يسحب كارت
-                unoOpponentHandCount++;
-                document.getElementById('unoTurnStatusText').innerText = "📥 الخصم لم يجد كارت مناسب وقام بالسحب من السلة! دورك الآن.";
-                isMyTurnUno = true;
-                renderUnoHand();
-            } else {
-                let playedCard = simulatedOppHand[foundIndex];
-                unoOpponentHandCount--;
-                if(unoOpponentHandCount <= 0) unoOpponentHandCount = 1; // إبقاء التحدي مستمر
-                
-                if(playedCard.color === 'wild') playedCard.color = ['red','blue','green','yellow'][Math.floor(Math.random()*4)];
-                
-                unoDiscardPile.push(playedCard);
-                updateUnoDiscardUI();
-                
-                if(playedCard.value === '+2') {
-                    // سحب كارتين عقوبة لك بطلب من قوانين اللعبة
-                    unoPlayerHand.push(unoDeck.pop() || {color:'red', value:'5'});
-                    unoPlayerHand.push(unoDeck.pop() || {color:'blue', value:'3'});
-                    document.getElementById('unoTurnStatusText').innerText = "💥 الخصم رمى +2! تم إضافة كارتين ليدك عقوبة. دورك الآن.";
-                } else if(playedCard.value === '+4') {
-                    for(let k=0; k<4; k++) unoPlayerHand.push(unoDeck.pop() || {color:'green', value:'7'});
-                    document.getElementById('unoTurnStatusText').innerText = "🔥 الخصم رمى كارت سحري +4 الهجومي! دورك الآن.";
-                } else if(playedCard.value === 'Skip' || playedCard.value === 'Reverse') {
-                    document.getElementById('unoTurnStatusText').innerText = "🚫 الخصم استخدم كارت تخطي! تجاوز دورك ليلعب مرة أخرى.";
-                    setTimeout(makeOpponentUnoMove, 1500);
-                    return;
-                } else {
-                    document.getElementById('unoTurnStatusText').innerText = `رمى الخصم كارت [${playedCard.value}]. دورك التكتيكي الآن!`;
-                }
-                
-                isMyTurnUno = true;
-                renderUnoHand();
-            }
-            checkUnoWinStatus();
+            let botCard = { color: topCard.color, value: '6' };
+            if(botDifficulty === 'expert') botCard = { color: 'wild', value: '+4' };
+            unoDiscardPile.push(botCard); unoOpponentHandCount--;
+            updateUnoDiscardUI(); isMyTurnUno = true; renderUnoHand(); checkUnoWinStatus();
         }
 
         function checkUnoWinStatus() {
-            if(unoPlayerHand.length === 0) {
-                document.getElementById('unoTurnStatusText').innerText = "🥇 انتصار ساحق! لقد تخلصت من جميع كروتك بنجاح 🎉";
-                unoGameActive = false;
-                alert("🎉 مبروك! انتصرت في جولة أونو النيون المشفرة!");
-            }
+            if(unoPlayerHand.length === 0) { alert("🎉 مبروك الفوز بجولة الأونو!"); unoGameActive = false; }
         }
+        socket.on('unoSyncReceived', (data) => { if(isOnlineMode) { unoOpponentHandCount = data.oppCount; unoDiscardPile.push(data.top); updateUnoDiscardUI(); isMyTurnUno = true; renderUnoHand(); } });
 
-        // الاستماع لأحداث الأونو عبر الشبكة (أونلاين)
-        socket.on('unoSyncReceived', (data) => {
-            unoOpponentHandCount = data.oppCount;
-            unoDiscardPile.push(data.top);
-            updateUnoDiscardUI();
-            isMyTurnUno = true;
-            document.getElementById('unoTurnStatusText').innerText = "تحديث من الشبكة: لعب الخصم كارت، دورك الآن!";
-            renderUnoHand();
-        });
-
-
-        // ================= [ ذكاء XO ] =================
+        // ================= [ نظام الجولات المتطور لـ XO ] =================
         function initXOMatch() {
             xoBoard = Array(9).fill(null); xoGameActive = true;
             for(let i=0; i<9; i++) document.getElementById(`cell-${i}`).innerText = "";
-            if (currentPlayersCount === 1 && mySymbol === "O") { isMyTurnXO = false; setTimeout(makeBOTMoveXO, 500); }
+            document.getElementById('xoScorePlayer').innerText = pScoreXO;
+            document.getElementById('xoScoreOpponent').innerText = oScoreXO;
+            if(!isOnlineMode && !isMyTurnXO) setTimeout(makeBotXOMove, 500);
         }
+
         function clickXOCell(index) {
             if(!xoGameActive || xoBoard[index] !== null || !isMyTurnXO) return;
             xoBoard[index] = mySymbol; document.getElementById(`cell-${index}`).innerText = mySymbol;
-            if (currentPlayersCount >= 2) { socket.emit('xoMove', { index: index, symbol: mySymbol }); isMyTurnXO = false; }
+            if(isOnlineMode) socket.emit('xoMove', { index: index, symbol: mySymbol });
             checkXOWinState();
-            if (xoGameActive && currentPlayersCount === 1) { isMyTurnXO = false; setTimeout(makeBOTMoveXO, 500); }
+            if(xoGameActive) { isMyTurnXO = false; if(!isOnlineMode) setTimeout(makeBotXOMove, 500); }
         }
-        function makeBOTMoveXO() {
-            if (!xoGameActive) return;
-            const botSymbol = (mySymbol === "X") ? "O" : "X"; let chosenIndex = -1;
-            const available = xoBoard.map((v, i) => v === null ? i : null).filter(v => v !== null);
-            if (available.length === 0) return;
-            if (botDifficulty === "easy") chosenIndex = available[Math.floor(Math.random() * available.length)];
-            else {
-                for (let i of available) { xoBoard[i] = botSymbol; if (checkXOWin(botSymbol)) { chosenIndex = i; xoBoard[i] = null; break; } xoBoard[i] = null; }
-                if (chosenIndex === -1 && (botDifficulty === "smart" || botDifficulty === "expert")) {
-                    for (let i of available) { xoBoard[i] = mySymbol; if (checkXOWin(mySymbol)) { chosenIndex = i; xoBoard[i] = null; break; } xoBoard[i] = null; }
-                }
-                if (chosenIndex === -1) chosenIndex = available[Math.floor(Math.random() * available.length)];
-            }
-            xoBoard[chosenIndex] = botSymbol; document.getElementById(`cell-${chosenIndex}`).innerText = botSymbol;
+
+        function makeBotXOMove() {
+            if(!xoGameActive) return;
+            const botSymbol = (mySymbol === "X") ? "O" : "X";
+            const avail = xoBoard.map((v, i) => v === null ? i : null).filter(v => v !== null);
+            if(avail.length === 0) return;
+            let choice = avail[Math.floor(Math.random() * avail.length)];
+            xoBoard[choice] = botSymbol; document.getElementById(`cell-${choice}`).innerText = botSymbol;
             isMyTurnXO = true; checkXOWinState();
         }
-        socket.on('xoMoveReceived', (data) => { xoBoard[data.index] = data.symbol; document.getElementById(`cell-${data.index}`).innerText = data.symbol; isMyTurnXO = true; checkXOWinState(); });
-        function checkXOWinState() {
-            if(checkXOWin(mySymbol)) { document.getElementById('xoTurnStatus').innerText = "لقد انتصرت! 🎉"; xoGameActive = false; } 
-            else if(checkXOWin(mySymbol === "X" ? "O" : "X")) { document.getElementById('xoTurnStatus').innerText = "لقد هُزمت!"; xoGameActive = false; }
-        }
-        function checkXOWin(sym) { const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; return wins.some(combo => combo.every(idx => xoBoard[idx] === sym)); }
 
-        // ================= [ ذكاء الشطرنج ] =================
+        function checkXOWinState() {
+            if(checkXOWin(mySymbol)) { 
+                pScoreXO++; alert("🎉 فزت بهذه الجولة!"); xoGameActive = false; setTimeout(initXOMatch, 1500); 
+            } else if(checkXOWin(mySymbol === "X" ? "O" : "X")) { 
+                oScoreXO++; alert("❌ فاز الخصم بالجولة!"); xoGameActive = false; setTimeout(initXOMatch, 1500); 
+            } else if(xoBoard.every(v => v !== null)) {
+                alert("⚖️ تعادل في الجولة!"); xoGameActive = false; setTimeout(initXOMatch, 1500);
+            }
+        }
+        function checkXOWin(sym) { const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; return wins.some(c => c.every(i => xoBoard[i] === sym)); }
+        socket.on('xoMoveReceived', (data) => { if(isOnlineMode) { xoBoard[data.index] = data.symbol; document.getElementById(`cell-${data.index}`).innerText = data.symbol; isMyTurnXO = true; checkXOWinState(); } });
+
+        // ================= [ باقي محركات الألعاب الأساسية ] =================
         function initChessMatch() { chessInstance = new Chess(); renderChessUI(); }
         function renderChessUI() {
             const boardEl = document.getElementById("chessBoard"); boardEl.innerHTML = ""; const squares = chessInstance.board();
@@ -548,80 +419,51 @@
             for(let r=0; r<8; r++) {
                 for(let c=0; c<8; c++) {
                     const squareObj = squares[r][c]; const squareName = String.fromCharCode(97 + c) + (8 - r);
-                    const cell = document.createElement("div"); cell.className = `flex items-center justify-center text-2xl font-bold transition-all ${(r+c)%2===0?'bg-[#0b0f19]':'bg-[#151d30]'}`;
-                    if(selectedSquare === squareName) cell.className += " bg-purple-900/60";
-                    if(squareObj) { cell.innerText = syms[squareObj.type] || ''; cell.style.color = squareObj.color === 'w' ? '#06b6d4' : '#a855f7'; }
+                    const cell = document.createElement("div"); cell.className = `flex items-center justify-center text-2xl font-bold ${(r+c)%2===0?'bg-[#0b0f19]':'bg-[#151d30]'}`;
+                    if(squareObj) { cell.innerText = syms[squareObj.type]; cell.style.color = squareObj.color === 'w' ? '#06b6d4' : '#a855f7'; }
                     cell.onclick = () => {
-                        if(selectedSquare === squareName) { selectedSquare = null; renderChessUI(); return; }
                         if(selectedSquare) {
                             let move = chessInstance.move({ from: selectedSquare, to: squareName, promotion: 'q' });
-                            if(move) { if (currentPlayersCount >= 2) socket.emit('chessMove', { from: selectedSquare, to: squareName }); selectedSquare = null; renderChessUI(); if (currentPlayersCount === 1) setTimeout(makeBOTMoveChess, 500); } else { selectedSquare = squareName; renderChessUI(); }
-                        } else { if(squareObj && squareObj.color === chessColor) { selectedSquare = squareName; renderChessUI(); } }
+                            if(move) { 
+                                if(isOnlineMode) socket.emit('chessMove', { from: selectedSquare, to: squareName });
+                                selectedSquare = null; renderChessUI(); 
+                                if(!isOnlineMode) setTimeout(makeBotChessMove, 500);
+                            } else { selectedSquare = squareName; }
+                        } else { selectedSquare = squareName; }
                     }; boardEl.appendChild(cell);
                 }
             }
         }
-        function makeBOTMoveChess() {
-            const moves = chessInstance.moves({ verbose: true }); if (moves.length === 0) return;
-            chessInstance.move(moves[Math.floor(Math.random() * moves.length)]); renderChessUI();
-        }
-        socket.on('chessMoveReceived', (data) => { chessInstance.move({ from: data.from, to: data.to, promotion: 'q' }); renderChessUI(); });
+        function makeBotChessMove() { const moves = chessInstance.moves(); if(moves.length > 0) { chessInstance.move(moves[Math.floor(Math.random()*moves.length)]); renderChessUI(); } }
+        socket.on('chessMoveReceived', (data) => { if(isOnlineMode) { chessInstance.move({ from: data.from, to: data.to, promotion: 'q' }); renderChessUI(); } });
 
-        // ================= [ محرك لعبة الدودة المضيئة ] =================
-        function startSuperSnakeOnline() {
-            resizeCanvas(); initSnakeData(); spawnTenAdvancedBots();
-            if(snakeLoop) clearInterval(snakeLoop); snakeLoop = setInterval(runSnakeEngine, 55); 
+        function startSuperSnake() {
+            resizeCanvas(); player.body = []; player.direction = "RIGHT"; player.nextDirection = "RIGHT";
+            let sx = 400, sy = 400; for(let i=0; i<15; i++) player.body.push({x: sx - i*10, y: sy});
+            if(snakeLoop) clearInterval(snakeLoop); snakeLoop = setInterval(runSnakeEngine, 60);
         }
-        function initSnakeData() {
-            player.body = []; player.direction = "RIGHT"; player.nextDirection = "RIGHT"; player.score = 250;
-            let sx = Math.floor(Math.random() * 1200 + 400), sy = Math.floor(Math.random() * 1200 + 400);
-            for(let i=0; i<25; i++) player.body.push({ x: sx - (i * 10), y: sy });
-        }
-        function spawnTenAdvancedBots() {
-            const bNames = ["🤖 نيون-X", "🤖 الشبح", "🤖 السايبورغ"]; bots = [];
-            for(let i=0; i<3; i++) {
-                let bx = Math.floor(Math.random() * 1600 + 300); let by = Math.floor(Math.random() * 1600 + 300); let bBody = [];
-                for(let l=0; l<30; l++) bBody.push({ x: bx, y: by + (l * 10) }); bots.push({ username: bNames[i], color: '#ec4899', body: bBody, direction: "UP" });
-            }
-        }
-        function resizeCanvas() { 
-            if(canvas) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-            if(flappyCanvas) {
-                flappyCanvas.width = window.innerWidth > 500 ? 450 : window.innerWidth;
-                flappyCanvas.height = window.innerHeight;
-            }
-        }
-        window.addEventListener('resize', resizeCanvas);
-        window.addEventListener("keydown", (e) => {
-            if ((e.key === "ArrowUp" || e.key === "w") && player.direction !== "DOWN") player.nextDirection = "UP";
-            if ((e.key === "ArrowDown" || e.key === "s") && player.direction !== "UP") player.nextDirection = "DOWN";
-            if ((e.key === "ArrowLeft" || e.key === "a") && player.direction !== "RIGHT") player.nextDirection = "LEFT";
-            if ((e.key === "ArrowRight" || e.key === "d") && player.direction !== "LEFT") player.nextDirection = "RIGHT";
-        });
         function runSnakeEngine() {
-            player.direction = player.nextDirection; let head = { ...player.body[0] }; let speed = 11; 
-            if (player.direction === "UP") head.y -= speed; if (player.direction === "DOWN") head.y += speed;
-            if (player.direction === "LEFT") head.x -= speed; if (player.direction === "RIGHT") head.x += speed;
-            player.body.unshift(head); player.body.pop(); drawSnakeGraphics();
+            player.direction = player.nextDirection; let head = { ...player.body[0] };
+            if(player.direction === "UP") head.y -= 10; if(player.direction === "DOWN") head.y += 10;
+            if(player.direction === "LEFT") head.x -= 10; if(player.direction === "RIGHT") head.x += 10;
+            player.body.unshift(head); player.body.pop();
+            if(isOnlineMode) socket.emit('snakeUpdate', { body: player.body });
+            drawSnakeGraphics();
         }
         function drawSnakeGraphics() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); if(player.body.length === 0) return;
-            let cx = canvas.width / 2 - player.body[0].x; let cy = canvas.height / 2 - player.body[0].y;
-            ctx.save(); ctx.translate(cx, cy); ctx.fillStyle = "#03060f"; ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
-            player.body.forEach((seg, idx) => { ctx.fillStyle = myColor; ctx.beginPath(); ctx.arc(seg.x, seg.y, idx===0?12:8, 0, 2*Math.PI); ctx.fill(); }); ctx.restore();
+            ctx.clearRect(0,0,canvas.width,canvas.height); if(!player.body[0]) return;
+            let cx = canvas.width/2 - player.body[0].x, cy = canvas.height/2 - player.body[0].y;
+            ctx.save(); ctx.translate(cx, cy); ctx.fillStyle = "#03060f"; ctx.fillRect(0,0,MAP_SIZE,MAP_SIZE);
+            player.body.forEach(b => { ctx.fillStyle = myColor; ctx.fillRect(b.x, b.y, 9, 9); }); ctx.restore();
         }
 
-        // ================= [ محرك لعبة حبة البطاطا الطائرة السهلة ] =================
         function startFlappyPotatoGame() {
-            resizeCanvas(); potato.y = flappyCanvas.height / 2; potato.velocity = 0; pipes = []; fScore = 0; flappyLevel = 1;
-            currentPipeSpeed = 1.6; currentPipeGap = 190; currentPipeInterval = 280;    
-            flappyGameOver = false; if(flappyLoop) clearInterval(flappyLoop); flappyLoop = setInterval(runFlappyPotatoEngine, 1000 / 60);
+            resizeCanvas(); potato.y = flappyCanvas.height / 2; potato.velocity = 0; pipes = []; fScore = 0; flappyGameOver = false;
+            if(flappyLoop) clearInterval(flappyLoop); flappyLoop = setInterval(runFlappyPotatoEngine, 1000 / 60);
         }
         function triggerPotatoJump() { if(flappyGameOver) { startFlappyPotatoGame(); return; } potato.velocity = potato.jump; }
         function runFlappyPotatoEngine() {
             potato.velocity += potato.gravity; potato.y += potato.velocity;
-            let calculatedLevel = Math.floor(fScore / 10) + 1;
-            if(calculatedLevel !== flappyLevel) { flappyLevel = calculatedLevel; currentPipeSpeed = 1.6 + (flappyLevel - 1) * 0.35; }
             if(pipes.length === 0 || pipes[pipes.length - 1].x < flappyCanvas.width - currentPipeInterval) {
                 let topH = Math.floor(Math.random() * (flappyCanvas.height - currentPipeGap - 100)) + 40;
                 pipes.push({ x: flappyCanvas.width, top: topH, bottom: flappyCanvas.height - topH - currentPipeGap, width: 55, passed: false });
@@ -629,13 +471,13 @@
             for(let i = pipes.length - 1; i >= 0; i--) {
                 let p = pipes[i]; p.x -= currentPipeSpeed;
                 if(!p.passed && p.x + p.width < potato.x) { p.passed = true; fScore++; document.getElementById('flappyScore').innerText = fScore; }
-                if (potato.x + potato.radius > p.x && potato.x - potato.radius < p.x + p.width) {
-                    if (potato.y - potato.radius < p.top || potato.y + potato.radius > flappyCanvas.height - p.bottom) { flappyGameOver = true; }
+                if(potato.x + potato.radius > p.x && potato.x - potato.radius < p.x + p.width) {
+                    if (potato.y - potato.radius < p.top || potato.y + potato.radius > flappyCanvas.height - p.bottom) flappyGameOver = true;
                 }
                 if(p.x < -p.width) pipes.splice(i, 1);
             }
-            if(potato.y + potato.radius >= flappyCanvas.height || potato.y - potato.radius <= 0) { flappyGameOver = true; }
-            if(flappyGameOver) { clearInterval(flappyLoop); } drawFlappyGraphics();
+            if(potato.y + potato.radius >= flappyCanvas.height || potato.y - potato.radius <= 0) flappyGameOver = true;
+            if(flappyGameOver) clearInterval(flappyLoop); drawFlappyGraphics();
         }
         function drawFlappyGraphics() {
             fctx.fillStyle = "#02050f"; fctx.fillRect(0, 0, flappyCanvas.width, flappyCanvas.height);
@@ -644,7 +486,7 @@
         }
 
         function connectToHub() {
-            myUsername = document.getElementById('usernameInput').value.trim() || "العميل_" + Math.floor(Math.random()*100);
+            myUsername = document.getElementById('usernameInput').value.trim() || "عميل_" + Math.floor(Math.random()*100);
             myColor = document.getElementById('snakeColorInput').value;
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('gameHub').classList.remove('hidden');
@@ -652,13 +494,15 @@
             socket.emit('joinRoom', { roomCode: currentRoomCode, username: myUsername, color: myColor });
         }
         function createNewPrivateRoom() { currentRoomCode = Math.floor(100000 + Math.random()*900000).toString(); document.getElementById('joinRoomCodeInput').value = currentRoomCode; }
-        function joinPrivateRoomByCode() { currentRoomCode = document.getElementById('joinRoomCodeInput').value; }
-        function exitGame(screenId) {
-            clearInterval(snakeLoop); clearInterval(flappyLoop); unoGameActive = false;
-            document.getElementById(screenId).classList.add('hidden');
-            document.getElementById('gameHub').classList.remove('hidden');
-            document.getElementById('globalChatAndUsersPanel').classList.remove('hidden');
+        function joinPrivateRoomByCode() { currentRoomCode = document.getElementById('joinRoomCodeInput').value.trim(); }
+        function resizeCanvas() { 
+            if(canvas) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+            if(flappyCanvas) { flappyCanvas.width = window.innerWidth > 500 ? 450 : window.innerWidth; flappyCanvas.height = window.innerHeight; }
         }
+        window.addEventListener('resize', resizeCanvas);
+        function sendChatMessageToServer() { const input = document.getElementById('chatMessageInputField'); if(input.value.trim()) { socket.emit('sendChatMessage', input.value.trim()); input.value = ""; } }
+        socket.on('chatMessageReceived', (msg) => { const c = document.getElementById('chatMessagesContainer'); const d = document.createElement('div'); d.innerText = msg.text; c.appendChild(d); c.scrollTop = c.scrollHeight; });
+        function exitGame(screenId) { clearInterval(snakeLoop); clearInterval(flappyLoop); unoGameActive = false; document.getElementById(screenId).classList.add('hidden'); document.getElementById('gameHub').classList.remove('hidden'); }
     </script>
 </body>
 </html>

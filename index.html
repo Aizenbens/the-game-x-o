@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none, viewport-fit=cover">
-    <title>DARK ARENA - النسخة الأصلية المتكاملة</title>
+    <title>DARK ARENA - النسخة الفائقة الكثافة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
@@ -97,7 +97,7 @@
                 <div onclick="openModeModal('uno')" class="game-card cyber-panel border-red-500/30 py-3 rounded-xl text-red-400 font-bold bg-black/40 flex items-center justify-center gap-3">🃏 تحدي أونو النيون</div>
                 <div onclick="openModeModal('xo')" class="game-card cyber-panel border-amber-500/20 py-3 rounded-xl text-amber-500 font-bold bg-black/40 flex items-center justify-center gap-3">❌⭕ تحدي XO الجولات</div>
                 <div onclick="openModeModal('chess')" class="game-card cyber-panel border-purple-500/20 py-3 rounded-xl text-purple-400 font-bold bg-black/40 flex items-center justify-center gap-3">👑 شطرنج التكتيك 3D المحسن</div>
-                <div onclick="openModeModal('snake')" class="game-card cyber-panel border-cyan-500/20 py-3 rounded-xl text-cyan-400 font-bold bg-black/40 flex items-center justify-center gap-3">🐍 ساحة الدودة الأصلية (نقاط مكثفة + تصنيف)</div>
+                <div onclick="openModeModal('snake')" class="game-card cyber-panel border-cyan-500/20 py-3 rounded-xl text-cyan-400 font-bold bg-black/40 flex items-center justify-center gap-3">🐍 ساحة الدودة (نقاط كثيفة جداً + قدرات 7 ثوانٍ)</div>
             </div>
         </div>
     </div>
@@ -146,9 +146,9 @@
         <div class="absolute top-4 left-4 right-4 z-50 flex justify-between items-start pointer-events-none">
             <div class="flex flex-col gap-2 pointer-events-auto cyber-panel px-4 py-2 rounded-xl text-xs font-black shadow-2xl">
                 <div class="flex items-center gap-3">
-                    <span class="text-cyan-400">🐍 ساحة الدودة الأصلية</span>
+                    <span class="text-cyan-400">🐍 ساحة الكثافة الفائقة</span>
                     <span class="bg-black/50 px-2 py-0.5 rounded-md text-yellow-400">نقاطك: <span id="snakeLiveScore">0</span></span>
-                    <span id="snakeActiveAbility" class="text-pink-400 hidden">⚡ قدرة نشطة!</span>
+                    <span id="snakeActiveAbility" class="text-pink-400 hidden">⚡ قدرة نشطة (<span id="abilityTimeLeft">7</span>s)</span>
                 </div>
                 <button onclick="exitGame('snakeCanvasArea')" class="bg-red-900 text-white px-3 py-1 rounded-md text-[10px] self-start mt-1">خروج</button>
             </div>
@@ -168,7 +168,7 @@
         let xoBoard = Array(9).fill(null), xoGameActive = true, mySymbol = "X", isMyTurnXO = true, pScoreXO = 0, oScoreXO = 0;
         let chessInstance = new Chess(), selectedSquare = null, chessColor = 'w', highlightedSquares = [];
 
-        // إعدادات محرك الدودة المطور
+        // إعدادات محرك الدودة الفائقة الكثافة
         const canvas = document.getElementById("snakeFullScreenCanvas");
         const ctx = canvas.getContext("2d");
         const MAP_SIZE = 2000; 
@@ -269,27 +269,27 @@
             return false;
         }
 
-        // ================= [ محرك الدودة المتطور المليء بالنقاط والاصطدامات الأصلية ] =================
+        // ================= [ محرك الدودة الفائقة الكثافة ] =================
         function startSuperSnake() {
             resizeCanvas();
             player.name = myUsername || "أنت";
             player.body = []; player.direction = "RIGHT"; player.nextDirection = "RIGHT"; player.score = 0; player.isDead = false;
             let sx = 200, sy = 200; for(let i=0; i<12; i++) player.body.push({x: sx - i*15, y: sy});
             
-            // توليد 50 نقطة عشوائية لملء الخريطة نسبياً فور بدء اللعبة
+            // توليد 250 نقطة لملء الخريطة بكثافة عالية جداً
             candies = [];
-            for(let i=0; i<50; i++) candies.push(generateRandomCandyPosition());
+            for(let i=0; i<250; i++) candies.push(generateRandomCandyPosition());
 
-            // إعادة تعيين البوتات في أماكن متفرقة
+            // إعداد البوتات
             aiSnakes.forEach((bot, idx) => {
                 bot.isDead = false; bot.score = 50; bot.body = [];
-                let bx = 400 + idx*300, by = 400 + idx*300;
+                let bx = 500 + idx*350, by = 400 + idx*300;
                 for(let i=0; i<10; i++) bot.body.push({x: bx - i*15, y: by});
             });
 
             powerSpawnTimer = 0; powerActiveTimer = 0; specialPower.active = false;
 
-            // اللمس للهواتف
+            // إعدادات اللمس
             window.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; });
             window.addEventListener('touchend', e => {
                 let dx = e.changedTouches[0].clientX - touchStartX; let dy = e.changedTouches[0].clientY - touchStartY;
@@ -310,18 +310,18 @@
             return {
                 x: Math.floor(Math.random() * (MAP_SIZE - 60)) + 30,
                 y: Math.floor(Math.random() * (MAP_SIZE - 60)) + 30,
-                color: ['#eab308', '#ec4899', '#22c55e', '#3b82f6', '#f97316'][Math.floor(Math.random()*5)]
+                color: ['#eab308', '#ec4899', '#22c55e', '#3b82f6', '#f97316', '#a855f7'][Math.floor(Math.random()*6)]
             };
         }
-        function respawnPower() { specialPower.x = Math.floor(Math.random() * (MAP_SIZE - 40)) + 20; specialPower.y = Math.floor(Math.random() * (MAP_SIZE - 40)) + 20; specialPower.active = true; }
+        function respawnPower() { specialPower.x = Math.floor(Math.random() * (MAP_SIZE - 60)) + 30; specialPower.y = Math.floor(Math.random() * (MAP_SIZE - 60)) + 30; specialPower.active = true; }
 
         function runSnakeEngine() {
             if(player.isDead) return;
 
-            // 1. تحريك اللاعب الأساسي
+            // 1. حساب سرعة التحرك بناء على تفعيل القدرة الخاصة
             player.direction = player.nextDirection;
             let head = { ...player.body[0] };
-            let moveSpeed = (specialPower.active && powerActiveTimer > 0) ? 22 : 15;
+            let moveSpeed = (powerActiveTimer > 0) ? 25 : 15; // زيادة السرعة عند تفعيل القدرة
 
             if(player.direction === "UP") head.y -= moveSpeed;
             if(player.direction === "DOWN") head.y += moveSpeed;
@@ -329,29 +329,28 @@
             if(player.direction === "RIGHT") head.x += moveSpeed;
             player.body.unshift(head);
 
-            // التحقق من أكل النقاط الموزعة في الخريطة
+            // التحقق من التهام النقاط
             let ateCandy = false;
             for(let i=0; i<candies.length; i++) {
                 if(Math.hypot(head.x - candies[i].x, head.y - candies[i].y) < 22) {
                     player.score += 10; document.getElementById('snakeLiveScore').innerText = player.score;
-                    candies[i] = generateRandomCandyPosition(); // تختفي وتظهر واحدة أخرى في مكان عشوائي فوراً
+                    candies[i] = generateRandomCandyPosition(); 
                     ateCandy = true; break;
                 }
             }
             if(!ateCandy) player.body.pop();
 
-            // 2. حدود مشعة للخريطة (الموت عند ملامستها)
+            // الموت عند الخروج من الحدود المشعة
             if(head.x <= 0 || head.x >= MAP_SIZE || head.y <= 0 || head.y >= MAP_SIZE) {
-                killSnake(player); alert("💥 اصطدمت بحدود الخريطة المشعة! انتهت اللعبة."); startSuperSnake(); return;
+                killSnake(player); alert("💥 اصطدمت بحدود الخريطة المشعة!"); startSuperSnake(); return;
             }
 
-            // 3. تحريك البوتات وفحصها
+            // 2. إدارة وتحديث حركات البوتات
             aiSnakes.forEach(bot => {
                 if(bot.isDead) return;
                 let bHead = bot.body[0];
                 
-                // ذكاء اصطناعي بسيط للبوتات للتوجه نحو أقرب نقطة حلوى
-                if(Math.random() < 0.2 && candies.length > 0) {
+                if(Math.random() < 0.25 && candies.length > 0) {
                     let nearest = candies[0]; let minDist = Math.hypot(bHead.x - nearest.x, bHead.y - nearest.y);
                     for(let i=1; i<candies.length; i++){
                         let d = Math.hypot(bHead.x - candies[i].x, bHead.y - candies[i].y);
@@ -368,7 +367,6 @@
                 if(bot.direction === "RIGHT") nbHead.x += 13;
                 bot.body.unshift(nbHead);
 
-                // فحص إذا أكل البوت نقطة
                 let bAte = false;
                 for(let i=0; i<candies.length; i++) {
                     if(Math.hypot(nbHead.x - candies[i].x, nbHead.y - candies[i].y) < 22) {
@@ -377,37 +375,44 @@
                 }
                 if(!bAte) bot.body.pop();
 
-                // فحص موت البوت عند حدود الخريطة
                 if(nbHead.x <= 0 || nbHead.x >= MAP_SIZE || nbHead.y <= 0 || nbHead.y >= MAP_SIZE) { killSnake(bot); }
             });
 
-            // 4. تطبيق قواعد الاصطدام الأصلية (إذا اصطدم الرأس بجسم لاعب آخر يموت ويتحول لنقاط)
-            // فحص اصطدام اللاعب بجسم البوتات
+            // 3. قواعد الاصطدامات (تدمير الدودة عند ملامسة جسم الآخرين)
             aiSnakes.forEach(bot => {
                 if(bot.isDead) return;
                 bot.body.forEach((part, idx) => {
                     if(idx > 0 && Math.hypot(head.x - part.x, head.y - part.y) < 15) {
-                        killSnake(player); alert("💥 اصطدمت بجسم لاعب آخر وتحولت إلى نقاط!"); startSuperSnake();
+                        killSnake(player); alert("💥 اصطدمت بجسم البوت وتحولت لنقاط!"); startSuperSnake();
                     }
                 });
             });
 
-            // فحص اصطدام البوتات بجسم اللاعب أو بجسم بوتات أخرى
             aiSnakes.forEach(bot => {
                 if(bot.isDead) return;
                 let bHead = bot.body[0];
-                // مع جسم اللاعب الأساسي
                 player.body.forEach(part => {
-                    if(Math.hypot(bHead.x - part.x, bHead.y - part.y) < 15) { killSnake(bot); }
+                    if(Math.hypot(bHead.x - part.x, part.y - part.y) < 15) { killSnake(bot); }
                 });
             });
 
-            // 5. إدارة مؤقت القدرات الخاصة
-            powerSpawnTimer += 70; if(powerSpawnTimer >= 10000) { powerSpawnTimer = 0; respawnPower(); }
-            if(specialPower.active && Math.hypot(head.x - specialPower.x, head.y - specialPower.y) < 25) {
-                powerActiveTimer = 7000; specialPower.active = false; document.getElementById('snakeActiveAbility').classList.remove('hidden');
+            // 4. نظام القدرات الخاصة (تظهر كل 10 ثوانٍ وتدوم 7 ثوانٍ)
+            if(!specialPower.active) {
+                powerSpawnTimer += 70;
+                if(powerSpawnTimer >= 10000) { powerSpawnTimer = 0; respawnPower(); }
             }
-            if(powerActiveTimer > 0) { powerActiveTimer -= 70; if(powerActiveTimer <= 0) document.getElementById('snakeActiveAbility').classList.add('hidden'); }
+
+            if(specialPower.active && Math.hypot(head.x - specialPower.x, head.y - specialPower.y) < 25) {
+                powerActiveTimer = 7000; // تفعيل القدرة لـ 7 ثوانٍ
+                specialPower.active = false;
+                document.getElementById('snakeActiveAbility').classList.remove('hidden');
+            }
+
+            if(powerActiveTimer > 0) {
+                powerActiveTimer -= 70;
+                document.getElementById('abilityTimeLeft').innerText = Math.ceil(powerActiveTimer / 1000);
+                if(powerActiveTimer <= 0) document.getElementById('snakeActiveAbility').classList.add('hidden');
+            }
 
             updateLeaderboardUI();
             drawSnakeGraphics();
@@ -415,18 +420,17 @@
 
         function killSnake(snakeObj) {
             snakeObj.isDead = true;
-            // اللعبة الأصلية: تحويل جسم الدودة الميتة إلى نقاط مضيئة على الخريطة فوراً لينتفع بها الآخرون
+            // تحويل الجسم الميت إلى نقاط مضيئة متفرقة
             snakeObj.body.forEach(part => {
                 candies.push({ x: part.x, y: part.y, color: '#ffffff' });
             });
             snakeObj.body = [];
             if(snakeObj !== player) {
-                // إعادة إحياء البوت بعد 3 ثوانٍ
                 setTimeout(() => {
-                    snakeObj.isDead = false; snakeObj.score = 30;
+                    snakeObj.isDead = false; snakeObj.score = 40;
                     let rx = Math.floor(Math.random()*(MAP_SIZE-200))+100; let ry = Math.floor(Math.random()*(MAP_SIZE-200))+100;
                     for(let i=0; i<8; i++) snakeObj.body.push({x: rx - i*15, y: ry});
-                }, 300);
+                }, 1500);
             }
         }
 
@@ -445,18 +449,21 @@
 
             ctx.fillStyle = "#03050d"; ctx.fillRect(0,0,MAP_SIZE,MAP_SIZE);
 
-            // رسم الحدود المشعة (جدار نيون مضيء)
-            ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 12; ctx.shadowBlur = 25; ctx.shadowColor = "#ef4444";
+            // جدار نيون مشع عند الحدود
+            ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 14; ctx.shadowBlur = 30; ctx.shadowColor = "#ef4444";
             ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
-            ctx.shadowBlur = 0; // إلغاء تشتيت الظل للعناصر الداخلية لتفادي البطء
+            ctx.shadowBlur = 0; 
 
-            // رسم مصفوفة النقاط التي تملأ الخريطة
+            // رسم النقاط الكثيفة جداً
             candies.forEach(c => {
-                ctx.fillStyle = c.color; ctx.beginPath(); ctx.arc(c.x, c.y, 7, 0, 2*Math.PI); ctx.fill();
+                ctx.fillStyle = c.color; ctx.beginPath(); ctx.arc(c.x, c.y, 6, 0, 2*Math.PI); ctx.fill();
             });
 
+            // رسم القدرة الوردية الخاصة
             if(specialPower.active) {
-                ctx.fillStyle = "#ec4899"; ctx.beginPath(); ctx.arc(specialPower.x, specialPower.y, 12, 0, 2*Math.PI); ctx.fill();
+                ctx.fillStyle = "#ec4899"; ctx.shadowBlur = 15; ctx.shadowColor = "#ec4899";
+                ctx.beginPath(); ctx.arc(specialPower.x, specialPower.y, 14, 0, 2*Math.PI); ctx.fill();
+                ctx.shadowBlur = 0;
             }
 
             // رسم دودة اللاعب
@@ -479,7 +486,6 @@
             if(e.key === "ArrowRight" && player.direction !== "LEFT") player.nextDirection = "RIGHT";
         });
 
-        // ================= [ الأنظمة والألعاب الإضافية الملحقة لتفادي الأخطاء ] =================
         function initUnoMatch() { unoGameActive = true; unoPlayerHand = []; unoDiscardPile = []; setupUnoLogic(); }
         function setupUnoLogic() { const colors = ['red', 'blue', 'green', 'yellow']; for(let i=0; i<7; i++) unoPlayerHand.push({ color: colors[Math.floor(Math.random()*4)], value: Math.floor(Math.random()*9).toString() }); unoDiscardPile.push({ color: 'red', value: '5' }); renderUnoHand(); updateUnoDiscardUI(); }
         function renderUnoHand() { const container = document.getElementById('unoPlayerHandContainer'); container.innerHTML = ""; unoPlayerHand.forEach((card, index) => { const cardEl = document.createElement('div'); cardEl.className = `uno-card uno-${card.color} text-white`; cardEl.innerHTML = `<span class="text-xs">${card.value}</span><span class="text-center font-bold">${card.value}</span>`; cardEl.onclick = () => { const top = unoDiscardPile[unoDiscardPile.length-1]; if(card.color === top.color || card.value === top.value) { unoPlayerHand.splice(index, 1); unoDiscardPile.push(card); renderUnoHand(); updateUnoDiscardUI(); if(unoPlayerHand.length===0) alert("🎉 فزت بالجولة!"); } }; container.appendChild(cardEl); }); }

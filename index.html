@@ -29,15 +29,15 @@
         /* الشطرنج النيون */
         .chess-container-3d { perspective: 1000px; }
         .chess-board-3d { transform: rotateX(18deg) rotateZ(0deg); transform-style: preserve-3d; transition: transform 0.5s ease; box-shadow: 0 20px 50px rgba(168, 85, 247, 0.4); }
-        .chess-square { position: relative; cursor: pointer; transform-style: preserve-3d; transition: background-color 0.2s; }
-        .chess-piece-3d { transform: translateZ(25px); font-size: 2.3rem; line-height: 1; transition: all 0.2s ease; }
+        .chess-square { position: relative; cursor: pointer; transform-style: preserve-3d; transition: background-color 0.2s; touch-action: manipulation; }
+        .chess-piece-3d { transform: translateZ(25px); font-size: 2.3rem; line-height: 1; transition: all 0.2s ease; pointer-events: none; }
         @media (min-width: 640px) { .chess-piece-3d { font-size: 2.9rem; transform: translateZ(35px); } }
         .chess-piece-white { color: #38bdf8; filter: drop-shadow(0 0 10px #0284c7); }
         .chess-piece-black { color: #f43f5e; filter: drop-shadow(0 0 10px #be123c); }
-        .chess-highlight::after { content: ''; position: absolute; width: 16px; height: 16px; background: #06b6d4; box-shadow: 0 0 15px #06b6d4; border-radius: 50%; top: 35%; left: 35%; z-index: 10; }
+        .chess-highlight::after { content: ''; position: absolute; width: 16px; height: 16px; background: #06b6d4; box-shadow: 0 0 15px #06b6d4; border-radius: 50%; top: 35%; left: 35%; z-index: 10; pointer-events: none; }
         .chess-selected { background-color: rgba(168, 85, 247, 0.55) !important; border: 2px solid #c084fc; box-shadow: inset 0 0 15px #a855f7; }
 
-        .xo-btn { transition: all 0.15s ease; }
+        .xo-btn { transition: all 0.15s ease; touch-action: manipulation; }
         .xo-btn:active { transform: scale(0.92); }
 
         @keyframes modalPop { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
@@ -45,7 +45,7 @@
         .mobile-nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 0; font-size: 10px; font-weight: bold; color: #9ca3af; }
         .mobile-nav-btn.active { color: #a855f7; }
 
-        .dpad-btn { background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); color: white; font-weight: bold; border-radius: 12px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .dpad-btn { background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); color: white; font-weight: bold; border-radius: 12px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); touch-action: manipulation; }
         .dpad-btn:active { background: rgba(168, 85, 247, 0.6); }
 
         @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); } 50% { box-shadow: 0 0 25px rgba(168, 85, 247, 0.9); } }
@@ -119,7 +119,7 @@
                     <select id="botDifficultySelect" class="bg-[#050812] border border-purple-500/30 text-purple-300 rounded-lg px-2 py-1 font-bold text-xs">
                         <option value="normal">عادي</option>
                         <option value="strong">قوي</option>
-                        <option value="expert" selected>خبير تكتيكي (مستحيل)</option>
+                        <option value="expert" selected>خبير تكتيكي (مستحيل 🔥)</option>
                     </select>
                 </div>
                 <div class="flex justify-between items-center border-t border-gray-900 pt-2">
@@ -160,8 +160,8 @@
                     <span class="bg-amber-950/60 text-[10px] px-2 py-0.5 rounded-full border border-amber-500/30">الفوز بـ 5 جولات</span>
                 </div>
                 <div onclick="openModeModal('chess')" class="game-card cyber-panel border-purple-500/20 p-3 rounded-2xl text-purple-400 font-black bg-black/40 flex items-center justify-between px-4 touch-manipulation">
-                    <span class="flex items-center gap-2">👑 الشطرنج النيون المطور</span>
-                    <span class="bg-purple-950/60 text-[10px] px-2 py-0.5 rounded-full border border-purple-500/30">تصميم جديد</span>
+                    <span class="flex items-center gap-2">👑 الشطرنج النيون (بوت خارق)</span>
+                    <span class="bg-purple-950/60 text-[10px] px-2 py-0.5 rounded-full border border-purple-500/30">محلول التكرار 🔥</span>
                 </div>
             </div>
 
@@ -299,8 +299,11 @@
         let onlinePlayersList = [];
 
         let xoBoard = Array(9).fill(null), xoGameActive = true, isMyTurnXO = true, pScoreXO = 0, oScoreXO = 0;
-        let chessInstance = new Chess(), selectedSquare = null, highlightedSquares = [];
         
+        // متغيرات الشطرنج المحدثة لمنع اللعب المزدوج
+        let chessInstance = new Chess(), selectedSquare = null, highlightedSquares = [];
+        let isBotThinking = false; // لمنع اللاعب من اللعب في دور البوت
+
         // أونو
         let unoPlayerHand = [], unoDiscardPile = [], unoBots = [], unoBotCount = 1, unoStartCardsCount = 7, isPlayerTurnUno = true;
 
@@ -401,12 +404,10 @@
             document.getElementById("victoryModal").classList.remove("hidden");
         }
 
-        /* دالة المودال المحسنة والمضمونة للهواتف */
         function closeVictoryModal(restartCurrent) {
             document.getElementById("victoryModal").classList.add("hidden");
             const activeArea = currentActiveGameArea;
 
-            // إيقاف المحركات لمنع التعليق
             if(potatoLoop) { clearInterval(potatoLoop); potatoLoop = null; }
             if(snakeLoop) { clearInterval(snakeLoop); snakeLoop = null; }
 
@@ -464,6 +465,10 @@
                 xoBoard[action.index] = "O";
                 document.getElementById(`cell-${action.index}`).innerText = "O";
                 checkXOWinner(); isMyTurnXO = true;
+            } else if(action.type === 'chessMove') {
+                chessInstance.move(action.move);
+                renderChessUI();
+                updateChessTurnBanner();
             }
         }
 
@@ -495,7 +500,6 @@
             document.getElementById("potatoBestScore").innerText = potatoBestScore;
             spawnPipe();
 
-            // إصلاح حدث اللمس لتفادي حظر كليك الأزرار الأخرى
             potatoCanvas.onpointerdown = function(e) { potato.velocity = potato.jump; };
 
             if(potatoLoop) clearInterval(potatoLoop);
@@ -550,14 +554,21 @@
             pCtx.fillStyle = "#000"; pCtx.beginPath(); pCtx.arc(potato.x + 4, potato.y - 3, 2.5, 0, 2 * Math.PI); pCtx.fill();
         }
 
-        // ================= [ الشطرنج الذكي ] =================
-        function initChessMatch() { chessInstance = new Chess(); selectedSquare = null; highlightedSquares = []; renderChessUI(); updateChessTurnBanner(); }
+        // ================= [ الشطرنج الذكي الخارق - الإصلاح الشامل ] =================
+        function initChessMatch() { 
+            chessInstance = new Chess(); 
+            selectedSquare = null; 
+            highlightedSquares = []; 
+            isBotThinking = false;
+            renderChessUI(); 
+            updateChessTurnBanner(); 
+        }
         
         function updateChessTurnBanner() {
             const banner = document.getElementById("chessStatus"); if(!banner) return;
             if(chessInstance.turn() === 'w') {
                 banner.className = "turn-banner text-[11px] font-black bg-cyan-950/90 border border-cyan-500/50 px-4 py-1.5 rounded-full text-cyan-300 shadow-lg";
-                banner.innerText = "👑 دورك الآن! (تحريك القطع المضيئة)";
+                banner.innerText = "👑 دورك الآن! (اضغط على القطعة)";
             } else {
                 banner.className = "turn-banner text-[11px] font-black bg-purple-950/90 border border-purple-500/50 px-4 py-1.5 rounded-full text-purple-300 shadow-lg";
                 banner.innerText = "🤖 جاري تفكير البوت الذكي...";
@@ -584,54 +595,203 @@
                         pieceEl.innerText = syms[squareObj.type];
                         cell.appendChild(pieceEl);
                     }
-                    cell.onclick = () => handleChessSquareClick(squareName);
+                    cell.onclick = (e) => { e.preventDefault(); handleChessSquareClick(squareName); };
                     boardEl.appendChild(cell);
                 }
             }
         }
 
         function handleChessSquareClick(squareName) {
+            // حل مشكلة اللعب مرتين: منع أي نقرة إذا كان دور البوت أو البوت يفكر
+            if(isBotThinking) return;
             if(chessInstance.turn() !== 'w' && !isOnlineMode) return;
+
             if(selectedSquare) {
                 let move = chessInstance.move({ from: selectedSquare, to: squareName, promotion: 'q' });
                 if(move) {
-                    selectedSquare = null; highlightedSquares = []; renderChessUI();
+                    selectedSquare = null; 
+                    highlightedSquares = []; 
+                    renderChessUI();
+
+                    if(isOnlineMode && socket) {
+                        socket.emit('gameAction', { matchId: currentOnlineMatchId, type: 'chessMove', move: move });
+                    }
+
                     if(chessInstance.game_over()) {
                         let winner = chessInstance.in_checkmate() ? (chessInstance.turn() === 'b' ? `الفائز: ${myUsername} 👑` : "الفائز: البوت 🤖") : "تعادل!";
                         showVictoryModal("♟️", "انتهت معركة الشطرنج!", winner, "كش ملك وحسم التحدي!", 'chessPlayArea');
                         return;
                     }
+                    
                     updateChessTurnBanner();
-                    if(!isOnlineMode) setTimeout(makeSmartBotChessMove, 600);
+                    
+                    if(!isOnlineMode) {
+                        isBotThinking = true; // إغلاق اللوحة
+                        setTimeout(makeGrandmasterBotChessMove, 400);
+                    }
                     return;
                 }
             }
+            
             const piece = chessInstance.get(squareName);
             if(piece && piece.color === chessInstance.turn()) {
                 selectedSquare = squareName;
                 highlightedSquares = chessInstance.moves({ square: squareName, verbose: true }).map(m => m.to);
-            } else { selectedSquare = null; highlightedSquares = []; }
+            } else { 
+                selectedSquare = null; 
+                highlightedSquares = []; 
+            }
             renderChessUI();
         }
 
-        function makeSmartBotChessMove() {
-            const moves = chessInstance.moves({ verbose: true }); if(moves.length === 0) return;
-            let chosenMove = null;
-            if(botDifficulty === 'normal') {
-                chosenMove = moves[Math.floor(Math.random() * moves.length)];
-            } else {
-                const pieceValues = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 };
-                let bestValue = -9999;
-                moves.forEach(m => {
-                    let moveValue = 0;
-                    if(m.captured) moveValue += (pieceValues[m.captured] * 10) - pieceValues[m.piece];
-                    if(m.san.includes('+')) moveValue += 15;
-                    if(m.san.includes('#')) moveValue += 10000;
-                    if(moveValue > bestValue) { bestValue = moveValue; chosenMove = m; }
-                });
-                if(!chosenMove || (botDifficulty === 'strong' && Math.random() < 0.25)) chosenMove = moves[Math.floor(Math.random() * moves.length)];
+        // ================= [ خوارزمية ذكاء البوت الشديد (MiniMax + Positional Tables) ] =================
+        const positionScores = {
+            p: [
+                [0,  0,  0,  0,  0,  0,  0,  0],
+                [50, 50, 50, 50, 50, 50, 50, 50],
+                [10, 10, 20, 30, 30, 20, 10, 10],
+                [ 5,  5, 10, 25, 25, 10,  5,  5],
+                [ 0,  0,  0, 20, 20,  0,  0,  0],
+                [ 5, -5,-10,  0,  0,-10, -5,  5],
+                [ 5, 10, 10,-20,-20, 10, 10,  5],
+                [ 0,  0,  0,  0,  0,  0,  0,  0]
+            ],
+            n: [
+                [-50,-40,-30,-30,-30,-30,-40,-50],
+                [-40,-20,  0,  0,  0,  0,-20,-40],
+                [-30,  0, 10, 15, 15, 10,  0,-30],
+                [-30,  5, 15, 20, 20, 15,  5,-30],
+                [-30,  0, 15, 20, 20, 15,  0,-30],
+                [-30,  5, 10, 15, 15, 10,  5,-30],
+                [-40,-20,  0,  5,  5,  0,-20,-40],
+                [-50,-40,-30,-30,-30,-30,-40,-50]
+            ],
+            b: [
+                [-20,-10,-10,-10,-10,-10,-10,-20],
+                [-10,  0,  0,  0,  0,  0,  0,-10],
+                [-10,  0,  5, 10, 10,  5,  0,-10],
+                [-10,  5,  5, 10, 10,  5,  5,-10],
+                [-10,  0, 10, 10, 10, 10,  0,-10],
+                [-10, 10, 10, 10, 10, 10, 10,-10],
+                [-10,  5,  0,  0,  0,  0,  5,-10],
+                [-20,-10,-10,-10,-10,-10,-10,-20]
+            ],
+            r: [
+                [0,  0,  0,  0,  0,  0,  0,  0],
+                [5, 10, 10, 10, 10, 10, 10,  5],
+                [-5,  0,  0,  0,  0,  0,  0, -5],
+                [-5,  0,  0,  0,  0,  0,  0, -5],
+                [-5,  0,  0,  0,  0,  0,  0, -5],
+                [-5,  0,  0,  0,  0,  0,  0, -5],
+                [-5,  0,  0,  0,  0,  0,  0, -5],
+                [0,  0,  0,  5,  5,  0,  0,  0]
+            ],
+            q: [
+                [-20,-10,-10, -5, -5,-10,-10,-20],
+                [-10,  0,  0,  0,  0,  0,  0,-10],
+                [-10,  0,  5,  5,  5,  5,  0,-10],
+                [ -5,  0,  5,  5,  5,  5,  0, -5],
+                [  0,  0,  5,  5,  5,  5,  0, -5],
+                [-10,  5,  5,  5,  5,  5,  0,-10],
+                [-10,  0,  5,  0,  0,  0,  0,-10],
+                [-20,-10,-10, -5, -5,-10,-10,-20]
+            ],
+            k: [
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-20,-30,-30,-40,-40,-30,-30,-20],
+                [-10,-20,-20,-20,-20,-20,-20,-10],
+                [ 20, 20,  0,  0,  0,  0, 20, 20],
+                [ 20, 30, 10,  0,  0, 10, 30, 20]
+            ]
+        };
+
+        function evaluateBoardState(board) {
+            let totalEval = 0;
+            const values = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const piece = board[r][c];
+                    if (piece) {
+                        let val = values[piece.type] + (positionScores[piece.type] ? positionScores[piece.type][r][c] : 0);
+                        totalEval += piece.color === 'b' ? val : -val; // البوت بيلعب بالقطع السوداء 'b'
+                    }
+                }
             }
-            chessInstance.move(chosenMove); renderChessUI(); updateChessTurnBanner();
+            return totalEval;
+        }
+
+        function minimaxChess(depth, alpha, beta, isMaximizing) {
+            if (depth === 0 || chessInstance.game_over()) {
+                return evaluateBoardState(chessInstance.board());
+            }
+
+            const moves = chessInstance.moves();
+            if (isMaximizing) {
+                let maxEval = -Infinity;
+                for (let i = 0; i < moves.length; i++) {
+                    chessInstance.move(moves[i]);
+                    let ev = minimaxChess(depth - 1, alpha, beta, false);
+                    chessInstance.undo();
+                    maxEval = Math.max(maxEval, ev);
+                    alpha = Math.max(alpha, ev);
+                    if (beta <= alpha) break;
+                }
+                return maxEval;
+            } else {
+                let minEval = Infinity;
+                for (let i = 0; i < moves.length; i++) {
+                    chessInstance.move(moves[i]);
+                    let ev = minimaxChess(depth - 1, alpha, beta, true);
+                    chessInstance.undo();
+                    minEval = Math.min(minEval, ev);
+                    beta = Math.min(beta, ev);
+                    if (beta <= alpha) break;
+                }
+                return minEval;
+            }
+        }
+
+        function makeGrandmasterBotChessMove() {
+            const moves = chessInstance.moves({ verbose: true });
+            if (moves.length === 0) { isBotThinking = false; return; }
+
+            let bestMove = null;
+
+            if (botDifficulty === 'normal') {
+                bestMove = moves[Math.floor(Math.random() * moves.length)];
+            } else if (botDifficulty === 'strong') {
+                let bestValue = -Infinity;
+                moves.forEach(m => {
+                    chessInstance.move(m);
+                    let val = evaluateBoardState(chessInstance.board());
+                    chessInstance.undo();
+                    if (val > bestValue) { bestValue = val; bestMove = m; }
+                });
+            } else {
+                // مستوى خبير تكتيكي (Minimax depth 3)
+                let bestValue = -Infinity;
+                for (let i = 0; i < moves.length; i++) {
+                    chessInstance.move(moves[i]);
+                    let val = minimaxChess(2, -Infinity, Infinity, false);
+                    chessInstance.undo();
+                    if (val > bestValue) {
+                        bestValue = val;
+                        bestMove = moves[i];
+                    }
+                }
+            }
+
+            if(!bestMove) bestMove = moves[Math.floor(Math.random() * moves.length)];
+
+            chessInstance.move(bestMove);
+            isBotThinking = false; // إعادة السماح للاعب بالحركة
+            renderChessUI();
+            updateChessTurnBanner();
+
             if(chessInstance.game_over()) {
                 let winner = chessInstance.in_checkmate() ? (chessInstance.turn() === 'w' ? "الفائز: البوت 🤖" : `الفائز: ${myUsername} 👑`) : "تعادل!";
                 showVictoryModal("♟️", "انتهت معركة الشطرنج!", winner, "كش ملك وحسم التحدي!", 'chessPlayArea');

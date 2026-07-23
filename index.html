@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DARK ARENA - النسخة المتقدمة</title>
+    <title>DARK ARENA - النسخة الديناميكية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
@@ -17,7 +17,7 @@
         .game-card:active { transform: scale(0.97); }
         .bg-grid { background-size: 40px 40px; background-image: linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px); }
         
-        /* تصميم كروت الأونو الجديد والأنيق */
+        /* كروت الأونو */
         .uno-card { width: 65px; height: 100px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.6); display: inline-flex; flex-direction: column; justify-content: space-between; padding: 8px; font-weight: 900; font-size: 1.2rem; cursor: pointer; transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; box-shadow: 0 8px 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(255,255,255,0.2); flex-shrink: 0; }
         @media (min-width: 768px) { .uno-card { width: 80px; height: 125px; font-size: 1.5rem; padding: 10px; } }
         .uno-card:hover, .uno-card:active { transform: translateY(-18px) scale(1.08); z-index: 50; border-color: #fff; box-shadow: 0 12px 25px rgba(168, 85, 247, 0.6); }
@@ -26,7 +26,7 @@
         .uno-green { background: linear-gradient(135deg, #00e676, #005522); text-shadow: 0 0 8px rgba(0,230,118,0.8); }
         .uno-yellow { background: linear-gradient(135deg, #ffcc00, #996600); color: #000; border-color: rgba(0,0,0,0.3); text-shadow: none; }
 
-        /* الشطرنج النيون المطور */
+        /* الشطرنج النيون */
         .chess-container-3d { perspective: 1000px; }
         .chess-board-3d { transform: rotateX(18deg) rotateZ(0deg); transform-style: preserve-3d; transition: transform 0.5s ease; box-shadow: 0 20px 50px rgba(168, 85, 247, 0.4); }
         .chess-square { position: relative; cursor: pointer; transform-style: preserve-3d; transition: background-color 0.2s; }
@@ -40,10 +40,7 @@
         .xo-btn { transition: all 0.15s ease; }
         .xo-btn:active { transform: scale(0.92); }
 
-        @keyframes modalPop {
-            0% { transform: scale(0.7); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
+        @keyframes modalPop { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         .modal-animated { animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .mobile-nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 0; font-size: 10px; font-weight: bold; color: #9ca3af; }
         .mobile-nav-btn.active { color: #a855f7; }
@@ -51,11 +48,7 @@
         .dpad-btn { background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); color: white; font-weight: bold; border-radius: 12px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .dpad-btn:active { background: rgba(168, 85, 247, 0.6); }
 
-        /* أنيميشن نيون مضيء لمؤشر الدور */
-        @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
-            50% { box-shadow: 0 0 25px rgba(168, 85, 247, 0.9); }
-        }
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); } 50% { box-shadow: 0 0 25px rgba(168, 85, 247, 0.9); } }
         .turn-banner { animation: pulseGlow 2s infinite; }
     </style>
 </head>
@@ -101,12 +94,24 @@
     </div>
 
     <div id="gameHub" class="hidden flex-1 flex flex-col p-3 gap-3 h-full overflow-hidden z-10 bg-[#02040a]/80 justify-center items-center pb-20 md:pb-4">
-        <div class="cyber-panel p-4 rounded-3xl w-full max-w-md text-center space-y-3 overflow-y-auto max-h-[88vh]">
-            <h1 class="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-purple-400 to-indigo-500">غرفة التحدي أونلاين</h1>
+        <div class="cyber-panel p-4 rounded-3xl w-full max-w-lg text-center space-y-3 overflow-y-auto max-h-[90vh]">
+            <h1 class="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-purple-400 to-indigo-500">قاعة الانتظار والتحدي</h1>
 
-            <button onclick="copyInviteLink()" class="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-3 rounded-2xl text-white font-black text-xs flex items-center justify-center gap-2 border border-purple-400/30 shadow-lg active:scale-95 transition-all">
+            <button onclick="copyInviteLink()" class="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-2.5 rounded-2xl text-white font-black text-xs flex items-center justify-center gap-2 border border-purple-400/30 shadow-lg active:scale-95 transition-all">
                 <span>🔗 نسخ رابط الغرفة لمشاركته مع صديق</span>
             </button>
+
+            <div class="cyber-panel p-2.5 rounded-2xl border border-purple-500/30 flex flex-col text-right bg-black/40">
+                <div class="flex justify-between items-center text-xs font-black text-purple-400 mb-1 border-b border-gray-800 pb-1">
+                    <span>💬 شات قاعة الانتظار</span>
+                    <span id="connectedUsersCount" class="bg-cyan-950 text-cyan-300 text-[10px] px-2 py-0.5 rounded-full border border-cyan-500/30">1 متواجد</span>
+                </div>
+                <div id="lobbyChatBox" class="h-24 overflow-y-auto space-y-1 text-[11px] p-2 bg-black/60 rounded-xl mb-2"></div>
+                <div class="flex gap-1.5">
+                    <input type="text" id="lobbyChatInput" onkeydown="if(event.key==='Enter') sendLobbyChatMessage()" class="flex-1 bg-[#060a12] text-xs px-3 py-1.5 rounded-xl text-white border border-gray-800 focus:outline-none" placeholder="اكتب للجميع في الانتظار...">
+                    <button onclick="sendLobbyChatMessage()" class="bg-purple-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl active:scale-95">إرسال</button>
+                </div>
+            </div>
             
             <div class="bg-black/40 p-2.5 rounded-2xl border border-gray-900 flex flex-col gap-2 text-xs">
                 <div class="flex justify-between items-center">
@@ -138,60 +143,38 @@
             </div>
 
             <div class="flex flex-col gap-2 w-full text-xs">
-                <div onclick="openModeModal('potato')" class="game-card cyber-panel border-yellow-500/40 p-3.5 rounded-2xl text-yellow-400 font-black bg-black/40 flex items-center justify-between px-4">
+                <div onclick="openModeModal('potato')" class="game-card cyber-panel border-yellow-500/40 p-3 rounded-2xl text-yellow-400 font-black bg-black/40 flex items-center justify-between px-4">
                     <span class="flex items-center gap-2">🥔 Flappy Potato</span>
                     <span class="bg-yellow-950/60 text-[10px] px-2 py-0.5 rounded-full border border-yellow-500/30">أعلى رقم قياسي</span>
                 </div>
-                <div onclick="openModeModal('snake')" class="game-card cyber-panel border-cyan-500/20 p-3.5 rounded-2xl text-cyan-400 font-black bg-black/40 flex items-center justify-between px-4">
-                    <span class="flex items-center gap-2">🐍 ساحة الدودة مع البوتات</span>
-                    <span class="bg-cyan-950/60 text-[10px] px-2 py-0.5 rounded-full border border-cyan-500/30">تحكم باللمس / الأزرار</span>
+                <div onclick="openModeModal('snake')" class="game-card cyber-panel border-cyan-500/20 p-3 rounded-2xl text-cyan-400 font-black bg-black/40 flex items-center justify-between px-4">
+                    <span class="flex items-center gap-2">🐍 ساحة الدودة الديناميكية</span>
+                    <span class="bg-cyan-950/60 text-[10px] px-2 py-0.5 rounded-full border border-cyan-500/30">اصطدامات الرأس بالجسم🔥</span>
                 </div>
-                <div onclick="openModeModal('uno')" class="game-card cyber-panel border-red-500/30 p-3.5 rounded-2xl text-red-400 font-black bg-black/40 flex items-center justify-between px-4">
+                <div onclick="openModeModal('uno')" class="game-card cyber-panel border-red-500/30 p-3 rounded-2xl text-red-400 font-black bg-black/40 flex items-center justify-between px-4">
                     <span class="flex items-center gap-2">🃏 أونو النيون الأسطوري</span>
                     <span class="bg-red-950/60 text-[10px] px-2 py-0.5 rounded-full border border-red-500/30">حتى 15 كارت</span>
                 </div>
-                <div onclick="openModeModal('xo')" class="game-card cyber-panel border-amber-500/20 p-3.5 rounded-2xl text-amber-500 font-black bg-black/40 flex items-center justify-between px-4">
+                <div onclick="openModeModal('xo')" class="game-card cyber-panel border-amber-500/20 p-3 rounded-2xl text-amber-500 font-black bg-black/40 flex items-center justify-between px-4">
                     <span class="flex items-center gap-2">❌⭕ تحدي XO</span>
                     <span class="bg-amber-950/60 text-[10px] px-2 py-0.5 rounded-full border border-amber-500/30">الفوز بـ 5 جولات</span>
                 </div>
-                <div onclick="openModeModal('chess')" class="game-card cyber-panel border-purple-500/20 p-3.5 rounded-2xl text-purple-400 font-black bg-black/40 flex items-center justify-between px-4">
+                <div onclick="openModeModal('chess')" class="game-card cyber-panel border-purple-500/20 p-3 rounded-2xl text-purple-400 font-black bg-black/40 flex items-center justify-between px-4">
                     <span class="flex items-center gap-2">👑 الشطرنج النيون المطور</span>
                     <span class="bg-purple-950/60 text-[10px] px-2 py-0.5 rounded-full border border-purple-500/30">تصميم جديد</span>
                 </div>
             </div>
 
-            <a href="https://www.instagram.com/algerian_aizen/" target="_blank" rel="noopener noreferrer" class="w-full block mt-3 bg-gradient-to-r from-purple-900/80 via-pink-900/80 to-red-900/80 p-3 rounded-2xl text-pink-200 font-black text-xs border border-pink-500/40 shadow-lg active:scale-95 transition-all text-center">
+            <a href="https://www.instagram.com/algerian_aizen/" target="_blank" rel="noopener noreferrer" class="w-full block mt-2 bg-gradient-to-r from-purple-900/80 via-pink-900/80 to-red-900/80 p-2.5 rounded-2xl text-pink-200 font-black text-xs border border-pink-500/40 shadow-lg active:scale-95 transition-all text-center">
                 📸 زيارة حساب المطور على انستغرام (@algerian_aizen)
             </a>
-        </div>
-    </div>
-
-    <div id="mobileChatOverlay" class="hidden fixed inset-0 z-50 bg-[#010308]/95 p-4 flex flex-col justify-between pt-12 pb-20">
-        <div class="cyber-panel p-3 rounded-2xl border border-cyan-500/30 mb-2">
-            <div class="text-xs text-cyan-400 font-black mb-1.5 flex justify-between items-center">
-                <span>🟢 المتواجدون الآن:</span>
-                <span id="connectedUsersCount" class="bg-cyan-950 border border-cyan-500/40 text-cyan-300 text-[10px] px-2 py-0.5 rounded-full">1 لاعب</span>
-            </div>
-            <div id="connectedUsersList" class="flex flex-wrap gap-1.5 text-[10px] font-bold text-gray-300 max-h-20 overflow-y-auto"></div>
-        </div>
-        <div class="cyber-panel p-3 rounded-2xl border border-purple-500/30 flex-1 flex flex-col overflow-hidden">
-            <div class="text-xs font-black text-purple-400 mb-2 border-b border-gray-800 pb-1">💬 دردشة الساحة الجماعية</div>
-            <div id="chatMessagesContainer" class="flex-1 overflow-y-auto space-y-2 text-xs p-2 bg-black/50 rounded-xl mb-2 text-right"></div>
-            <div class="flex gap-2">
-                <input type="text" id="chatMessageInputField" onkeydown="if(event.key==='Enter') sendChatMessageToServer()" class="flex-1 bg-[#060a12] text-xs px-3 py-2.5 rounded-xl text-white border border-gray-800 focus:outline-none" placeholder="اكتب رسالة...">
-                <button onclick="sendChatMessageToServer()" class="bg-purple-600 text-white text-xs font-bold px-4 rounded-xl active:scale-95">إرسال</button>
-            </div>
         </div>
     </div>
 
     <div id="mobileNavBar" class="hidden fixed bottom-0 left-0 right-0 z-50 bg-[#04060d]/95 border-t border-purple-500/20 flex justify-around items-center px-2 py-1 md:hidden backdrop-blur-md">
         <button onclick="switchMobileTab('games')" id="navBtnGames" class="mobile-nav-btn active">
             <span class="text-base">🎮</span>
-            <span>الألعاب</span>
-        </button>
-        <button onclick="switchMobileTab('chat')" id="navBtnChat" class="mobile-nav-btn">
-            <span class="text-base">💬</span>
-            <span>الشات</span>
+            <span>الألعاب واللوبي</span>
         </button>
     </div>
 
@@ -211,8 +194,7 @@
             🎮 دورك الآن! (اختر كارت مناسب)
         </div>
 
-        <div id="unoBotsListArea" class="w-full flex justify-around items-center bg-black/50 p-2.5 rounded-2xl border border-red-500/20 text-xs gap-2 overflow-x-auto">
-            </div>
+        <div id="unoBotsListArea" class="w-full flex justify-around items-center bg-black/50 p-2.5 rounded-2xl border border-red-500/20 text-xs gap-2 overflow-x-auto"></div>
 
         <div class="flex justify-center items-center gap-8 my-auto">
             <div class="flex flex-col items-center gap-1">
@@ -319,28 +301,22 @@
         let xoBoard = Array(9).fill(null), xoGameActive = true, isMyTurnXO = true, pScoreXO = 0, oScoreXO = 0;
         let chessInstance = new Chess(), selectedSquare = null, highlightedSquares = [];
         
-        // أونو المطور مع مؤشر الدور وتسمية البوتات
-        let unoPlayerHand = [], unoDiscardPile = [];
-        let unoBots = [];
-        let unoBotCount = 1, unoStartCardsCount = 7;
-        let isPlayerTurnUno = true;
+        // أونو
+        let unoPlayerHand = [], unoDiscardPile = [], unoBots = [], unoBotCount = 1, unoStartCardsCount = 7, isPlayerTurnUno = true;
 
         // Flappy Potato
         const potatoCanvas = document.getElementById("potatoCanvas");
         const pCtx = potatoCanvas.getContext("2d");
-        let potatoLoop = null;
-        let potato = { x: 60, y: 200, velocity: 0, gravity: 0.38, jump: -6.5, radius: 14 };
-        let pipes = [], potatoScore = 0;
+        let potatoLoop = null, potato = { x: 60, y: 200, velocity: 0, gravity: 0.38, jump: -6.5, radius: 14 }, pipes = [], potatoScore = 0;
         let potatoBestScore = localStorage.getItem("potato_best") ? parseInt(localStorage.getItem("potato_best")) : 0;
         let pipeGap = 160, pipeSpeed = 3.2;
 
-        // Snake Engine
+        // Snake Engine Dynamic
         const canvas = document.getElementById("snakeFullScreenCanvas");
         const ctx = canvas.getContext("2d");
         const MAP_SIZE = 2000; 
         let player = { id: "player", name: "أنت", body: [], direction: "RIGHT", nextDirection: "RIGHT", score: 0, isDead: false };
-        let snakeBots = [];
-        let candies = [], snakeLoop = null, touchStartX = 0, touchStartY = 0;
+        let snakeBots = [], candies = [], snakeLoop = null, touchStartX = 0, touchStartY = 0;
 
         const urlParams = new URLSearchParams(window.location.search);
         if(urlParams.has('room')) { currentRoomCode = urlParams.get('room'); }
@@ -355,11 +331,25 @@
 
             if(socket) {
                 socket.emit('joinLobby', { username: myUsername, room: currentRoomCode });
-                socket.on('updateUserList', (users) => { onlinePlayersList = users; updateUsersListUI(); });
-                socket.on('playerNotification', (data) => { appendSystemNotification(data.message, data.type); });
+                
+                socket.on('updateUserList', (users) => {
+                    let previousCount = onlinePlayersList.length;
+                    onlinePlayersList = users;
+                    updateUsersListUI();
+                    
+                    // إشعار الانضمام / المغادرة في الشات
+                    if(previousCount > 0) {
+                        if(users.length > previousCount) appendLobbySystemMsg("🎉 انضم لاعب جديد إلى قاعة الانتظار!");
+                        else if(users.length < previousCount) appendLobbySystemMsg("🚪 غادر أحد اللاعبين قاعة الانتظار.");
+                    }
+                });
+
+                socket.on('playerJoined', (data) => { appendLobbySystemMsg(`🟢 ${data.username} انضم للغرفة الآن!`); });
+                socket.on('playerLeft', (data) => { appendLobbySystemMsg(`🔴 ${data.username} غادر الغرفة.`); });
+
                 socket.on('matchFound', (data) => {
                     currentOnlineMatchId = data.matchId;
-                    appendSystemNotification(`🎮 بدأت المباراة ضد: ${data.opponentName}`, 'join');
+                    appendLobbySystemMsg(`🎮 بدأت المباراة أونلاين ضد: ${data.opponentName}`);
                     if(data.game === 'xo') document.getElementById('xoOpponentTitle').innerText = data.opponentName;
                 });
                 socket.on('opponentLeftMatch', () => {
@@ -370,25 +360,37 @@
         }
 
         function updateUsersListUI() {
-            const listEl = document.getElementById('connectedUsersList');
             const countEl = document.getElementById('connectedUsersCount');
-            listEl.innerHTML = "";
-            let usersToDisplay = onlinePlayersList.length > 0 ? onlinePlayersList : [{username: myUsername + " (أنت)"}];
-            countEl.innerText = `${usersToDisplay.length} لاعب`;
-
-            usersToDisplay.forEach(u => {
-                const tag = document.createElement('span');
-                tag.className = "bg-purple-950 px-2 py-0.5 rounded-lg border border-purple-500/30 text-purple-200 flex items-center gap-1";
-                tag.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-ping"></span> ${u.username}`;
-                listEl.appendChild(tag);
-            });
+            let total = onlinePlayersList.length > 0 ? onlinePlayersList.length : 1;
+            countEl.innerText = `${total} متواجد`;
         }
 
-        function appendSystemNotification(msg, type) {
-            const chatBox = document.getElementById('chatMessagesContainer'); if(!chatBox) return;
+        function sendLobbyChatMessage() {
+            const inputField = document.getElementById('lobbyChatInput');
+            const message = inputField.value.trim(); if(!message) return;
+            appendLobbyMsg(myUsername, message, true); inputField.value = "";
+            if(socket) socket.emit('chatMessage', { user: myUsername, message: message, room: currentRoomCode });
+        }
+
+        function appendLobbyMsg(user, msg, isSelf = false) {
+            const chatBox = document.getElementById('lobbyChatBox'); if(!chatBox) return;
             const msgEl = document.createElement('div');
-            msgEl.className = type === 'join' ? "text-green-400 font-bold bg-green-950/40 p-1.5 rounded-lg border border-green-500/20 text-center" : "text-red-400 font-bold bg-red-950/40 p-1.5 rounded-lg border border-red-500/20 text-center";
+            msgEl.className = isSelf ? "text-cyan-400 font-bold" : "text-purple-300 font-bold";
+            msgEl.innerText = `${user}: ${msg}`;
+            chatBox.appendChild(msgEl); chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function appendLobbySystemMsg(msg) {
+            const chatBox = document.getElementById('lobbyChatBox'); if(!chatBox) return;
+            const msgEl = document.createElement('div');
+            msgEl.className = "text-yellow-400 font-bold text-[10px] text-center bg-yellow-950/30 p-1 rounded-lg border border-yellow-500/20";
             msgEl.innerText = msg; chatBox.appendChild(msgEl); chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        if(socket) {
+            socket.on('chatMessage', (data) => {
+                if(data.user !== myUsername) appendLobbyMsg(data.user, data.message, false);
+            });
         }
 
         function showVictoryModal(icon, title, winnerMsg, subDetails, currentGameArea) {
@@ -415,30 +417,7 @@
         function copyInviteLink() {
             if(currentRoomCode === "ARENA_LOBBY") { currentRoomCode = 'ROOM_' + Math.random().toString(36).substring(2, 8).toUpperCase(); }
             const inviteUrl = window.location.origin + window.location.pathname + '?room=' + currentRoomCode;
-            navigator.clipboard.writeText(inviteUrl).then(() => {
-                alert("✅ تم نسخ رابط الغرفة للحافظة بنجاح!\nشاركه مع صديقك:\n" + inviteUrl);
-            }).catch(() => { prompt("انسخ الرابط التالي:", inviteUrl); });
-        }
-
-        function sendChatMessageToServer() {
-            const inputField = document.getElementById('chatMessageInputField');
-            const message = inputField.value.trim(); if(!message) return;
-            appendMessageToGlobalChat(myUsername, message, true); inputField.value = "";
-            if(socket) socket.emit('chatMessage', { user: myUsername, message: message, room: currentRoomCode });
-        }
-
-        function appendMessageToGlobalChat(user, msg, isSelf = false) {
-            const chatBox = document.getElementById('chatMessagesContainer'); if(!chatBox) return;
-            const msgEl = document.createElement('div');
-            msgEl.className = isSelf ? "text-cyan-400 font-bold" : "text-purple-300 font-bold";
-            msgEl.innerText = `${user}: ${msg}`;
-            chatBox.appendChild(msgEl); chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        if(socket) {
-            socket.on('chatMessage', (data) => {
-                if(data.user !== myUsername) appendMessageToGlobalChat(data.user, data.message, false);
-            });
+            navigator.clipboard.writeText(inviteUrl).then(() => { alert("✅ تم نسخ رابط الغرفة للحافظة بنجاح!\nشاركه مع صديقك:\n" + inviteUrl); }).catch(() => { prompt("انسخ الرابط التالي:", inviteUrl); });
         }
 
         function sendInGameChat(gameType) {
@@ -446,8 +425,7 @@
             let chatBox = gameType === 'xo' ? document.getElementById('xoChatBox') : document.getElementById('chessChatBox');
             let msg = inputEl.value.trim(); if(!msg) return;
 
-            let msgLine = document.createElement('div');
-            msgLine.className = 'text-white font-bold';
+            let msgLine = document.createElement('div'); msgLine.className = 'text-white font-bold';
             msgLine.innerText = `${myUsername}: ${msg}`;
             chatBox.appendChild(msgLine); chatBox.scrollTop = chatBox.scrollHeight; inputEl.value = "";
 
@@ -468,28 +446,13 @@
             if(action.type === 'chat') {
                 let chatBox = currentActiveGameArea === 'xoPlayArea' ? document.getElementById('xoChatBox') : document.getElementById('chessChatBox');
                 if(!chatBox) return;
-                let msgLine = document.createElement('div');
-                msgLine.className = 'text-purple-300 font-bold';
+                let msgLine = document.createElement('div'); msgLine.className = 'text-purple-300 font-bold';
                 msgLine.innerText = `${action.sender}: ${action.text}`;
                 chatBox.appendChild(msgLine); chatBox.scrollTop = chatBox.scrollHeight;
             } else if(action.type === 'xoMove') {
                 xoBoard[action.index] = "O";
                 document.getElementById(`cell-${action.index}`).innerText = "O";
                 checkXOWinner(); isMyTurnXO = true;
-            }
-        }
-
-        function switchMobileTab(tab) {
-            document.getElementById('navBtnGames').classList.remove('active');
-            document.getElementById('navBtnChat').classList.remove('active');
-            if(tab === 'games') {
-                document.getElementById('gameHub').classList.remove('hidden');
-                document.getElementById('mobileChatOverlay').classList.add('hidden');
-                document.getElementById('navBtnGames').classList.add('active');
-            } else if(tab === 'chat') {
-                document.getElementById('gameHub').classList.add('hidden');
-                document.getElementById('mobileChatOverlay').classList.remove('hidden');
-                document.getElementById('navBtnChat').classList.add('active');
             }
         }
 
@@ -504,9 +467,7 @@
             document.getElementById('gameHub').classList.add('hidden');
             document.getElementById('mobileNavBar').classList.add('hidden');
             
-            if(isOnlineMode && socket) {
-                socket.emit('findMatch', { game: game, username: myUsername, room: currentRoomCode });
-            }
+            if(isOnlineMode && socket) { socket.emit('findMatch', { game: game, username: myUsername, room: currentRoomCode }); }
 
             if(game === 'snake') { document.getElementById('snakeCanvasArea').classList.remove('hidden'); currentActiveGameArea = 'snakeCanvasArea'; startSuperSnake(); }
             else if(game === 'uno') { document.getElementById('unoPlayArea').classList.remove('hidden'); currentActiveGameArea = 'unoPlayArea'; initUnoMatch(); }
@@ -522,10 +483,8 @@
             document.getElementById("potatoScore").innerText = potatoScore;
             document.getElementById("potatoBestScore").innerText = potatoBestScore;
             spawnPipe();
-            window.removeEventListener("touchstart", potatoJumpAction);
-            window.addEventListener("touchstart", potatoJumpAction, {passive: false});
-            window.removeEventListener("mousedown", potatoJumpAction);
-            window.addEventListener("mousedown", potatoJumpAction);
+            window.removeEventListener("touchstart", potatoJumpAction); window.addEventListener("touchstart", potatoJumpAction, {passive: false});
+            window.removeEventListener("mousedown", potatoJumpAction); window.addEventListener("mousedown", potatoJumpAction);
 
             if(potatoLoop) clearInterval(potatoLoop);
             potatoLoop = setInterval(runPotatoEngine, 1000 / 60);
@@ -566,7 +525,7 @@
             clearInterval(potatoLoop);
             let isNewBest = potatoScore > potatoBestScore;
             if(isNewBest) { potatoBestScore = potatoScore; localStorage.setItem("potato_best", potatoBestScore); }
-            showVictoryModal(isNewBest ? "🌟" : "🥔", isNewBest ? "رقم قياسي جديد!" : "انتهت الجولة!", `النقاط الحالية: ${potatoScore}`, `<div class="mt-1 text-purple-400">🏆 أعلى رقم قياسي مسجل: <span class="text-yellow-400 font-bold">${potatoBestScore}</span></div>`, 'potatoPlayArea');
+            showVictoryModal(isNewBest ? "🌟" : "🥔", isNewBest ? "رقم قياسي جديد!" : "انتهت الجولة!", `النقاط الحالية: ${potatoScore}`, `<div class="mt-1 text-purple-400">🏆 أعلى رقم قياسي: <span class="text-yellow-400 font-bold">${potatoBestScore}</span></div>`, 'potatoPlayArea');
         }
 
         function drawPotatoGraphics() {
@@ -581,12 +540,11 @@
             pCtx.fillStyle = "#000"; pCtx.beginPath(); pCtx.arc(potato.x + 4, potato.y - 3, 2.5, 0, 2 * Math.PI); pCtx.fill();
         }
 
-        // ================= [ الشطرنج الذكي المطور ] =================
+        // ================= [ الشطرنج الذكي ] =================
         function initChessMatch() { chessInstance = new Chess(); selectedSquare = null; highlightedSquares = []; renderChessUI(); updateChessTurnBanner(); }
         
         function updateChessTurnBanner() {
-            const banner = document.getElementById("chessStatus");
-            if(!banner) return;
+            const banner = document.getElementById("chessStatus"); if(!banner) return;
             if(chessInstance.turn() === 'w') {
                 banner.className = "turn-banner text-[11px] font-black bg-cyan-950/90 border border-cyan-500/50 px-4 py-1.5 rounded-full text-cyan-300 shadow-lg";
                 banner.innerText = "👑 دورك الآن! (تحريك القطع المضيئة)";
@@ -624,7 +582,6 @@
 
         function handleChessSquareClick(squareName) {
             if(chessInstance.turn() !== 'w' && !isOnlineMode) return;
-
             if(selectedSquare) {
                 let move = chessInstance.move({ from: selectedSquare, to: squareName, promotion: 'q' });
                 if(move) {
@@ -648,8 +605,7 @@
         }
 
         function makeSmartBotChessMove() {
-            const moves = chessInstance.moves({ verbose: true });
-            if(moves.length === 0) return;
+            const moves = chessInstance.moves({ verbose: true }); if(moves.length === 0) return;
             let chosenMove = null;
             if(botDifficulty === 'normal') {
                 chosenMove = moves[Math.floor(Math.random() * moves.length)];
@@ -665,7 +621,6 @@
                 });
                 if(!chosenMove || (botDifficulty === 'strong' && Math.random() < 0.25)) chosenMove = moves[Math.floor(Math.random() * moves.length)];
             }
-
             chessInstance.move(chosenMove); renderChessUI(); updateChessTurnBanner();
             if(chessInstance.game_over()) {
                 let winner = chessInstance.in_checkmate() ? (chessInstance.turn() === 'w' ? "الفائز: البوت 🤖" : `الفائز: ${myUsername} 👑`) : "تعادل!";
@@ -771,22 +726,16 @@
             return false;
         }
 
-        // ================= [ أونو المطور بأسماء جديدة ومؤشر الدور وحجم كروت 15 ] =================
+        // ================= [ أونو ] =================
         function initUnoMatch() {
             unoPlayerHand = []; unoDiscardPile = []; unoBots = []; isPlayerTurnUno = true;
-            
-            // تسمية البوتات بأسماء مميزة
             const botNamesList = ["Aizen Bot 🤖", "Sōsuke Bot ⚡", "Gotei Bot ⚔️"];
-            for(let b = 0; b < unoBotCount; b++) {
-                unoBots.push({ id: b+1, name: botNamesList[b], cardsCount: unoStartCardsCount });
-            }
-
+            for(let b = 0; b < unoBotCount; b++) { unoBots.push({ id: b+1, name: botNamesList[b], cardsCount: unoStartCardsCount }); }
             setupUnoLogic(); updateUnoTurnBanner();
         }
 
         function updateUnoTurnBanner(activeName = "دورك الآن!") {
-            const banner = document.getElementById("unoTurnBanner");
-            if(!banner) return;
+            const banner = document.getElementById("unoTurnBanner"); if(!banner) return;
             if(isPlayerTurnUno) {
                 banner.className = "turn-banner w-full bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-900 text-cyan-300 border border-purple-500/50 py-2 rounded-2xl text-center text-xs font-black shadow-lg";
                 banner.innerText = "🎮 دورك الآن! (اختر كارت مناسب من يدك)";
@@ -853,14 +802,8 @@
         }
 
         function runUnoBotsLoopSequence(botIndex) {
-            if(botIndex >= unoBots.length) {
-                isPlayerTurnUno = true;
-                updateUnoTurnBanner();
-                return;
-            }
-
-            let bot = unoBots[botIndex];
-            updateUnoTurnBanner(bot.name);
+            if(botIndex >= unoBots.length) { isPlayerTurnUno = true; updateUnoTurnBanner(); return; }
+            let bot = unoBots[botIndex]; updateUnoTurnBanner(bot.name);
 
             setTimeout(() => {
                 const top = unoDiscardPile[unoDiscardPile.length-1];
@@ -878,7 +821,7 @@
             }, 800);
         }
 
-        // ================= [ الدودة الذكية مع التحكم ] =================
+        // ================= [ الدودة الديناميكية - Dynamic Collision Engine ] =================
         function startSuperSnake() {
             resizeCanvas(); player.name = myUsername || "أنت";
             player.body = []; player.direction = "RIGHT"; player.nextDirection = "RIGHT"; player.score = 0; player.isDead = false;
@@ -889,19 +832,18 @@
             const botNames = ["🤖 Aizen Bot", "⚡ Sōsuke Bot", "🐍 Gotei Bot"];
             const botColors = ["#ef4444", "#a855f7", "#10b981"];
             for(let b=0; b<3; b++) {
-                let bx = Math.floor(Math.random() * (MAP_SIZE - 400)) + 200;
-                let by = Math.floor(Math.random() * (MAP_SIZE - 400)) + 200;
+                let bx = Math.floor(Math.random() * (MAP_SIZE - 600)) + 300;
+                let by = Math.floor(Math.random() * (MAP_SIZE - 600)) + 300;
                 let body = [];
-                for(let i=0; i<12; i++) body.push({x: bx - i*10, y: by});
-                snakeBots.push({ id: `bot_${b}`, name: botNames[b], color: botColors[b], body: body, direction: "LEFT", score: 0 });
+                for(let i=0; i<14; i++) body.push({x: bx - i*10, y: by});
+                snakeBots.push({ id: `bot_${b}`, name: botNames[b], color: botColors[b], body: body, direction: "LEFT", score: 0, isDead: false });
             }
-            document.getElementById('snakeBotCountUI').innerText = snakeBots.length;
+            document.getElementById('snakeBotCountUI').innerText = snakeBots.filter(b=>!b.isDead).length;
 
             candies = []; 
-            for(let i=0; i<300; i++) candies.push(generateRandomCandyPosition());
+            for(let i=0; i<350; i++) candies.push(generateRandomCandyPosition());
 
-            window.removeEventListener('keydown', handleSnakeKey);
-            window.addEventListener('keydown', handleSnakeKey);
+            window.removeEventListener('keydown', handleSnakeKey); window.addEventListener('keydown', handleSnakeKey);
 
             window.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, {passive: true});
             window.addEventListener('touchend', e => {
@@ -938,31 +880,39 @@
             return { x: Math.floor(Math.random() * (MAP_SIZE - 60)) + 30, y: Math.floor(Math.random() * (MAP_SIZE - 60)) + 30, color: ['#eab308', '#ec4899', '#22c55e', '#3b82f6', '#c084fc'][Math.floor(Math.random()*5)] };
         }
 
+        function spawnDeadSnakeFood(body) {
+            body.forEach(segment => {
+                if(Math.random() < 0.7) candies.push({ x: segment.x, y: segment.y, color: '#f43f5e' });
+            });
+        }
+
         function runSnakeEngine() {
             if(player.isDead) return;
             
+            // 1. تحريك اللاعب
             player.direction = player.nextDirection;
-            let head = { ...player.body[0] };
+            let pHead = { ...player.body[0] };
             let moveSpeed = 10;
-            if(player.direction === "UP") head.y -= moveSpeed;
-            if(player.direction === "DOWN") head.y += moveSpeed;
-            if(player.direction === "LEFT") head.x -= moveSpeed;
-            if(player.direction === "RIGHT") head.x += moveSpeed;
-            player.body.unshift(head);
+            if(player.direction === "UP") pHead.y -= moveSpeed;
+            if(player.direction === "DOWN") pHead.y += moveSpeed;
+            if(player.direction === "LEFT") pHead.x -= moveSpeed;
+            if(player.direction === "RIGHT") pHead.x += moveSpeed;
+            player.body.unshift(pHead);
 
             let ateCandy = false;
             for(let i=0; i<candies.length; i++) {
-                if(Math.hypot(head.x - candies[i].x, head.y - candies[i].y) < 18) {
+                if(Math.hypot(pHead.x - candies[i].x, pHead.y - candies[i].y) < 18) {
                     player.score += 10; document.getElementById('snakeLiveScore').innerText = player.score;
                     candies[i] = generateRandomCandyPosition(); ateCandy = true; break;
                 }
             }
             if(!ateCandy) player.body.pop();
 
+            // 2. تحريك البوتات الذكية
             snakeBots.forEach(bot => {
+                if(bot.isDead) return;
                 let bHead = { ...bot.body[0] };
-                let targetCandy = candies[0];
-                let minDist = 99999;
+                let targetCandy = candies[0]; let minDist = 99999;
                 
                 candies.forEach(c => {
                     let d = Math.hypot(bHead.x - c.x, bHead.y - c.y);
@@ -990,12 +940,86 @@
                 if(!bAte) bot.body.pop();
             });
 
-            if(head.x <= 10 || head.x >= MAP_SIZE - 10 || head.y <= 10 || head.y >= MAP_SIZE - 10) {
-                clearInterval(snakeLoop); player.isDead = true;
-                showVictoryModal("🐍", "اصطدمت الدودة بالحافة!", `النقاط النهائية: ${player.score}`, "حاول تحطيم رقمك القياسي مجدداً!", 'snakeCanvasArea');
-                return;
+            // 3. فحص التصادمات الديناميكية (الرأس بـ الرأس والجسم)
+            // أ) اصطدام اللاعب بالحواف
+            if(pHead.x <= 10 || pHead.x >= MAP_SIZE - 10 || pHead.y <= 10 || pHead.y >= MAP_SIZE - 10) {
+                killPlayer("اصطدمت بالجدار الحدودية!"); return;
             }
+
+            // ب) تصادمات اللاعب مع البوتات
+            snakeBots.forEach(bot => {
+                if(bot.isDead) return;
+                let bHead = bot.body[0];
+
+                // تصادم رأس اللاعب برأس البوت -> يموت الاثنان!
+                if(Math.hypot(pHead.x - bHead.x, pHead.y - bHead.y) < 16) {
+                    bot.isDead = true; spawnDeadSnakeFood(bot.body);
+                    killPlayer("اصطدم رأسك برأس البوت ومات الاثنان!"); return;
+                }
+
+                // تصادم رأس اللاعب بجسد البوت -> يموت اللاعب
+                for(let i = 1; i < bot.body.length; i++) {
+                    if(Math.hypot(pHead.x - bot.body[i].x, pHead.y - bot.body[i].y) < 14) {
+                        killPlayer(`اصطدمت بجسد ${bot.name}!`); return;
+                    }
+                }
+
+                // تصادم رأس البوت بجسد اللاعب -> يموت البوت فوراً
+                for(let i = 1; i < player.body.length; i++) {
+                    if(Math.hypot(bHead.x - player.body[i].x, bHead.y - player.body[i].y) < 14) {
+                        bot.isDead = true; spawnDeadSnakeFood(bot.body); player.score += 50;
+                        document.getElementById('snakeLiveScore').innerText = player.score;
+                        break;
+                    }
+                }
+            });
+
+            // ج) تصادمات البوتات مع بعضها ومع الجدران
+            for(let i=0; i<snakeBots.length; i++) {
+                let botA = snakeBots[i]; if(botA.isDead) continue;
+                let hA = botA.body[0];
+
+                if(hA.x <= 10 || hA.x >= MAP_SIZE - 10 || hA.y <= 10 || hA.y >= MAP_SIZE - 10) {
+                    botA.isDead = true; spawnDeadSnakeFood(botA.body); continue;
+                }
+
+                for(let j=i+1; j<snakeBots.length; j++) {
+                    let botB = snakeBots[j]; if(botB.isDead) continue;
+                    let hB = botB.body[0];
+
+                    // رأس بـ رأس بين بوتين
+                    if(Math.hypot(hA.x - hB.x, hA.y - hB.y) < 16) {
+                        botA.isDead = true; botB.isDead = true;
+                        spawnDeadSnakeFood(botA.body); spawnDeadSnakeFood(botB.body);
+                        break;
+                    }
+
+                    // رأس A بجسم B
+                    for(let k=1; k<botB.body.length; k++) {
+                        if(Math.hypot(hA.x - botB.body[k].x, hA.y - botB.body[k].y) < 14) {
+                            botA.isDead = true; spawnDeadSnakeFood(botA.body); break;
+                        }
+                    }
+
+                    // رأس B بجسم A
+                    if(!botB.isDead) {
+                        for(let k=1; k<botA.body.length; k++) {
+                            if(Math.hypot(hB.x - botA.body[k].x, hB.y - botA.body[k].y) < 14) {
+                                botB.isDead = true; spawnDeadSnakeFood(botB.body); break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            document.getElementById('snakeBotCountUI').innerText = snakeBots.filter(b=>!b.isDead).length;
             drawSnakeGraphics();
+        }
+
+        function killPlayer(reason) {
+            clearInterval(snakeLoop); player.isDead = true;
+            spawnDeadSnakeFood(player.body);
+            showVictoryModal("💥", "انتهت معركة الدودة!", reason, `مجموع النقاط التي جمعتها: ${player.score}`, 'snakeCanvasArea');
         }
 
         function drawSnakeGraphics() {
@@ -1008,12 +1032,15 @@
 
             candies.forEach(c => { ctx.fillStyle = c.color; ctx.beginPath(); ctx.arc(c.x, c.y, 6, 0, 2*Math.PI); ctx.fill(); });
             
+            // رسم البوتات الاحياء
             snakeBots.forEach(bot => {
+                if(bot.isDead) return;
                 bot.body.forEach((b, idx) => {
                     ctx.fillStyle = bot.color; ctx.beginPath(); ctx.arc(b.x, b.y, idx === 0 ? 10 : 7, 0, 2 * Math.PI); ctx.fill();
                 });
             });
 
+            // رسم اللاعب
             player.body.forEach((b, idx) => { 
                 ctx.fillStyle = myColor || "#06b6d4"; ctx.beginPath(); ctx.arc(b.x, b.y, idx === 0 ? 11 : 8, 0, 2 * Math.PI); ctx.fill(); 
             });
